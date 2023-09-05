@@ -43,7 +43,7 @@ def get_video_transcript(video_id: str) -> str:
     Fetch the transcript of the provided YouTube video
     """
     try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['de', 'en'])
+        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['de', 'de-DE', 'en'])
     except TranscriptsDisabled:
         # The video doesn't have a transcript
         return None
@@ -51,15 +51,19 @@ def get_video_transcript(video_id: str) -> str:
     text = " ".join([line["text"] for line in transcript])
     return text or "Fehler"
 
-def generate_summary(text: str, key: str) -> str:
+def generate_summary(text: str, key: str, length: int) -> str:
     """
     Generate a summary of the provided text using OpenAI API
     """
     # Initialize the OpenAI API client
     openai.api_key = key
 
-    # Use GPT to generate a summary
-    instructions = "Fasse das oben genannte Transkript eines Videos zusammen. Gib dafür zuerst eine Zusammenfassung. Liste anschließend die fünf wichtigsten Höhepunkte auf. Zum Schluss fasst du die Kernaussage des Videos kurz zusammen. Schreibe in Deutsch, bleibe außerdem objektiv und benutze einen angemessenen Schreibstil."
+    if length == 0:
+        instructions = "Fasse das oben genannte Transkript eines Videos sehr kurz zusammen, konzentriere dich dabei vorallem auf das Fazit, wenn es eines gibt. Auf Deutsch."
+    elif length == 1:
+        instructions = "Fasse das oben genannte Transkript eines Videos zusammen. Auf Deutsch."
+    else:
+        instructions = "Fasse das oben genannte Transkript eines Videos zusammen. Gib dafür zuerst eine Zusammenfassung. Liste anschließend die fünf wichtigsten Höhepunkte auf. Zum Schluss fasst du die Kernaussage des Videos kurz zusammen. Schreibe in Deutsch, bleibe außerdem objektiv und benutze einen angemessenen Schreibstil."
 
     try:
         response = openai.ChatCompletion.create(
@@ -103,10 +107,10 @@ def generate_summary(text: str, key: str) -> str:
         except Exception as e:
             # If an error still occurs, handle it or return an error message
             print(f"An error occurred with 'gpt-3.5-turbo-16k': {str(e)}")
-            return "Ein Fehler ist aufgetreten, und keine Zusammenfassung konnte generiert werden."
+            return f"Ein Fehler ist aufgetreten, und keine Zusammenfassung konnte generiert werden.{str(e)}"
 
 
-def summarize_youtube_video(video_url: str, key: str) -> str:
+def summarize_youtube_video(video_url: str, key: str, length: int) -> str:
     """
     Summarize the provided YouTube video
     """
@@ -125,7 +129,7 @@ def summarize_youtube_video(video_url: str, key: str) -> str:
         return f"Keine Untertitel für diese Video gefunden: {video_url}"
 
     # Generate the summary
-    summary = generate_summary(transcript, key)
+    summary = generate_summary(transcript, key, length)
 
     # Return the summary
     return summary

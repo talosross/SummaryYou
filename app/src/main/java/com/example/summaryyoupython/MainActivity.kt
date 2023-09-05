@@ -26,6 +26,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -98,6 +101,8 @@ fun Test(modifier: Modifier = Modifier) {
     val context = LocalContext.current // Zugriff auf den Context
     val haptics = LocalHapticFeedback.current //Vibration bei kopieren von Zusammenfassung
     val focusManager = LocalFocusManager.current //Cursor ausblenden
+    var selectedIndex by remember { mutableStateOf(0) } //Index für Zusammenfassungslänge
+    val options = listOf("Kurz", "Mittel", "Lang") //Längen
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
@@ -146,6 +151,22 @@ fun Test(modifier: Modifier = Modifier) {
                         .fillMaxWidth()
                         .padding(top = 20.dp)
                 )
+                Box(
+                    modifier = Modifier
+                        .padding(top = 15.dp)
+                ) {
+                    SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
+                        options.forEachIndexed { index, label ->
+                            SegmentedButton(
+                                shape = SegmentedButtonDefaults.shape(position = index, count = options.size),
+                                onClick = { selectedIndex = index },
+                                selected = index == selectedIndex
+                            ) {
+                                Text(label)
+                            }
+                        }
+                    }
+                }
                 if (!transcriptResult.isNullOrEmpty()) {
                     Card(
                         modifier = modifier
@@ -192,11 +213,10 @@ fun Test(modifier: Modifier = Modifier) {
                         Button(
                             onClick = {
                                 isLoading = true // Starte den Abruf
-                                transcriptResult = null //Textfeld und Regenerate ausblenden
                                 scope.launch {
                                     title = getTitel(url)
                                     author = getAuthor(url)
-                                    transcriptResult = summarize(url)
+                                    transcriptResult = summarize(url, selectedIndex)
                                     isLoading = false // Setze isLoading auf false, wenn der Abruf abgeschlossen ist
                                 }
                             },
@@ -245,7 +265,7 @@ fun Test(modifier: Modifier = Modifier) {
                     scope.launch {
                         title = getTitel(url)
                         author = getAuthor(url)
-                        transcriptResult = summarize(url)
+                        transcriptResult = summarize(url, selectedIndex)
                         isLoading = false // Setze isLoading auf false, wenn der Abruf abgeschlossen ist
                     }
                 },
@@ -257,7 +277,7 @@ fun Test(modifier: Modifier = Modifier) {
     }
 }
 
-suspend fun summarize(url: String): String {
+suspend fun summarize(url: String, length: Int): String {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
     val dotenv = dotenv {
@@ -268,12 +288,12 @@ suspend fun summarize(url: String): String {
 
     try {
         val result = withContext(Dispatchers.IO) {
-            module.callAttr("summarize_youtube_video", url, key).toString()
+            module.callAttr("summarize_youtube_video", url, key, length).toString()
         }
         return result
     } catch (e: Exception) {
         // Fehlerbehandlung
-        return "Fehler beim Abrufen der Zusammenfassung"
+        return "Fehler beim Abrufen der Zusammenfassung ${e.message}"
     }
 }
 
