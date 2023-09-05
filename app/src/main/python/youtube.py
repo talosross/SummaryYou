@@ -51,12 +51,12 @@ def get_video_transcript(video_id: str) -> str:
     text = " ".join([line["text"] for line in transcript])
     return text or "Fehler"
 
-def generate_summary(text: str) -> str:
+def generate_summary(text: str, key: str) -> str:
     """
     Generate a summary of the provided text using OpenAI API
     """
     # Initialize the OpenAI API client
-    openai.api_key = "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"
+    openai.api_key = key
 
     # Use GPT to generate a summary
     instructions = "Fasse das oben genannte Transkript eines Videos zusammen. Gib dafür zuerst eine Zusammenfassung. Liste anschließend die fünf wichtigsten Höhepunkte auf. Zum Schluss fasst du die Kernaussage des Videos kurz zusammen. Schreibe in Deutsch, bleibe außerdem objektiv und benutze einen angemessenen Schreibstil."
@@ -106,7 +106,7 @@ def generate_summary(text: str) -> str:
             return "Ein Fehler ist aufgetreten, und keine Zusammenfassung konnte generiert werden."
 
 
-def summarize_youtube_video(video_url: str) -> str:
+def summarize_youtube_video(video_url: str, key: str) -> str:
     """
     Summarize the provided YouTube video
     """
@@ -125,7 +125,7 @@ def summarize_youtube_video(video_url: str) -> str:
         return f"Keine Untertitel für diese Video gefunden: {video_url}"
 
     # Generate the summary
-    summary = generate_summary(transcript)
+    summary = generate_summary(transcript, key)
 
     # Return the summary
     return summary

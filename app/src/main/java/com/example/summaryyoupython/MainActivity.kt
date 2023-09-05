@@ -54,6 +54,7 @@ import androidx.core.view.WindowCompat
 import com.chaquo.python.*
 import com.chaquo.python.android.AndroidPlatform
 import com.example.summaryyoupython.ui.theme.SummaryYouPythonTheme
+import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -256,15 +257,20 @@ fun Test(modifier: Modifier = Modifier) {
 suspend fun summarize(url: String): String {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
+    val dotenv = dotenv {
+        directory = "/assets"
+        filename = "env" // instead of '.env', use 'env'
+    }
+    val key = dotenv["OPEN_AI_KEY"]
 
     try {
         val result = withContext(Dispatchers.IO) {
-            module.callAttr("summarize_youtube_video", url).toString()
+            module.callAttr("summarize_youtube_video", url, key).toString()
         }
         return result
     } catch (e: Exception) {
         // Fehlerbehandlung
-        return "Fehler beim Abrufen des Transkripts"
+        return "Fehler beim Abrufen des Transkripts: ${e.message}"
     }
 }
 
