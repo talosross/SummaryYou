@@ -270,7 +270,7 @@ suspend fun summarize(url: String): String {
         return result
     } catch (e: Exception) {
         // Fehlerbehandlung
-        return "Fehler beim Abrufen des Transkripts: ${e.message}"
+        return "Fehler beim Abrufen des Transkripts."
     }
 }
 

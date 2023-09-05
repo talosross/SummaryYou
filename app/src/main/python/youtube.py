@@ -113,7 +113,7 @@ def summarize_youtube_video(video_url: str, key: str) -> str:
     # Extract the video ID from the URL
     video_id = extract_youtube_video_id(video_url)
 
-    #Fehlerausgabe ungültiger Link
+    #Error message: Invalid link
     if not video_id:
         return f"Ungültiger Link"
 
