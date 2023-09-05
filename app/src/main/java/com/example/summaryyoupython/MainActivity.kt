@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -95,7 +96,8 @@ fun Test(modifier: Modifier = Modifier) {
     var url by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current // Zugriff auf den Context
-    val haptics = LocalHapticFeedback.current
+    val haptics = LocalHapticFeedback.current //Vibration bei kopieren von Zusammenfassung
+    val focusManager = LocalFocusManager.current //Cursor ausblenden
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
@@ -238,6 +240,7 @@ fun Test(modifier: Modifier = Modifier) {
             }
             FloatingActionButton(
                 onClick = {
+                    focusManager.clearFocus()
                     isLoading = true // Starte den Abruf
                     scope.launch {
                         title = getTitel(url)
@@ -270,7 +273,7 @@ suspend fun summarize(url: String): String {
         return result
     } catch (e: Exception) {
         // Fehlerbehandlung
-        return "Fehler beim Abrufen des Transkripts."
+        return "Fehler beim Abrufen der Zusammenfassung"
     }
 }
 
