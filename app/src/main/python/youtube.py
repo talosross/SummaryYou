@@ -2,30 +2,64 @@ from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 import re
 import openai
 from pytube import YouTube
+from newspaper import Article
 
-def get_youtube_video_title(youtube_url):
+def get_title(url):
     try:
         # YouTube-Video-Objekt erstellen
-        yt_video = YouTube(youtube_url)
+        yt_video = YouTube(url)
 
         # Titel des Videos abrufen
         video_title = yt_video.title
 
         return video_title
     except Exception as e:
-        return None
+        try:
+            site = Article(url)
+            site.download()
+            site.parse()
+            return site.title
+        except Exception as e:
+            return None
 
-def get_youtube_video_author(youtube_url):
+
+def get_author(url):
     try:
         # YouTube-Video-Objekt erstellen
-        yt_video = YouTube(youtube_url)
+        yt_video = YouTube(url)
 
         # Autor des Videos abrufen
         video_author = yt_video.author
-
-        return video_author
-    except Exception as e:
-        return None
+        if video_author == "unknown":
+            try:
+                site = Article(url)
+                site.download()
+                site.parse()
+                authors = site.authors
+                for element in authors:
+                    if element and len(element.split()) > 0:
+                        # Wenn das Element nicht leer ist und mindestens ein Wort enthält
+                        # Zeige das Element und beende die Schleife
+                        return element
+                return None
+            except Exception as e:
+                return None
+        else:
+            return video_author
+    except VideoUnavailable:
+        try:
+            site = Article(url)
+            site.download()
+            site.parse()
+            authors = site.authors
+            for element in authors:
+                if element and len(element.split()) > 0:
+                    # Wenn das Element nicht leer ist und mindestens ein Wort enthält
+                    # Zeige das Element und beende die Schleife
+                    return element
+            return None
+        except Exception as e:
+            return None
 
 def extract_youtube_video_id(url: str) -> str:
     """
@@ -51,19 +85,26 @@ def get_video_transcript(video_id: str) -> str:
     text = " ".join([line["text"] for line in transcript])
     return text or "Fehler"
 
-def generate_summary(text: str, key: str, length: int) -> str:
+def generate_summary(text: str, key: str, length: int, article: bool) -> str:
     """
     Generate a summary of the provided text using OpenAI API
     """
     # Initialize the OpenAI API client
     openai.api_key = key
-
-    if length == 0:
-        instructions = "Fasse das oben genannte Transkript eines Videos sehr kurz zusammen, konzentriere dich dabei vorallem auf das Fazit, wenn es eines gibt. Auf Deutsch."
-    elif length == 1:
-        instructions = "Fasse das oben genannte Transkript eines Videos zusammen. Auf Deutsch."
+    if article == True:
+        if length == 0:
+            instructions = "Fasse das oben genannte Transkript eines Videos in 3 kurzen Stichpunkten zusammen, wenn es ein Fazit gibt, so baue es mit ein. Auf Deutsch."
+        elif length == 1:
+            instructions = "Fasse das oben genannte Transkript eines Videos zusammen. Auf Deutsch."
+        else:
+            instructions = "Fasse das oben genannte Transkript eines Videos zusammen. Gib dafür zuerst eine Zusammenfassung. Liste anschließend die fünf wichtigsten Höhepunkte auf. Zum Schluss fasst du die Kernaussage des Videos kurz zusammen. Schreibe in Deutsch, bleibe außerdem objektiv und benutze einen angemessenen Schreibstil."
     else:
-        instructions = "Fasse das oben genannte Transkript eines Videos zusammen. Gib dafür zuerst eine Zusammenfassung. Liste anschließend die fünf wichtigsten Höhepunkte auf. Zum Schluss fasst du die Kernaussage des Videos kurz zusammen. Schreibe in Deutsch, bleibe außerdem objektiv und benutze einen angemessenen Schreibstil."
+        if length == 0:
+            instructions = "Fasse den Artikel in 3 kurzen Stichpunkten zusammen. Auf Deutsch."
+        elif length == 1:
+            instructions = "Fasse den Artikel kurz zusammen. Ziehe am Schluss ein Fazit. Auf Deutsch."
+        else:
+            instructions = "Fasse den Artikel zusammen. Gib dafür zuerst eine Zusammenfassung. Liste anschließend die fünf wichtigsten Höhepunkte auf. Zum Schluss fasst du die Kernaussage des Artikels kurz zusammen. Schreibe in Deutsch, bleibe außerdem objektiv und benutze einen angemessenen Schreibstil."
 
     try:
         response = openai.ChatCompletion.create(
@@ -109,27 +150,40 @@ def generate_summary(text: str, key: str, length: int) -> str:
             print(f"An error occurred with 'gpt-3.5-turbo-16k': {str(e)}")
             return f"Ein Fehler ist aufgetreten, und keine Zusammenfassung konnte generiert werden.{str(e)}"
 
+def get_site_transcript(url: str) -> str:
+    try:
+        site = Article(url)
+        site.download()
+        site.parse()
+        return site.text
+    except Exception as e:
+        return None
 
-def summarize_youtube_video(video_url: str, key: str, length: int) -> str:
+def summarize(url: str, key: str, length: int) -> str:
     """
     Summarize the provided YouTube video
     """
     # Extract the video ID from the URL
-    video_id = extract_youtube_video_id(video_url)
+    video_id = extract_youtube_video_id(url)
 
     #Error message: Invalid link
     if not video_id:
-        return f"Ungültiger Link"
+        transcript = get_site_transcript(url)
+        if transcript == None or transcript == "":
+            return "ungültiger Link"
+        else:
+            summary = generate_summary(transcript, key, length, True)
+            return summary
 
     # Fetch the video transcript
     transcript = get_video_transcript(video_id)
 
     # If no transcript is found, return an error message
     if not transcript:
-        return f"Keine Untertitel für diese Video gefunden: {video_url}"
+        return f"Keine Untertitel für diese Video gefunden: {url}"
 
     # Generate the summary
-    summary = generate_summary(transcript, key, length)
+    summary = generate_summary(transcript, key, length, False)
 
     # Return the summary
     return summary

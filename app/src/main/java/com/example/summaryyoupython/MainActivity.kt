@@ -145,7 +145,7 @@ fun Test(modifier: Modifier = Modifier) {
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text("Videolink") },
+                    label = { Text("URL") },
                     singleLine = true,
                     modifier = modifier
                         .fillMaxWidth()
@@ -183,19 +183,25 @@ fun Test(modifier: Modifier = Modifier) {
                                 }
                             )
                     ) {
-                        Text(
-                            text = title ?: "",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = modifier
-                                .padding(top = 12.dp, start = 12.dp, end = 12.dp)
-                        )
-                        Text(
-                            text = author ?: "",
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = modifier
-                                .padding(top = 4.dp, start = 12.dp, end = 12.dp)
-                        )
+                        if(transcriptResult!="ungültiger Link") {
+                            if(!title.isNullOrEmpty()) {
+                                Text(
+                                    text = title ?: "",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = modifier
+                                        .padding(top = 12.dp, start = 12.dp, end = 12.dp)
+                                )
+                                if(!author.isNullOrEmpty()) {
+                                    Text(
+                                        text = author ?: "",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = modifier
+                                            .padding(top = 4.dp, start = 12.dp, end = 12.dp)
+                                    )
+                                }
+                            }
+                        }
                         Text(
                             text = transcriptResult ?: "Transkript nicht gefunden",
                             style = MaterialTheme.typography.labelLarge,
@@ -212,6 +218,7 @@ fun Test(modifier: Modifier = Modifier) {
                     ) {
                         Button(
                             onClick = {
+                                focusManager.clearFocus()
                                 isLoading = true // Starte den Abruf
                                 scope.launch {
                                     title = getTitel(url)
@@ -269,7 +276,7 @@ fun Test(modifier: Modifier = Modifier) {
                         isLoading = false // Setze isLoading auf false, wenn der Abruf abgeschlossen ist
                     }
                 },
-                modifier = modifier.padding(bottom = 70.dp, end = 15.dp)
+                modifier = modifier.padding(bottom = 60.dp, end = 15.dp)
             ) {
                 Icon(Icons.Filled.Check, "Localized description")
             }
@@ -288,7 +295,7 @@ suspend fun summarize(url: String, length: Int): String {
 
     try {
         val result = withContext(Dispatchers.IO) {
-            module.callAttr("summarize_youtube_video", url, key, length).toString()
+            module.callAttr("summarize", url, key, length).toString()
         }
         return result
     } catch (e: Exception) {
@@ -297,32 +304,34 @@ suspend fun summarize(url: String, length: Int): String {
     }
 }
 
-suspend fun getAuthor(url: String): String {
+suspend fun getAuthor(url: String): String? {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
 
     try {
         val result = withContext(Dispatchers.IO) {
-            module.callAttr("get_youtube_video_author", url).toString()
+            module.callAttr("get_author", url).toString()
         }
         return result
     } catch (e: Exception) {
         // Fehlerbehandlung
-        return "Fehler beim Abrufen des Authors"
+        //return "Fehler beim Abrufen des Authors"
+        return null
     }
 }
 
-suspend fun getTitel(url: String): String {
+suspend fun getTitel(url: String): String? {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
 
     try {
         val result = withContext(Dispatchers.IO) {
-            module.callAttr("get_youtube_video_title", url).toString()
+            module.callAttr("get_title", url).toString()
         }
         return result
     } catch (e: Exception) {
         // Fehlerbehandlung
-        return "Fehler beim Abrufen des Titels"
+        //return "Fehler beim Abrufen des Titels"
+        return null
     }
 }

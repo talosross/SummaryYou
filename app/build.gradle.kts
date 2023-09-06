@@ -64,6 +64,7 @@ chaquopy {
             install("youtube-transcript-api")
             install("openai")
             install("pytube")
+            install("newspaper3k")
             }
     }
 }
