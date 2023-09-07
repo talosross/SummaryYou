@@ -12,7 +12,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
@@ -34,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.R
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -103,6 +106,7 @@ fun Test(modifier: Modifier = Modifier) {
     val focusManager = LocalFocusManager.current //Cursor ausblenden
     var selectedIndex by remember { mutableStateOf(0) } //Index für Zusammenfassungslänge
     val options = listOf("Kurz", "Mittel", "Lang") //Längen
+    val isVisible by remember { derivedStateOf { url.isNotBlank() } } //Icon-Clear
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
@@ -146,6 +150,18 @@ fun Test(modifier: Modifier = Modifier) {
                     value = url,
                     onValueChange = { url = it },
                     label = { Text("URL") },
+                    trailingIcon = {
+                        if (isVisible) {
+                            IconButton(
+                                onClick = { url = "" }
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_cancel_24),
+                                    contentDescription = "Cancel"
+                                )
+                            }
+                        }
+                    },
                     singleLine = true,
                     modifier = modifier
                         .fillMaxWidth()
