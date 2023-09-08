@@ -166,6 +166,7 @@ fun Test(modifier: Modifier = Modifier) {
                     modifier = modifier
                         .fillMaxWidth()
                         .padding(top = 20.dp)
+
                 )
                 Box(
                     modifier = Modifier
@@ -209,12 +210,21 @@ fun Test(modifier: Modifier = Modifier) {
                                         .padding(top = 12.dp, start = 12.dp, end = 12.dp)
                                 )
                                 if(!author.isNullOrEmpty()) {
-                                    Text(
-                                        text = author ?: "",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        modifier = modifier
-                                            .padding(top = 4.dp, start = 12.dp, end = 12.dp)
-                                    )
+                                    Row {
+                                        Text(
+                                            text = author ?: "",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            modifier = modifier
+                                                .padding(top = 4.dp, start = 12.dp, end = 12.dp)
+                                        )
+                                        if (isYouTubeLink(url)) {
+                                            Icon(
+                                                painter = painterResource(id = com.example.summaryyoupython.R.drawable.youtube),
+                                                contentDescription = null,
+                                                modifier = Modifier.padding(top = 1.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -222,12 +232,12 @@ fun Test(modifier: Modifier = Modifier) {
                             text = transcriptResult ?: "Transkript nicht gefunden",
                             style = MaterialTheme.typography.labelLarge,
                             modifier = modifier
-                                .padding(12.dp)
+                                .padding(start=12.dp, end=12.dp, top=10.dp, bottom=12.dp)
                         )
                     }
                     Column(
                         modifier = Modifier
-                            .padding(top = 15.dp, bottom = 40.dp)
+                            .padding(top = 15.dp, bottom = 90.dp)
                             .fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -350,4 +360,9 @@ suspend fun getTitel(url: String): String? {
         //return "Fehler beim Abrufen des Titels"
         return null
     }
+}
+
+fun isYouTubeLink(input: String): Boolean {
+    val youtubePattern = Regex("""^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.*$""")
+    return youtubePattern.matches(input)
 }
