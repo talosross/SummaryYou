@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -107,6 +109,8 @@ fun Test(modifier: Modifier = Modifier) {
     var selectedIndex by remember { mutableStateOf(0) } //Index für Zusammenfassungslänge
     val options = listOf("Kurz", "Mittel", "Lang") //Längen
     val isVisible by remember { derivedStateOf { url.isNotBlank() } } //Icon-Clear
+    var isError by remember { mutableStateOf(false) } //Textinput Fehler
+
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
@@ -115,6 +119,12 @@ fun Test(modifier: Modifier = Modifier) {
 
     val py = Python.getInstance()
     val module = py.getModule("youtube")
+
+    if(transcriptResult == "ungültiger Link") {
+        isError = true
+    }else{
+        isError = false
+    }
 
     Box() {
         Column(
@@ -150,10 +160,23 @@ fun Test(modifier: Modifier = Modifier) {
                     value = url,
                     onValueChange = { url = it },
                     label = { Text("URL") },
+                    isError = isError,
+                    supportingText = {
+                        if (isError) {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = "ungültiger Link",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
                     trailingIcon = {
                         if (isVisible) {
                             IconButton(
-                                onClick = { url = "" }
+                                onClick = {
+                                    url = ""
+                                    transcriptResult = null
+                                }
                             ) {
                                 Icon(
                                     painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_cancel_24),
@@ -166,11 +189,13 @@ fun Test(modifier: Modifier = Modifier) {
                     modifier = modifier
                         .fillMaxWidth()
                         .padding(top = 20.dp)
-
                 )
                 Box(
-                    modifier = Modifier
-                        .padding(top = 15.dp)
+                    modifier = if (isError) {
+                        Modifier.padding(top = 11.dp)
+                    } else {
+                        Modifier.padding(top = 15.dp)
+                    }
                 ) {
                     SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
                         options.forEachIndexed { index, label ->
@@ -184,7 +209,7 @@ fun Test(modifier: Modifier = Modifier) {
                         }
                     }
                 }
-                if (!transcriptResult.isNullOrEmpty()) {
+                if (!transcriptResult.isNullOrEmpty() && transcriptResult != "ungültiger Link") {
                     Card(
                         modifier = modifier
                             .padding(top = 15.dp, bottom = 15.dp)
