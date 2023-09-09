@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -62,13 +63,22 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.WindowCompat
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.chaquo.python.*
 import com.chaquo.python.android.AndroidPlatform
 import com.example.summaryyoupython.ui.theme.SummaryYouPythonTheme
+import io.github.cdimascio.dotenv.DotenvBuilder
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.util.Properties
+import androidx.navigation.NavHostController
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,14 +90,89 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             SummaryYouPythonTheme {
+                val navController = rememberNavController()
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Test()
+                    AppNavigation(navController)
                 }
             }
+        }
+    }
+}
+@Composable
+fun AppNavigation(navController: NavHostController) {
+    NavHost(navController, startDestination = "home") {
+        composable("home") {
+            homeScreen(
+                modifier = Modifier,
+                navController = navController
+            )
+        }
+        composable("settings") {
+            settingsScreen(
+                modifier = Modifier,
+                navController = navController
+            )
+        }
+        composable("history") {
+            historyScreen(
+                modifier = Modifier,
+                navController = navController
+            )
+        }
+    }
+}
+
+@Composable
+fun historyScreen(modifier: Modifier = Modifier, navController: NavHostController) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        IconButton(onClick = {navController.navigate("home")}, modifier = modifier.padding(start = 8.dp, top=55.dp)) {
+            Icon(Icons.Outlined.ArrowBack, contentDescription = "Localized description")
+        }
+        Column(
+            modifier = modifier
+                .padding(start=20.dp, end=20.dp, top=17.dp)
+        ) {
+            Text(
+                text = "Bibliothek",
+                style = MaterialTheme.typography.headlineLarge
+            )
+
+        }
+    }
+}
+
+
+@Composable
+fun settingsScreen(modifier: Modifier = Modifier, navController: NavHostController) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        IconButton(onClick = {navController.navigate("home")}, modifier = modifier.padding(start = 8.dp, top=55.dp)) {
+            Icon(Icons.Outlined.ArrowBack, contentDescription = "Localized description")
+        }
+        Column(
+            modifier = modifier
+                .padding(start=20.dp, end=20.dp, top=17.dp)
+        ) {
+            Text(
+                text = "Einstellungen",
+                style = MaterialTheme.typography.headlineLarge
+            )
+
         }
     }
 }
@@ -97,7 +182,7 @@ class MainActivity : ComponentActivity() {
     ExperimentalLayoutApi::class
 )
 @Composable
-fun Test(modifier: Modifier = Modifier) {
+fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController) {
     // Zustand für das Ergebnis des Transkript-Abrufs
     var transcriptResult by remember { mutableStateOf<String?>(null) }
     var title by remember { mutableStateOf<String?>(null) }
@@ -137,8 +222,24 @@ fun Test(modifier: Modifier = Modifier) {
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            IconButton(onClick = { /*TODO*/ }, modifier = modifier.padding(start = 8.dp, top = 55.dp)) {
-                Icon(Icons.Outlined.Settings, contentDescription = "Localized description")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(
+                    onClick = {navController.navigate("settings")},
+                    modifier = modifier.padding(start = 8.dp, top = 40.dp)
+                ) {
+                    Icon(Icons.Outlined.Settings, contentDescription = "Localized description")
+                }
+                IconButton(
+                    onClick = {navController.navigate("history")},
+                    modifier = modifier.padding(end = 8.dp, top = 40.dp)
+                ) {
+                    Icon( painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_library_books_24), contentDescription = "Localized description")
+                }
             }
             Column(
                 modifier = modifier
