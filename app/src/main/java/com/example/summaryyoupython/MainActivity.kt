@@ -45,6 +45,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -106,6 +108,7 @@ fun Test(modifier: Modifier = Modifier) {
     val context = LocalContext.current // Zugriff auf den Context
     val haptics = LocalHapticFeedback.current //Vibration bei kopieren von Zusammenfassung
     val focusManager = LocalFocusManager.current //Cursor ausblenden
+    val focusRequester = remember { FocusRequester() } //Cursor einblenden nach entfernen
     var selectedIndex by remember { mutableStateOf(0) } //Index für Zusammenfassungslänge
     val options = listOf("Kurz", "Mittel", "Lang") //Längen
     val isVisible by remember { derivedStateOf { url.isNotBlank() } } //Icon-Clear
@@ -176,6 +179,7 @@ fun Test(modifier: Modifier = Modifier) {
                                 onClick = {
                                     url = ""
                                     transcriptResult = null
+                                    focusRequester.requestFocus()
                                 }
                             ) {
                                 Icon(
@@ -189,6 +193,7 @@ fun Test(modifier: Modifier = Modifier) {
                     modifier = modifier
                         .fillMaxWidth()
                         .padding(top = 20.dp)
+                        .focusRequester(focusRequester)
                 )
                 Box(
                     modifier = if (isError) {
