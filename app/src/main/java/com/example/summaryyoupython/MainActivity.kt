@@ -3,6 +3,7 @@ package com.example.summaryyoupython
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,16 +15,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -37,57 +34,45 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.R
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.chaquo.python.*
 import com.chaquo.python.android.AndroidPlatform
 import com.example.summaryyoupython.ui.theme.SummaryYouPythonTheme
-import io.github.cdimascio.dotenv.DotenvBuilder
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.util.Properties
 import androidx.navigation.NavHostController
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
 class MainActivity : ComponentActivity() {
+    private var sharedUrl: String? = null // Deklariere sharedUrl hier
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (!Python.isStarted()) {
@@ -97,6 +82,12 @@ class MainActivity : ComponentActivity() {
         val viewModel = TextSummaryViewModel(applicationContext)
         // This will lay out our app behind the system bars
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        // Überprüfe, ob ein Link geteilt wurde
+        val intent: Intent? = intent
+        if (Intent.ACTION_SEND == intent?.action && intent.type == "text/plain") {
+            sharedUrl = intent.getStringExtra(Intent.EXTRA_TEXT)
+        }
         setContent {
             SummaryYouPythonTheme {
                 val navController = rememberNavController()
@@ -105,7 +96,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation(navController, applicationContext)
+                    AppNavigation(navController, applicationContext, sharedUrl)
                 }
             }
         }
@@ -164,14 +155,15 @@ data class TextSummary(val title: String, val author: String, val text: String)
 
 
 @Composable
-fun AppNavigation(navController: NavHostController, applicationContext: Context) {
+fun AppNavigation(navController: NavHostController, applicationContext: Context, initialUrl: String? = null) {
     val viewModel = TextSummaryViewModel(applicationContext) //For History
     NavHost(navController, startDestination = "home") {
         composable("home") {
             homeScreen(
                 modifier = Modifier,
                 navController = navController,
-                viewModel = viewModel
+                viewModel = viewModel,
+                initialUrl
             )
         }
         composable("settings") {
@@ -261,13 +253,13 @@ fun settingsScreen(modifier: Modifier = Modifier, navController: NavHostControll
     ExperimentalLayoutApi::class
 )
 @Composable
-fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel) {
+fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel, initialUrl: String? = null) {
     // Zustand für das Ergebnis des Transkript-Abrufs
     var transcriptResult by remember { mutableStateOf<String?>(null) }
     var title by remember { mutableStateOf<String?>(null) }
     var author by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
-    var url by remember { mutableStateOf("") }
+    var url by remember { mutableStateOf(initialUrl ?: "") }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current // Zugriff auf den Context
     val haptics = LocalHapticFeedback.current //Vibration bei kopieren von Zusammenfassung
@@ -285,7 +277,6 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
 
     val py = Python.getInstance()
     val module = py.getModule("youtube")
-
 
     if(transcriptResult == "ungültiger Link") {
         isError = true
