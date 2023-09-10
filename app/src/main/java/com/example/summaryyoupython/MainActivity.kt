@@ -2,6 +2,8 @@ package com.example.summaryyoupython
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -39,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.R
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -63,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -79,6 +83,9 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Properties
 import androidx.navigation.NavHostController
+import androidx.lifecycle.ViewModel
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,6 +93,8 @@ class MainActivity : ComponentActivity() {
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(this))
         }
+        // Hier kannst du auf den applicationContext zugreifen und ihn an deine ViewModel-Klasse übergeben
+        val viewModel = TextSummaryViewModel(applicationContext)
         // This will lay out our app behind the system bars
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
@@ -96,19 +105,73 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation(navController)
+                    AppNavigation(navController, applicationContext)
                 }
             }
         }
     }
 }
+
+class TextSummaryViewModel(private val context: Context) : ViewModel() {
+    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("TextSummaries", Context.MODE_PRIVATE)
+
+    val textSummaries = mutableStateListOf<TextSummary>()
+
+    init {
+        // Beim Erstellen des ViewModels die gespeicherten Daten abrufen (wenn vorhanden)
+        val savedTextSummaries = sharedPreferences.getString("textSummaries", null)
+        savedTextSummaries?.let {
+            val type = object : TypeToken<List<TextSummary>>() {}.type
+            val textSummariesFromJson = Gson().fromJson<List<TextSummary>>(it, type)
+            textSummaries.addAll(textSummariesFromJson)
+        }
+    }
+
+    fun addTextSummary(title: String?, author: String?, text: String?) {
+        val nonNullTitle = title ?: ""
+        val nonNullAuthor = author ?: ""
+
+        if (text != null && text.isNotBlank() && text != "ungültiger Link") {
+            val newTextSummary = TextSummary(nonNullTitle, nonNullAuthor, text)
+            textSummaries.add(newTextSummary)
+            // Textdaten in den SharedPreferences speichern
+            saveTextSummaries()
+        }
+    }
+
+    private fun saveTextSummaries() {
+        val textSummariesJson = Gson().toJson(textSummaries)
+        sharedPreferences.edit().putString("textSummaries", textSummariesJson).apply()
+    }
+
+    fun removeTextSummary(title: String?, author: String?, text: String?) {
+        // Finde das TextSummary-Objekt, das entfernt werden soll, basierend auf title, author und text
+        val textSummaryToRemove = textSummaries.firstOrNull { it.title == title && it.author == author && it.text == text }
+
+        // Überprüfe, ob ein passendes TextSummary-Objekt gefunden wurde, und entferne es
+        textSummaryToRemove?.let {
+            textSummaries.remove(it)
+
+            // Nach dem Entfernen das aktualisierte ViewModel speichern (falls erforderlich)
+            saveTextSummaries()
+        }
+    }
+
+}
+
+
+data class TextSummary(val title: String, val author: String, val text: String)
+
+
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(navController: NavHostController, applicationContext: Context) {
+    val viewModel = TextSummaryViewModel(applicationContext) //For History
     NavHost(navController, startDestination = "home") {
         composable("home") {
             homeScreen(
                 modifier = Modifier,
-                navController = navController
+                navController = navController,
+                viewModel = viewModel
             )
         }
         composable("settings") {
@@ -120,14 +183,16 @@ fun AppNavigation(navController: NavHostController) {
         composable("history") {
             historyScreen(
                 modifier = Modifier,
-                navController = navController
+                navController = navController,
+                viewModel = viewModel
             )
         }
     }
 }
 
 @Composable
-fun historyScreen(modifier: Modifier = Modifier, navController: NavHostController) {
+fun historyScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel) {
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -146,6 +211,20 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                 text = "Bibliothek",
                 style = MaterialTheme.typography.headlineLarge
             )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                for (textSummary in viewModel.textSummaries.reversed()) {
+                    Textbox(
+                        modifier = Modifier,
+                        title = textSummary.title,
+                        author = textSummary.author,
+                        text = textSummary.text,
+                        viewModel = viewModel
+                    )
+                }
+            }
 
         }
     }
@@ -177,12 +256,12 @@ fun settingsScreen(modifier: Modifier = Modifier, navController: NavHostControll
     }
 }
 
-@Preview
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
     ExperimentalLayoutApi::class
 )
 @Composable
-fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController) {
+fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel) {
     // Zustand für das Ergebnis des Transkript-Abrufs
     var transcriptResult by remember { mutableStateOf<String?>(null) }
     var title by remember { mutableStateOf<String?>(null) }
@@ -199,7 +278,6 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController) 
     val isVisible by remember { derivedStateOf { url.isNotBlank() } } //Icon-Clear
     var isError by remember { mutableStateOf(false) } //Textinput Fehler
 
-
     val clipboardManager = ContextCompat.getSystemService(
         context,
         ClipboardManager::class.java
@@ -207,6 +285,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController) 
 
     val py = Python.getInstance()
     val module = py.getModule("youtube")
+
 
     if(transcriptResult == "ungültiger Link") {
         isError = true
@@ -382,6 +461,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController) 
                                     author = getAuthor(url)
                                     transcriptResult = summarize(url, selectedIndex)
                                     isLoading = false // Setze isLoading auf false, wenn der Abruf abgeschlossen ist
+                                    viewModel.addTextSummary(title, author, transcriptResult)
                                 }
                             },
                             contentPadding = ButtonDefaults.ButtonWithIconContentPadding
@@ -431,6 +511,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController) 
                         author = getAuthor(url)
                         transcriptResult = summarize(url, selectedIndex)
                         isLoading = false // Setze isLoading auf false, wenn der Abruf abgeschlossen ist
+                        viewModel.addTextSummary(title, author, transcriptResult)
                     }
                 },
                 modifier = modifier.padding(bottom = 60.dp, end = 15.dp)
@@ -496,4 +577,47 @@ suspend fun getTitel(url: String): String? {
 fun isYouTubeLink(input: String): Boolean {
     val youtubePattern = Regex("""^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.*$""")
     return youtubePattern.matches(input)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun Textbox(modifier: Modifier = Modifier, title: String?, author: String?, text: String?, viewModel: TextSummaryViewModel) {
+    val haptics = LocalHapticFeedback.current //Vibration bei kopieren von Zusammenfassung
+
+    Card(
+        modifier = modifier
+            .padding(top = 15.dp, bottom = 15.dp)
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = {},
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    viewModel.removeTextSummary(title, author, text)
+                }
+            )
+    ) {
+        if(!title.isNullOrEmpty()) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = modifier
+                    .padding(top = 12.dp, start = 12.dp, end = 12.dp)
+            )
+            if (!author.isNullOrEmpty()) {
+                Text(
+                    text = author,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = modifier
+                        .padding(top = 4.dp, start = 12.dp, end = 12.dp)
+                )
+            }
+        }
+        Text(
+            text = text ?: "",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = modifier
+                .padding(12.dp)
+        )
+    }
 }
