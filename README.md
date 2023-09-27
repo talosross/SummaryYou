@@ -15,14 +15,7 @@
 <div align="center">
 <div>
 <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="30%" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="30%" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" width="30%" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg" width="30%" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.jpg" width="30%" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.jpg" width="30%" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/7.jpg" width="30%" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/8.jpg" width="30%" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/9.jpg" width="30%" />
+
 </div>
 </div>
 
@@ -30,19 +23,17 @@
 
 ## 📖 Features
 
-- Download videos and audio files from video platforms supported by [yt-dlp](https://github.com/yt-dlp/yt-dlp) (formerly youtube-dl).
+- Summarize YouTube-Videos
+  
+- Summarize Articles
 
-- Embed metadata and video thumbnail into extracted audio files supported by [mutagen](https://github.com/quodlibet/mutagen).
+- Set length of summary
 
-- Download all videos in the playlist with one click.
+- History-Section
 
-- Use embedded [aria2c](https://github.com/aria2/aria2) as external downloader for all your downloads.
+- OLED-Dark Mode
 
-- Embed subtitles into the downloaded videos.
-
-- Execute custom yt-dlp commands with templates.
-
-- Manage in-app downloads and custom command templates.
+- python-backend
 
 - Easy to use and user-friendly.
 
