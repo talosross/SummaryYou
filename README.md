@@ -56,29 +56,6 @@ For most devices, it is recommended to install the **arm64-v8a** version of the 
      alt="Get it on F-Droid"
      height="70">](https://f-droid.org/packages/com.junkfood.seal/) -->
 
-## 💬 Contact
-
-Join our [Telegram Channel](https://t.me/seal_app) or [Matrix Space](https://matrix.to/#/#seal-space:matrix.org) for discussion, announcements, and releases!
-
-## 💖 Sponsors
-
-<p><!-- sponsors --><a href="https://github.com/4kaimar"><img src="https://github.com/4kaimar.png" width="60px" alt="" /></a><!-- sponsors --></p>
-
-
-Seal will be always free and open source for everyone. If you like it, please consider [sponsoring me](https://github.com/sponsors/JunkFood02)!
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-You can help translate Seal on [Hosted Weblate](https://hosted.weblate.org/projects/seal/).
-	
-[![Translate status](https://hosted.weblate.org/widgets/seal/-/strings/multi-auto.svg)](https://hosted.weblate.org/engage/seal/)
-	
->**Note**
->
->For submitting bug reports, feature requests, questions, or any other ideas to improve, please read [CONTRIBUTING.md](https://github.com/JunkFood02/Seal/blob/main/CONTRIBUTING.md) for instructions and guidelines first.
-
 ## ⭐️ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=jeffconrad18/SummaryYouPython&type=Timeline)](https://star-history.com/#JunkFood02/Seal&Timeline)
@@ -88,13 +65,10 @@ You can help translate Seal on [Hosted Weblate](https://hosted.weblate.org/proje
 
 Seal is a simple GUI of [yt-dlp](https://github.com/yt-dlp/yt-dlp), based on [youtubedl-android](https://github.com/yausername/youtubedl-android)
 
-Some of the UI designs and codes are borrowed from [Read You](https://github.com/Ashinch/ReadYou) and [Music You](https://github.com/Kyant0/MusicYou)
-
-[dvd](https://github.com/yausername/dvd)
+Some of the UI designs and codes are borrowed from [Seal](https://github.com/JunkFood02/Seal)
 
 [Material color utilities](https://github.com/material-foundation/material-color-utilities)
 
-[Monet](https://github.com/Kyant0/Monet)
 
 ## 📃 License
 
