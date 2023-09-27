@@ -1,10 +1,10 @@
 <div align="center">
 
-<img width="" src="fastlane/metadata/android/en-US/images/icon.png"  width=160 height=160  align="center">
+<img width="" src="Bildschirmfoto_vom_2023-09-08_01-39-34-removebg-preview.png"  width=160 height=160  align="center">
 
 # Summary You
 
-### Summarize Videos & Articles
+### Summarize Videos & Articles with AI
 
 
 </div>
@@ -14,7 +14,11 @@
 
 <div align="center">
 <div>
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="30%" />
+<img src="Screenshot_20230927-164030.png" width="30%" />
+<img src="Screenshot_20230927-164034.png" width="30%" />
+<img src="Screenshot_20230927-164055.png" width="30%" />
+<img src="Screenshot_20230927-164211.png" width="30%" />
+<img src="Screenshot_20230927-164300.png" width="30%" />
 
 </div>
 </div>
@@ -23,9 +27,7 @@
 
 ## 📖 Features
 
-- Summarize YouTube-Videos
-  
-- Summarize Articles
+- Summarize YouTube-Videos & Articles with the help of GPT-3.5
 
 - Set length of summary
 
@@ -33,19 +35,13 @@
 
 - OLED-Dark Mode
 
-- python-backend
-
 - Easy to use and user-friendly.
 
 - [Material Design 3](https://m3.material.io/) style UI, with dynamic color theme.
 
-- MAD: UI and logic written with pure Kotlin. Single activity, no fragments, only composable destinations.
-
 
 
 ## ⬇️ Download
-
-For most devices, it is recommended to install the **arm64-v8a** version of the apks
 
 - Download the latest stable version from [GitHub releases](https://github.com/JunkFood02/Seal/releases/latest)
   - Install the [pre-release](https://github.com/JunkFood02/Seal/releases/) versions to help us test out new features & changes
@@ -63,7 +59,7 @@ For most devices, it is recommended to install the **arm64-v8a** version of the 
 
 ## 🧱 Credits
 
-Seal is a simple GUI of [yt-dlp](https://github.com/yt-dlp/yt-dlp), based on [youtubedl-android](https://github.com/yausername/youtubedl-android)
+Python with [Chaquopy](https://github.com/chaquo/chaquopy) as backend
 
 Some of the UI designs and codes are borrowed from [Seal](https://github.com/JunkFood02/Seal)
 
