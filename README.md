@@ -4,7 +4,7 @@
 
 # Summary You
 
-### Summarize Videos & Articles with AI
+### Summarize YouTube-Videos & Articles with AI
 
 
 </div>
