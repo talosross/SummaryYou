@@ -81,7 +81,7 @@ You can help translate Seal on [Hosted Weblate](https://hosted.weblate.org/proje
 
 ## ⭐️ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=JunkFood02/Seal&type=Timeline)](https://star-history.com/#JunkFood02/Seal&Timeline)
+[![Star History Chart](https://api.star-history.com/svg?repos=jeffconrad18/SummaryYouPython&type=Timeline)](https://star-history.com/#JunkFood02/Seal&Timeline)
 
 
 ## 🧱 Credits
