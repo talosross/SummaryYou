@@ -7,7 +7,9 @@ plugins {
 android {
     namespace = "com.example.summaryyoupython"
     compileSdk = 34
-
+    androidResources {
+        generateLocaleConfig = true
+    }
     defaultConfig {
         applicationId = "com.example.summaryyoupython"
         minSdk = 24

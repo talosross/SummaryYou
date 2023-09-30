@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Summary You Python</string>
+    <string name="short_length">Kurz</string>
+    <string name="middle_length">Mittel</string>
+    <string name="long_length">Lang</string>
+    <string name="settings">Einstellungen</string>
+    <string name="history">Bibliothek</string>
+    <string name="invalidURL">ungültiger Link</string>
+    <string name="regenerate">Regenerieren</string>
+</resources>

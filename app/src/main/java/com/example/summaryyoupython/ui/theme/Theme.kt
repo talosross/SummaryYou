@@ -2,6 +2,7 @@ package com.example.summaryyoupython.ui.theme
 
 import android.app.Activity
 import android.os.Build
+import android.text.BoringLayout
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -86,17 +87,30 @@ fun SummaryYouPythonTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
+    OledModeEnabled: Boolean,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    var colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (darkTheme && OledModeEnabled)
+                dynamicDarkColorScheme(context).copy(
+                    surface = Color.Black,
+                    background = Color.Black,
+                )
+            else if (darkTheme) dynamicDarkColorScheme(context)
+            else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColors
+        darkTheme -> if(OledModeEnabled) DarkColors.copy(
+                        surface = Color.Black,
+                        background = Color.Black,
+                        )
+                     else DarkColors
         else -> LightColors
     }
+
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

@@ -85,26 +85,26 @@ def get_video_transcript(video_id: str) -> str:
     text = " ".join([line["text"] for line in transcript])
     return text or "Fehler"
 
-def generate_summary(text: str, key: str, length: int, article: bool) -> str:
+def generate_summary(text: str, key: str, length: int, article: bool, language: str) -> str:
     """
     Generate a summary of the provided text using OpenAI API
     """
     # Initialize the OpenAI API client
     openai.api_key = key
-    if article == True:
+    if article == False:
         if length == 0:
-            instructions = "Fasse das oben genannte Transkript eines Videos in 3 kurzen Stichpunkten zusammen, wenn es ein Fazit gibt, so baue es mit ein. Auf Deutsch."
+            instructions = "Summarize the transcript of this YouTube video in three short bullet points. If the video has a conclusion include it. In" + language
         elif length == 1:
-            instructions = "Fasse das oben genannte Transkript eines Videos zusammen. Auf Deutsch."
+            instructions = "Provide a concise summary of the transcript from a YouTube video. If the video includes a conclusion or key takeaway, make sure to include that as well. In" + language
         else:
-            instructions = "Fasse das oben genannte Transkript eines Videos zusammen. Gib dafür zuerst eine Zusammenfassung. Liste anschließend die fünf wichtigsten Höhepunkte auf. Zum Schluss fasst du die Kernaussage des Videos kurz zusammen. Schreibe in Deutsch, bleibe außerdem objektiv und benutze einen angemessenen Schreibstil."
+            instructions = "Summarize the transcript of the video mentioned above. Begin with an overview. Next, list the top five key highlights. Finally, briefly encapsulate the main message of the video. Maintaining objectivity, and employing appropriate writing style. In" + language
     else:
         if length == 0:
-            instructions = "Fasse den Artikel in 3 kurzen Stichpunkten zusammen. Auf Deutsch."
+            instructions = "Summarize the article in three concise, very short bullet points. If the article includes a conclusion, provide that as well. In" + language
         elif length == 1:
-            instructions = "Fasse den Artikel kurz zusammen. Ziehe am Schluss ein Fazit. Auf Deutsch."
+            instructions = "Provide a concise summary of this article. If it includes a conclusion or key takeaway, make sure to include that as well. In" + language
         else:
-            instructions = "Fasse den Artikel zusammen. Gib dafür zuerst eine Zusammenfassung. Liste anschließend die fünf wichtigsten Höhepunkte auf. Zum Schluss fasst du die Kernaussage des Artikels kurz zusammen. Schreibe in Deutsch, bleibe außerdem objektiv und benutze einen angemessenen Schreibstil."
+            instructions = "Summarize the article mentioned above. Begin with an overview. Next, list the top five key highlights. Finally, briefly encapsulate the main message of the video. Maintaining objectivity, and employing appropriate writing style." + language
 
     try:
         response = openai.ChatCompletion.create(
@@ -159,7 +159,7 @@ def get_site_transcript(url: str) -> str:
     except Exception as e:
         return None
 
-def summarize(url: str, key: str, length: int) -> str:
+def summarize(url: str, key: str, length: int, language: str) -> str:
     """
     Summarize the provided YouTube video
     """
@@ -172,7 +172,7 @@ def summarize(url: str, key: str, length: int) -> str:
         if transcript == None or transcript == "":
             return "ungültiger Link"
         else:
-            summary = generate_summary(transcript, key, length, True)
+            summary = generate_summary(transcript, key, length, True, language)
             return summary
 
     # Fetch the video transcript
@@ -183,7 +183,7 @@ def summarize(url: str, key: str, length: int) -> str:
         return f"Keine Untertitel für diese Video gefunden: {url}"
 
     # Generate the summary
-    summary = generate_summary(transcript, key, length, False)
+    summary = generate_summary(transcript, key, length, False, language)
 
     # Return the summary
     return summary

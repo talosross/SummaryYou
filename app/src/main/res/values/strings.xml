@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">Summary You Python</string>
+    <string name="app_name" translatable="false">Summary You Python</string>
+    <string name="short_length">Short</string>
+    <string name="middle_length">Middle</string>
+    <string name="long_length">Long</string>
+    <string name="settings">Settings</string>
+    <string name="history">History</string>
+    <string name="invalidURL">invalid URL</string>
+    <string name="regenerate">Regenerate</string>
 </resources>
