@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.res.Resources
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,7 +17,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -50,14 +50,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import com.chaquo.python.*
 import com.chaquo.python.android.AndroidPlatform
 import com.example.summaryyoupython.ui.theme.SummaryYouPythonTheme
@@ -69,27 +67,34 @@ import androidx.navigation.NavHostController
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.util.Locale
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 
 class MainActivity : ComponentActivity() {
-    private var sharedUrl: String? = null // Deklariere sharedUrl hier
+    private var sharedUrl: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!Python.isStarted()) {
+        if (!Python.isStarted()) { //If not started, python will start here
             Python.start(AndroidPlatform(this))
         }
-        // Hier kannst du auf den applicationContext zugreifen und ihn an deine ViewModel-Klasse übergeben
+        // Access the applicationContext and pass it to ViewModel class
         val viewModel = TextSummaryViewModel(applicationContext)
-        // This will lay out our app behind the system bars
+
+        // Lay app behind the system bars
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // Überprüfe, ob ein Link geteilt wurde
+        // Check if a link has been shared
         val intent: Intent? = intent
         if (Intent.ACTION_SEND == intent?.action && intent.type == "text/plain") {
             sharedUrl = intent.getStringExtra(Intent.EXTRA_TEXT)
         }
         setContent {
-            SummaryYouPythonTheme {
+            SummaryYouPythonTheme(OledModeEnabled = true) {
                 val navController = rememberNavController()
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -109,7 +114,7 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
     val textSummaries = mutableStateListOf<TextSummary>()
 
     init {
-        // Beim Erstellen des ViewModels die gespeicherten Daten abrufen (wenn vorhanden)
+        // When creating the ViewModel, retrieve the saved data (if any)
         val savedTextSummaries = sharedPreferences.getString("textSummaries", null)
         savedTextSummaries?.let {
             val type = object : TypeToken<List<TextSummary>>() {}.type
@@ -122,7 +127,7 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
         val nonNullTitle = title ?: ""
         val nonNullAuthor = author ?: ""
 
-        if (text != null && text.isNotBlank() && text != "ungültiger Link") {
+        if (text != null && text.isNotBlank() && text != "invalid link") {
             val newTextSummary = TextSummary(nonNullTitle, nonNullAuthor, text)
             textSummaries.add(newTextSummary)
             // Textdaten in den SharedPreferences speichern
@@ -182,107 +187,33 @@ fun AppNavigation(navController: NavHostController, applicationContext: Context,
     }
 }
 
-@Composable
-fun historyScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel) {
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        IconButton(onClick = {navController.navigate("home")}, modifier = modifier.padding(start = 8.dp, top=55.dp)) {
-            Icon(Icons.Outlined.ArrowBack, contentDescription = "Localized description")
-        }
-        Column(
-            modifier = modifier
-                .padding(start=20.dp, end=20.dp, top=17.dp)
-        ) {
-            Text(
-                text = "Bibliothek",
-                style = MaterialTheme.typography.headlineLarge
-            )
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                for (textSummary in viewModel.textSummaries.reversed()) {
-                    Textbox(
-                        modifier = Modifier,
-                        title = textSummary.title,
-                        author = textSummary.author,
-                        text = textSummary.text,
-                        viewModel = viewModel
-                    )
-                }
-            }
-
-        }
-    }
-}
-
-
-@Composable
-fun settingsScreen(modifier: Modifier = Modifier, navController: NavHostController) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        IconButton(onClick = {navController.navigate("home")}, modifier = modifier.padding(start = 8.dp, top=55.dp)) {
-            Icon(Icons.Outlined.ArrowBack, contentDescription = "Localized description")
-        }
-        Column(
-            modifier = modifier
-                .padding(start=20.dp, end=20.dp, top=17.dp)
-        ) {
-            Text(
-                text = "Einstellungen",
-                style = MaterialTheme.typography.headlineLarge
-            )
-
-        }
-    }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
     ExperimentalLayoutApi::class
 )
 @Composable
 fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel, initialUrl: String? = null) {
-    // Zustand für das Ergebnis des Transkript-Abrufs
-    var transcriptResult by remember { mutableStateOf<String?>(null) }
+    var transcriptResult by remember { mutableStateOf<String?>(null) } // State for the transcript retrieval result
     var title by remember { mutableStateOf<String?>(null) }
     var author by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) } // For Loading-Animation
     var url by remember { mutableStateOf(initialUrl ?: "") }
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current // Zugriff auf den Context
-    val haptics = LocalHapticFeedback.current //Vibration bei kopieren von Zusammenfassung
-    val focusManager = LocalFocusManager.current //Cursor ausblenden
-    val focusRequester = remember { FocusRequester() } //Cursor einblenden nach entfernen
-    var selectedIndex by remember { mutableStateOf(0) } //Index für Zusammenfassungslänge
-    val options = listOf("Kurz", "Mittel", "Lang") //Längen
-    val isVisible by remember { derivedStateOf { url.isNotBlank() } } //Icon-Clear
-    var isError by remember { mutableStateOf(false) } //Textinput Fehler
+    val scope = rememberCoroutineScope() // Python needs asynchronous call
+    val context = LocalContext.current // Clipboard
+    val haptics = LocalHapticFeedback.current // Vibrations
+    val focusManager = LocalFocusManager.current // Hide cursor
+    val focusRequester = remember { FocusRequester() } // Show cursor after removing
+    var selectedIndex by remember { mutableStateOf(0) } // Summary length index
+    val options = listOf(stringResource(id = R.string.short_length), stringResource(id = R.string.middle_length), stringResource(id = R.string.long_length)) // Lengths
+    val showCancelIcon by remember { derivedStateOf { url.isNotBlank() } }
+    var isError by remember { mutableStateOf(false) }
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
         ClipboardManager::class.java
     ) as ClipboardManager
 
-    val py = Python.getInstance()
-    val module = py.getModule("youtube")
-
-    if(transcriptResult == "ungültiger Link") {
-        isError = true
-    }else{
-        isError = false
-    }
+    isError = transcriptResult == "invalid link" // If transcriptResult is "invalid link" isError is true
 
     Box() {
         Column(
@@ -302,13 +233,13 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                     onClick = {navController.navigate("settings")},
                     modifier = modifier.padding(start = 8.dp, top = 40.dp)
                 ) {
-                    Icon(Icons.Outlined.Settings, contentDescription = "Localized description")
+                    Icon(Icons.Outlined.Settings, contentDescription = "Settings")
                 }
                 IconButton(
                     onClick = {navController.navigate("history")},
                     modifier = modifier.padding(end = 8.dp, top = 40.dp)
                 ) {
-                    Icon( painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_library_books_24), contentDescription = "Localized description")
+                    Icon( painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_library_books_24), contentDescription = "History")
                 }
             }
             Column(
@@ -320,7 +251,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                     text = "Summary You",
                     style = MaterialTheme.typography.headlineLarge
                 )
-                // Anzeige des Ergebnisses oder Ladeanzeige
+                // Loading-Animation
                 if (isLoading) {
                     LinearProgressIndicator(
                         modifier = modifier
@@ -339,13 +270,13 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                         if (isError) {
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
-                                text = "ungültiger Link",
+                                text = stringResource(id = R.string.invalidURL),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
                     },
                     trailingIcon = {
-                        if (isVisible) {
+                        if (showCancelIcon) {
                             IconButton(
                                 onClick = {
                                     url = ""
@@ -385,7 +316,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                         }
                     }
                 }
-                if (!transcriptResult.isNullOrEmpty() && transcriptResult != "ungültiger Link") {
+                if (!transcriptResult.isNullOrEmpty() && transcriptResult != "invalid link") {
                     Card(
                         modifier = modifier
                             .padding(top = 15.dp, bottom = 15.dp)
@@ -394,14 +325,14 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                 onClick = {},
                                 onLongClick = {
                                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    // Inhalt der Karte in die Zwischenablage kopieren
+                                    // Copy the contents of the box to the clipboard
                                     clipboardManager.setPrimaryClip(
-                                        ClipData.newPlainText("Transkript", transcriptResult)
+                                        ClipData.newPlainText(null, transcriptResult)
                                     )
                                 }
                             )
                     ) {
-                        if(transcriptResult!="ungültiger Link") {
+                        if(transcriptResult!="invalid link") {
                             if(!title.isNullOrEmpty()) {
                                 Text(
                                     text = title ?: "",
@@ -430,7 +361,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                             }
                         }
                         Text(
-                            text = transcriptResult ?: "Transkript nicht gefunden",
+                            text = transcriptResult ?: stringResource(id = R.string.noTranscriptFound),
                             style = MaterialTheme.typography.labelLarge,
                             modifier = modifier
                                 .padding(start=12.dp, end=12.dp, top=10.dp, bottom=12.dp)
@@ -446,13 +377,13 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                         Button(
                             onClick = {
                                 focusManager.clearFocus()
-                                isLoading = true // Starte den Abruf
+                                isLoading = true // Start Loading-Animation
                                 scope.launch {
                                     title = getTitel(url)
                                     author = getAuthor(url)
                                     transcriptResult = summarize(url, selectedIndex)
-                                    isLoading = false // Setze isLoading auf false, wenn der Abruf abgeschlossen ist
-                                    viewModel.addTextSummary(title, author, transcriptResult)
+                                    isLoading = false // Stop Loading-Animation
+                                    viewModel.addTextSummary(title, author, transcriptResult) // Add to history
                                 }
                             },
                             contentPadding = ButtonDefaults.ButtonWithIconContentPadding
@@ -463,7 +394,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                 modifier = Modifier.size(ButtonDefaults.IconSize)
                             )
                             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text("Regenerate")
+                            Text(stringResource(id = R.string.regenerate))
                         }
                     }
                 }
@@ -481,7 +412,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
             FloatingActionButton(
                 onClick = {
                     scope.launch {
-                        // Überprüfe, ob etwas in der Zwischenablage ist
+                        // Check if there is anything on the clipboard
                         val clipData = clipboardManager.primaryClip
                         if (clipData != null && clipData.itemCount > 0) {
                             val clipItem = clipData.getItemAt(0)
@@ -491,23 +422,23 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                 },
                 modifier = modifier.padding(bottom = 20.dp, end = 15.dp)
             ) {
-                Icon(painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_content_paste_24), "Localized description")
+                Icon(painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_content_paste_24), "Paste")
             }
             FloatingActionButton(
                 onClick = {
                     focusManager.clearFocus()
-                    isLoading = true // Starte den Abruf
+                    isLoading = true // Start Loading-Animation
                     scope.launch {
                         title = getTitel(url)
                         author = getAuthor(url)
                         transcriptResult = summarize(url, selectedIndex)
-                        isLoading = false // Setze isLoading auf false, wenn der Abruf abgeschlossen ist
-                        viewModel.addTextSummary(title, author, transcriptResult)
+                        isLoading = false // Stop Loading-Animation
+                        viewModel.addTextSummary(title, author, transcriptResult) // Add to history
                     }
                 },
                 modifier = modifier.padding(bottom = 60.dp, end = 15.dp)
             ) {
-                Icon(Icons.Filled.Check, "Localized description")
+                Icon(Icons.Filled.Check, "Check")
             }
         }
     }
@@ -518,18 +449,22 @@ suspend fun summarize(url: String, length: Int): String {
     val module = py.getModule("youtube")
     val dotenv = dotenv {
         directory = "/assets"
-        filename = "env" // instead of '.env', use 'env'
+        filename = "env"
     }
     val key = dotenv["OPEN_AI_KEY"]
 
+    // Get the currently set language
+    val currentLocale: Locale = Resources.getSystem().configuration.locale
+    // Save the language code in your own variable
+    val language: String = currentLocale.getDisplayLanguage(Locale.ENGLISH)
+
     try {
         val result = withContext(Dispatchers.IO) {
-            module.callAttr("summarize", url, key, length).toString()
+            module.callAttr("summarize", url, key, length, language).toString()
         }
         return result
     } catch (e: Exception) {
-        // Fehlerbehandlung
-        return "Fehler beim Abrufen der Zusammenfassung ${e.message}"
+        return "Error retrieving summary ${e.message}"
     }
 }
 
@@ -543,8 +478,7 @@ suspend fun getAuthor(url: String): String? {
         }
         return result
     } catch (e: Exception) {
-        // Fehlerbehandlung
-        //return "Fehler beim Abrufen des Authors"
+        //return "Error getting author"
         return null
     }
 }
@@ -559,8 +493,7 @@ suspend fun getTitel(url: String): String? {
         }
         return result
     } catch (e: Exception) {
-        // Fehlerbehandlung
-        //return "Fehler beim Abrufen des Titels"
+        //return "Error getting title"
         return null
     }
 }
@@ -573,7 +506,7 @@ fun isYouTubeLink(input: String): Boolean {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Textbox(modifier: Modifier = Modifier, title: String?, author: String?, text: String?, viewModel: TextSummaryViewModel) {
-    val haptics = LocalHapticFeedback.current //Vibration bei kopieren von Zusammenfassung
+    val haptics = LocalHapticFeedback.current // Vibrations
 
     Card(
         modifier = modifier

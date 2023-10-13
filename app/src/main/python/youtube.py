@@ -170,7 +170,7 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
     if not video_id:
         transcript = get_site_transcript(url)
         if transcript == None or transcript == "":
-            return "ungültiger Link"
+            return "invalid link"
         else:
             summary = generate_summary(transcript, key, length, True, language)
             return summary

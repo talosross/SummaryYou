@@ -8,4 +8,5 @@
     <string name="history">Bibliothek</string>
     <string name="invalidURL">ungültiger Link</string>
     <string name="regenerate">Regenerieren</string>
+    <string name="noTranscriptFound">Kein Transcript gefunden</string>
 </resources>
