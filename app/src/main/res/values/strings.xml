@@ -5,7 +5,8 @@
     <string name="long_length">Long</string>
     <string name="settings">Settings</string>
     <string name="history">History</string>
-    <string name="invalidURL">invalid URL</string>
     <string name="regenerate">Regenerate</string>
-    <string name="noTranscriptFound">No Transcript found</string>
+    <string name="invalidURL">invalid URL</string>
+    <string name="noTranscript">No Transcript found</string>
+    <string name="noInternet">No Internet-Connection</string>
 </resources>

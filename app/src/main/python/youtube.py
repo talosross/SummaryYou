@@ -3,6 +3,15 @@ import re
 import openai
 from pytube import YouTube
 from newspaper import Article
+import socket
+
+def internet_connection():
+    try:
+        host = socket.gethostbyname("www.google.com")
+        socket.create_connection((host, 80), timeout=5)
+        return True
+    except (socket.gaierror, socket.error):
+        return False
 
 def get_title(url):
     try:
@@ -148,7 +157,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
         except Exception as e:
             # If an error still occurs, handle it or return an error message
             print(f"An error occurred with 'gpt-3.5-turbo-16k': {str(e)}")
-            return f"Ein Fehler ist aufgetreten, und keine Zusammenfassung konnte generiert werden.{str(e)}"
+            raise e
 
 def get_site_transcript(url: str) -> str:
     try:
@@ -163,27 +172,38 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
     """
     Summarize the provided YouTube video
     """
-    # Extract the video ID from the URL
-    video_id = extract_youtube_video_id(url)
 
-    #Error message: Invalid link
-    if not video_id:
-        transcript = get_site_transcript(url)
-        if transcript == None or transcript == "":
-            return "invalid link"
-        else:
-            summary = generate_summary(transcript, key, length, True, language)
-            return summary
+    try:
+        # Internet-Connection
+        if not internet_connection():
+            raise Exception("no internet")
 
-    # Fetch the video transcript
-    transcript = get_video_transcript(video_id)
+        # Extract the video ID from the URL
+        video_id = extract_youtube_video_id(url)
 
-    # If no transcript is found, return an error message
-    if not transcript:
-        return f"Keine Untertitel für diese Video gefunden: {url}"
+        # Error message: Invalid link
+        if not video_id:
+            transcript = get_site_transcript(url)
+            if transcript is None or transcript == "":
+                raise Exception("invalid link")
+            else:
+                summary = generate_summary(transcript, key, length, True, language)
+                return summary
 
-    # Generate the summary
-    summary = generate_summary(transcript, key, length, False, language)
+        # Fetch the video transcript
+        transcript = get_video_transcript(video_id)
 
-    # Return the summary
-    return summary
+        # If no transcript is found, return an error message
+        if not transcript:
+            raise Exception("no transcript")
+
+        try:
+            # Generate the summary
+            summary = generate_summary(transcript, key, length, False, language)
+        except Exception as e:
+            raise e
+
+        # Return the summary
+        return summary
+    except Exception as e:
+        raise e

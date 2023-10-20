@@ -108,6 +108,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 class TextSummaryViewModel(private val context: Context) : ViewModel() {
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences("TextSummaries", Context.MODE_PRIVATE)
 
@@ -130,7 +131,7 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
         if (text != null && text.isNotBlank() && text != "invalid link") {
             val newTextSummary = TextSummary(nonNullTitle, nonNullAuthor, text)
             textSummaries.add(newTextSummary)
-            // Textdaten in den SharedPreferences speichern
+            // Save text data in SharedPreferences
             saveTextSummaries()
         }
     }
@@ -141,14 +142,14 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
     }
 
     fun removeTextSummary(title: String?, author: String?, text: String?) {
-        // Finde das TextSummary-Objekt, das entfernt werden soll, basierend auf title, author und text
+        // Find the TextSummary object to remove based on title, author, and text
         val textSummaryToRemove = textSummaries.firstOrNull { it.title == title && it.author == author && it.text == text }
 
-        // Überprüfe, ob ein passendes TextSummary-Objekt gefunden wurde, und entferne es
+        // Check whether a matching TextSummary object was found and remove it
         textSummaryToRemove?.let {
             textSummaries.remove(it)
 
-            // Nach dem Entfernen das aktualisierte ViewModel speichern (falls erforderlich)
+            // After removing, save the updated ViewModel (if necessary)
             saveTextSummaries()
         }
     }
@@ -213,7 +214,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
         ClipboardManager::class.java
     ) as ClipboardManager
 
-    isError = transcriptResult == "invalid link" // If transcriptResult is "invalid link" isError is true
+    //isError = transcriptResult == "invalid link" // If transcriptResult is "invalid link" isError is true
 
     Box() {
         Column(
@@ -270,7 +271,11 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                         if (isError) {
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
-                                text = stringResource(id = R.string.invalidURL),
+                                text = when (transcriptResult){
+                                    "Exception: no internet" -> stringResource(id = R.string.noInternet)
+                                    "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
+                                    "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
+                                    else -> transcriptResult ?: "unknown error 3" },
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
@@ -281,6 +286,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                 onClick = {
                                     url = ""
                                     transcriptResult = null
+                                    isError = false // No error
                                     focusRequester.requestFocus()
                                 }
                             ) {
@@ -316,7 +322,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                         }
                     }
                 }
-                if (!transcriptResult.isNullOrEmpty() && transcriptResult != "invalid link") {
+                if (!transcriptResult.isNullOrEmpty() && isError == false) {
                     Card(
                         modifier = modifier
                             .padding(top = 15.dp, bottom = 15.dp)
@@ -332,7 +338,6 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                 }
                             )
                     ) {
-                        if(transcriptResult!="invalid link") {
                             if(!title.isNullOrEmpty()) {
                                 Text(
                                     text = title ?: "",
@@ -359,9 +364,8 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     }
                                 }
                             }
-                        }
                         Text(
-                            text = transcriptResult ?: stringResource(id = R.string.noTranscriptFound),
+                            text = transcriptResult ?: stringResource(id = R.string.noTranscript),
                             style = MaterialTheme.typography.labelLarge,
                             modifier = modifier
                                 .padding(start=12.dp, end=12.dp, top=10.dp, bottom=12.dp)
@@ -378,10 +382,13 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                             onClick = {
                                 focusManager.clearFocus()
                                 isLoading = true // Start Loading-Animation
+                                isError = false // No error
                                 scope.launch {
                                     title = getTitel(url)
                                     author = getAuthor(url)
-                                    transcriptResult = summarize(url, selectedIndex)
+                                    val (result, error) = summarize(url, selectedIndex)
+                                    transcriptResult = result
+                                    isError = error
                                     isLoading = false // Stop Loading-Animation
                                     viewModel.addTextSummary(title, author, transcriptResult) // Add to history
                                 }
@@ -428,10 +435,13 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                 onClick = {
                     focusManager.clearFocus()
                     isLoading = true // Start Loading-Animation
+                    isError = false // No error
                     scope.launch {
                         title = getTitel(url)
                         author = getAuthor(url)
-                        transcriptResult = summarize(url, selectedIndex)
+                        val (result, error) = summarize(url, selectedIndex)
+                        transcriptResult = result
+                        isError = error
                         isLoading = false // Stop Loading-Animation
                         viewModel.addTextSummary(title, author, transcriptResult) // Add to history
                     }
@@ -444,7 +454,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     }
 }
 
-suspend fun summarize(url: String, length: Int): String {
+suspend fun summarize(url: String, length: Int): Pair<String, Boolean> {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
     val dotenv = dotenv {
@@ -455,18 +465,22 @@ suspend fun summarize(url: String, length: Int): String {
 
     // Get the currently set language
     val currentLocale: Locale = Resources.getSystem().configuration.locale
-    // Save the language code in your own variable
+    // Save the language code in deiner eigenen Variable
     val language: String = currentLocale.getDisplayLanguage(Locale.ENGLISH)
 
     try {
         val result = withContext(Dispatchers.IO) {
             module.callAttr("summarize", url, key, length, language).toString()
         }
-        return result
+        return Pair(result, false)
+    } catch (e: PyException) {
+        return Pair(e.message ?: "unknown error 2", true)
     } catch (e: Exception) {
-        return "Error retrieving summary ${e.message}"
+        return Pair(e.message ?: "unknown error 3", true)
     }
 }
+
+
 
 suspend fun getAuthor(url: String): String? {
     val py = Python.getInstance()

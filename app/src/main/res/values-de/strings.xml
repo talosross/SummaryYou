@@ -6,7 +6,8 @@
     <string name="long_length">Lang</string>
     <string name="settings">Einstellungen</string>
     <string name="history">Bibliothek</string>
-    <string name="invalidURL">ungültiger Link</string>
     <string name="regenerate">Regenerieren</string>
-    <string name="noTranscriptFound">Kein Transcript gefunden</string>
+    <string name="invalidURL">ungültiger Link</string>
+    <string name="noTranscript">Kein Transcript gefunden</string>
+    <string name="noInternet">Keine Internet-Verbindung</string>
 </resources>
