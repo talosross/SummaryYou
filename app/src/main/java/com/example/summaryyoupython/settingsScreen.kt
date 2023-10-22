@@ -35,8 +35,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.summaryyoupython.BuildConfig
-
 
 @Composable
 fun settingsScreenOld(modifier: Modifier = Modifier, navController: NavHostController) {
@@ -134,8 +132,7 @@ fun ScrollContent(innerPadding: PaddingValues) {
                     },
                     supportingContent = { Text(stringResource(id = R.string.githubDescription)) }
                 )
-                val versionName = "Version " + BuildConfig.VERSION_NAME
-                Text(text = versionName)
+                Text(text = "versionName")
             }
         }
 

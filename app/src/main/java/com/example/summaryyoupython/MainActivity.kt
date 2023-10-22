@@ -390,7 +390,9 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     transcriptResult = result
                                     isError = error
                                     isLoading = false // Stop Loading-Animation
-                                    viewModel.addTextSummary(title, author, transcriptResult) // Add to history
+                                    if(!isError){
+                                        viewModel.addTextSummary(title, author, transcriptResult) // Add to history
+                                    }
                                 }
                             },
                             contentPadding = ButtonDefaults.ButtonWithIconContentPadding
@@ -443,7 +445,9 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                         transcriptResult = result
                         isError = error
                         isLoading = false // Stop Loading-Animation
-                        viewModel.addTextSummary(title, author, transcriptResult) // Add to history
+                        if(!isError){
+                            viewModel.addTextSummary(title, author, transcriptResult) // Add to history
+                        }
                     }
                 },
                 modifier = modifier.padding(bottom = 60.dp, end = 15.dp)
