@@ -275,6 +275,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     "Exception: no internet" -> stringResource(id = R.string.noInternet)
                                     "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
                                     "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
+                                    "Exception: no content" -> stringResource(id = R.string.noContent)
                                     else -> transcriptResult ?: "unknown error 3" },
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -437,6 +438,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                 onClick = {
                     focusManager.clearFocus()
                     isLoading = true // Start Loading-Animation
+                    if(isError){transcriptResult = ""}
                     isError = false // No error
                     scope.launch {
                         title = getTitel(url)

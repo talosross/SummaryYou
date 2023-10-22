@@ -174,6 +174,9 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
     """
 
     try:
+        if url == "":
+            raise Exception("no content")
+
         # Internet-Connection
         if not internet_connection():
             raise Exception("no internet")
