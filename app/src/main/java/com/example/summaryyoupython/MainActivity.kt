@@ -214,8 +214,6 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
         ClipboardManager::class.java
     ) as ClipboardManager
 
-    //isError = transcriptResult == "invalid link" // If transcriptResult is "invalid link" isError is true
-
     Box() {
         Column(
             modifier = modifier
@@ -276,6 +274,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
                                     "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
                                     "Exception: no content" -> stringResource(id = R.string.noContent)
+                                    "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
                                     else -> transcriptResult ?: "unknown error 3" },
                                 color = MaterialTheme.colorScheme.error
                             )

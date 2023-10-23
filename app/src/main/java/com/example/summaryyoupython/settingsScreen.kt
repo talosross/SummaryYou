@@ -119,6 +119,12 @@ fun ScrollContent(innerPadding: PaddingValues) {
                     },
                     supportingContent = { Text(stringResource(id = R.string.githubDescription)) }
                 )
+                HorizontalDivider()
+                ListItem(
+                    modifier = Modifier.fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                    headlineContent = { Text("Change Theme") },
+                    supportingContent = { Text(stringResource(id = R.string.githubDescription)) }
+                )
                 Text(text = "Version ${getVersionName(context)}", modifier = Modifier.align(alignment = CenterHorizontally))
             }
         }

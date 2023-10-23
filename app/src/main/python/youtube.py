@@ -164,6 +164,13 @@ def get_site_transcript(url: str) -> str:
         site = Article(url)
         site.download()
         site.parse()
+
+        # Paywall detection
+        pattern = r'"isAccessibleForFree"\s*:\s*"?false"?'
+        match = re.search(pattern, site.html, re.IGNORECASE)
+        if match:
+            return "paywall detected"
+
         return site.text
     except Exception as e:
         return None
@@ -174,6 +181,7 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
     """
 
     try:
+        # Content-Detection
         if url == "":
             raise Exception("no content")
 
@@ -189,6 +197,8 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
             transcript = get_site_transcript(url)
             if transcript is None or transcript == "":
                 raise Exception("invalid link")
+            elif transcript == "paywall detected":
+                raise Exception("paywall detected")
             else:
                 summary = generate_summary(transcript, key, length, True, language)
                 return summary
