@@ -13,4 +13,6 @@
     <string name="useOriginalLanguage">Use Original Language</string>
     <string name="useOriginalLanguageDescription">Use Original Language instead of your language.</string>
     <string name="githubDescription">Our Github repository</string>
+    <string name="useUltraDark">Use Ultra Dark</string>
+    <string name="useUltraDarkDescription">Use Ultra Dark Mode with real black</string>
 </resources>
