@@ -10,9 +10,14 @@
     <string name="noTranscript">No Transcript found</string>
     <string name="noContent">No Content</string>
     <string name="noInternet">No Internet-Connection</string>
+    <string name="paywallDetected">Paywall detected, summarizing not possible.</string>
     <string name="useOriginalLanguage">Use Original Language</string>
     <string name="useOriginalLanguageDescription">Use Original Language instead of your language.</string>
     <string name="githubDescription">Our Github repository</string>
     <string name="useUltraDark">Use Ultra Dark</string>
     <string name="useUltraDarkDescription">Use Ultra Dark Mode with real black</string>
+    <string name="use2lines">2 Lines for URL</string>
+    <string name="use2linesDescription">Use 2 lines in the URL-Field</string>
+    <string name="design">Design</string>
+    <string name="cancel">Cancel</string>
 </resources>

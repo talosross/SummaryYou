@@ -101,19 +101,23 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
     # Initialize the OpenAI API client
     openai.api_key = key
     if article == False:
+        if language == "the same language as the ":
+            language = language + "video"
         if length == 0:
-            instructions = "Summarize the transcript of this YouTube video in three short bullet points. If the video has a conclusion include it. In" + language
+            instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 20 words, in {language} using only 3 bullet points."
         elif length == 1:
-            instructions = "Provide a concise summary of the transcript from a YouTube video. If the video includes a conclusion or key takeaway, make sure to include that as well. In" + language
+            instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
         else:
-            instructions = "Summarize the transcript of the video mentioned above. Begin with an overview. Next, list the top five key highlights. Finally, briefly encapsulate the main message of the video. Maintaining objectivity, and employing appropriate writing style. In" + language
+            instructions = f"You will be provided with a transcript of a video, and your task is to generate a short, concise summary with a maximum of 120 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
     else:
+        if language == "the same language as the ":
+            language = language + "article"
         if length == 0:
-            instructions = "Summarize the article in three concise, very short bullet points. If the article includes a conclusion, provide that as well. In" + language
+            instructions = f"You will be provided with an article, and your task is to generate a summary a very short, concise summary with a maximum of 20 words, in {language} using only 3 bullet points."
         elif length == 1:
-            instructions = "Provide a concise summary of this article. If it includes a conclusion or key takeaway, make sure to include that as well. In" + language
+            instructions = f"You will be provided with an article, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that as in the end."
         else:
-            instructions = "Summarize the article mentioned above. Begin with an overview. Next, list the top five key highlights. Finally, briefly encapsulate the main message of the video. Maintaining objectivity, and employing appropriate writing style." + language
+            instructions = f"You will be provided with an article, and your task is to generate a short, concise summary with a maximum of 120 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that as in the end."
 
     try:
         response = openai.ChatCompletion.create(

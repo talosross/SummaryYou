@@ -153,12 +153,23 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
             saveTextSummaries()
         }
     }
+    var useOriginalLanguage by mutableStateOf(sharedPreferences.getBoolean("useOriginalLanguage", false))
+
+    // Funktion, um den Wert der Boolean-Variable festzulegen und in den SharedPreferences zu speichern
+    fun setUseOriginalLanguageValue(newValue: Boolean) {
+        useOriginalLanguage = newValue
+        sharedPreferences.edit().putBoolean("useOriginalLanguage", newValue).apply()
+    }
+
+    // Funktion, um den Wert der Boolean-Variable aus den SharedPreferences abzurufen
+    fun getUseOriginalLanguageValue(): Boolean {
+        return useOriginalLanguage
+    }
 
 }
 
 
 data class TextSummary(val title: String, val author: String, val text: String)
-
 
 @Composable
 fun AppNavigation(navController: NavHostController, applicationContext: Context, initialUrl: String? = null) {
@@ -175,7 +186,8 @@ fun AppNavigation(navController: NavHostController, applicationContext: Context,
         composable("settings") {
             settingsScreen(
                 modifier = Modifier,
-                navController = navController
+                navController = navController,
+                viewModel = viewModel
             )
         }
         composable("history") {
@@ -386,7 +398,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                 scope.launch {
                                     title = getTitel(url)
                                     author = getAuthor(url)
-                                    val (result, error) = summarize(url, selectedIndex)
+                                    val (result, error) = summarize(url, selectedIndex, viewModel)
                                     transcriptResult = result
                                     isError = error
                                     isLoading = false // Stop Loading-Animation
@@ -442,7 +454,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                     scope.launch {
                         title = getTitel(url)
                         author = getAuthor(url)
-                        val (result, error) = summarize(url, selectedIndex)
+                        val (result, error) = summarize(url, selectedIndex, viewModel)
                         transcriptResult = result
                         isError = error
                         isLoading = false // Stop Loading-Animation
@@ -459,7 +471,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     }
 }
 
-suspend fun summarize(url: String, length: Int): Pair<String, Boolean> {
+suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel): Pair<String, Boolean> {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
     val dotenv = dotenv {
@@ -470,8 +482,12 @@ suspend fun summarize(url: String, length: Int): Pair<String, Boolean> {
 
     // Get the currently set language
     val currentLocale: Locale = Resources.getSystem().configuration.locale
-    // Save the language code in deiner eigenen Variable
-    val language: String = currentLocale.getDisplayLanguage(Locale.ENGLISH)
+
+    val language: String = if (viewModel.getUseOriginalLanguageValue()) {
+        "the same language as the "
+    } else {
+        currentLocale.getDisplayLanguage(Locale.ENGLISH)
+    }
 
     try {
         val result = withContext(Dispatchers.IO) {
@@ -522,45 +538,3 @@ fun isYouTubeLink(input: String): Boolean {
     return youtubePattern.matches(input)
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun Textbox(modifier: Modifier = Modifier, title: String?, author: String?, text: String?, viewModel: TextSummaryViewModel) {
-    val haptics = LocalHapticFeedback.current // Vibrations
-
-    Card(
-        modifier = modifier
-            .padding(top = 15.dp, bottom = 15.dp)
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = {},
-                onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    viewModel.removeTextSummary(title, author, text)
-                }
-            )
-    ) {
-        if(!title.isNullOrEmpty()) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = modifier
-                    .padding(top = 12.dp, start = 12.dp, end = 12.dp)
-            )
-            if (!author.isNullOrEmpty()) {
-                Text(
-                    text = author,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = modifier
-                        .padding(top = 4.dp, start = 12.dp, end = 12.dp)
-                )
-            }
-        }
-        Text(
-            text = text ?: "",
-            style = MaterialTheme.typography.labelLarge,
-            modifier = modifier
-                .padding(12.dp)
-        )
-    }
-}
