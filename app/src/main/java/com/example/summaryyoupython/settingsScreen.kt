@@ -91,7 +91,6 @@ fun settingsScreen(modifier: Modifier = Modifier, navController: NavHostControll
 
 @Composable
 fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) {
-    val range = 1..10
     val context = LocalContext.current
     val context2 = LocalContext.current as Activity
     var showDialogDesign by remember { mutableStateOf(false) }

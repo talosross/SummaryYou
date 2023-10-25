@@ -204,8 +204,16 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
             elif transcript == "paywall detected":
                 raise Exception("paywall detected")
             else:
-                summary = generate_summary(transcript, key, length, True, language)
-                return summary
+                try:
+                    summary = generate_summary(transcript, key, length, True, language)
+                    return summary
+                except Exception as e:
+                    if "Incorrect API" in str(e):
+                        raise Exception("incorrect api")
+                    elif "You didn't provide an API key" in str(e):
+                        raise Exception("no api")
+                    else:
+                        raise e
 
         # Fetch the video transcript
         transcript = get_video_transcript(video_id)
@@ -215,12 +223,16 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
             raise Exception("no transcript")
 
         try:
-            # Generate the summary
             summary = generate_summary(transcript, key, length, False, language)
         except Exception as e:
-            raise e
+            if "Incorrect API" in str(e):
+                raise Exception("incorrect api")
+            elif "You didn't provide an API key" in str(e):
+                raise Exception("no api")
+            else:
+                raise e
 
-        # Return the summary
+                # Return the summary
         return summary
     except Exception as e:
         raise e

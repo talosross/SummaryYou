@@ -333,6 +333,8 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
                                     "Exception: no content" -> stringResource(id = R.string.noContent)
                                     "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
+                                    "Exception: incorrect api" -> stringResource(id = R.string.incorrectApi)
+                                    "Exception: no api" -> stringResource(id = R.string.noApi)
                                     else -> transcriptResult ?: "unknown error 3" },
                                 color = MaterialTheme.colorScheme.error
                             )
