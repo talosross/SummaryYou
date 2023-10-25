@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -73,6 +74,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 
 class MainActivity : ComponentActivity() {
     private var sharedUrl: String? = null
@@ -93,8 +96,9 @@ class MainActivity : ComponentActivity() {
         if (Intent.ACTION_SEND == intent?.action && intent.type == "text/plain") {
             sharedUrl = intent.getStringExtra(Intent.EXTRA_TEXT)
         }
+
         setContent {
-            SummaryYouPythonTheme(OledModeEnabled = true) {
+            SummaryYouPythonTheme(design = viewModel.getDesignNumber(), OledModeEnabled = viewModel.getUltraDarkValue()) {
                 val navController = rememberNavController()
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -153,19 +157,61 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
             saveTextSummaries()
         }
     }
+
+    // Original Language in summary
     var useOriginalLanguage by mutableStateOf(sharedPreferences.getBoolean("useOriginalLanguage", false))
 
-    // Funktion, um den Wert der Boolean-Variable festzulegen und in den SharedPreferences zu speichern
     fun setUseOriginalLanguageValue(newValue: Boolean) {
         useOriginalLanguage = newValue
         sharedPreferences.edit().putBoolean("useOriginalLanguage", newValue).apply()
     }
 
-    // Funktion, um den Wert der Boolean-Variable aus den SharedPreferences abzurufen
     fun getUseOriginalLanguageValue(): Boolean {
         return useOriginalLanguage
     }
 
+    // Multiline URL-Field
+    var multiLine by mutableStateOf(sharedPreferences.getBoolean("multiLine", false))
+
+    fun setMultiLineValue(newValue: Boolean) {
+        multiLine = newValue
+        sharedPreferences.edit().putBoolean("multiLine", newValue).apply()
+    }
+
+    fun getMultiLineValue(): Boolean {
+        return multiLine
+    }
+
+    // UltraDark - Mode
+    var ultraDark by mutableStateOf(sharedPreferences.getBoolean("ultraDark", false))
+
+    fun setUltraDarkValue(newValue: Boolean) {
+        ultraDark = newValue
+        sharedPreferences.edit().putBoolean("ultraDark", newValue).apply()
+    }
+
+    fun getUltraDarkValue(): Boolean {
+        return ultraDark
+    }
+
+    // DesignNumber for Dark, Light or System
+    private val _designNumberLiveData = MutableLiveData<Int>()
+
+    val designNumber: LiveData<Int> = _designNumberLiveData
+
+    init {
+        // Beim Erstellen des ViewModels, setze den aktuellen Wert aus den SharedPreferences
+        _designNumberLiveData.value = sharedPreferences.getInt("designNumber", 0)
+    }
+
+    fun setDesignNumber(newValue: Int) {
+        _designNumberLiveData.value = newValue
+        sharedPreferences.edit().putInt("designNumber", newValue).apply()
+    }
+
+    fun getDesignNumber(): Int {
+        return _designNumberLiveData.value ?: 1 // Standardwert 1, wenn der Wert null ist
+    }
 }
 
 
@@ -309,7 +355,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                             }
                         }
                     },
-                    singleLine = true,
+                    singleLine = !viewModel.getMultiLineValue(),
                     modifier = modifier
                         .fillMaxWidth()
                         .padding(top = 20.dp)

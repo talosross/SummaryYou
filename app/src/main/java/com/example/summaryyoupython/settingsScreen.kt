@@ -1,8 +1,13 @@
 package com.example.summaryyoupython
 
+import android.app.Activity
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,9 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -47,7 +50,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 
 
@@ -90,32 +92,58 @@ fun settingsScreen(modifier: Modifier = Modifier, navController: NavHostControll
 @Composable
 fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) {
     val range = 1..10
-    val context = LocalContext.current // Holen Sie sich den Context aus AmbientContext
-    var showDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val context2 = LocalContext.current as Activity
+    var showDialogDesign by remember { mutableStateOf(false) }
+    var showDialogRestart by remember { mutableStateOf(false) }
+    var design = viewModel.getDesignNumber()
 
-    if (showDialog) {
+    if (showDialogDesign) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = { showDialogDesign = false },
             title = { Text(stringResource(id = R.string.design)) },
             text = {
                 Column {
-                    RadioButtonItem("System", selected = false) {
-                        // Hier können Sie die Logik hinzufügen, um den Systemmodus einzustellen
+                    RadioButtonItem(stringResource(id = R.string.systemDesign), selected = !(viewModel.getDesignNumber() == 1 || viewModel.getDesignNumber() == 2)) {
+                        viewModel.setDesignNumber(0)
+                        context2.recreate()
                     }
-                    RadioButtonItem("Light", selected = false) {
-                        // Hier können Sie die Logik hinzufügen, um den Light-Modus einzustellen
+                    RadioButtonItem(stringResource(id = R.string.lightDesign), selected = (viewModel.getDesignNumber() == 2)) {
+                        viewModel.setDesignNumber(2)
+                        context2.recreate()
                     }
-                    RadioButtonItem("Dark", selected = false) {
-                        // Hier können Sie die Logik hinzufügen, um den Dark-Modus einzustellen
+                    RadioButtonItem(stringResource(id = R.string.darkDesign), selected = (viewModel.getDesignNumber() == 1)) {
+                        viewModel.setDesignNumber(1)
+                        context2.recreate()
                     }
                 }
             },
             confirmButton = {},
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(onClick = { showDialogDesign = false }) {
                     Text(stringResource(id = R.string.cancel))
                 }
             },
+        )
+    }
+
+    if(showDialogRestart) {
+        AlertDialog(
+            onDismissRequest = { showDialogRestart = false },
+            title = { Text(stringResource(id = R.string.restartRequired))},
+            text = { Text(stringResource(id = R.string.restartRequiredDescription))},
+            confirmButton =  {
+                TextButton(onClick = {
+                    context2.recreate()
+                }) {
+                    Text(stringResource(id = R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialogRestart = false }) {
+                    Text(stringResource(id = R.string.cancel))
+                }
+            }
         )
     }
 
@@ -149,8 +177,8 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                 )
                 ListItem(
                     modifier = Modifier
-                        .clickable(onClick = { showDialog = showDialog.not() })
-                        .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                        .clickable(onClick = { showDialogDesign = showDialogDesign.not() })
+                        .fillMaxWidth(),
                     headlineContent = { Text(stringResource(id = R.string.design)) },
                     leadingContent = {
                         Icon(
@@ -158,10 +186,14 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                             contentDescription = "Localized description",
                         )
                     },
-                    supportingContent = { Text(stringResource(id = R.string.githubDescription)) }
+                    supportingContent = { Text(when (viewModel.getDesignNumber()) {
+                        1 -> stringResource(id = R.string.darkDesign)
+                        2 -> stringResource(id = R.string.lightDesign)
+                        else -> stringResource(id = R.string.systemDesign)
+                    }) }
                 )
                 ListItem(
-                    modifier = Modifier.fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                    modifier = Modifier.fillMaxWidth(),
                     headlineContent = { Text(stringResource(id = R.string.useUltraDark)) },
                     supportingContent = { Text(stringResource(id = R.string.useUltraDarkDescription)) },
                     leadingContent = {
@@ -172,15 +204,18 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     trailingContent = {
                         Switch(
-                            checked = true, // Hier können Sie den Zustand des Schalters anpassen
-                            onCheckedChange = { /* Hier können Sie die Logik für den Schalter einfügen */ }
+                            checked = viewModel.getUltraDarkValue(),
+                            onCheckedChange = { newValue ->
+                                viewModel.setUltraDarkValue(newValue)
+                                context2.recreate()
+                            }
                         )
                     }
                 )
                 ListItem(
-                    modifier = Modifier.fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
-                    headlineContent = { Text(stringResource(id = R.string.use2lines)) },
-                    supportingContent = { Text(stringResource(id = R.string.use2linesDescription)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    headlineContent = { Text(stringResource(id = R.string.useMultiLines)) },
+                    supportingContent = { Text(stringResource(id = R.string.useMultiLinesDescription)) },
                     leadingContent = {
                         Icon(
                             painter = painterResource(id = R.drawable.outline_format_line_spacing_24),
@@ -189,23 +224,34 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     trailingContent = {
                         Switch(
-                            checked = true, // Hier können Sie den Zustand des Schalters anpassen
-                            onCheckedChange = { /* Hier können Sie die Logik für den Schalter einfügen */ }
+                            checked = viewModel.getMultiLineValue(),
+                            onCheckedChange = { newValue ->
+                                viewModel.setMultiLineValue(newValue)
+                            }
                         )
                     }
                 )
                 ListItem(
-                    modifier = Modifier.fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
-                    headlineContent = { Text("Github") },
+                    modifier = Modifier
+                        .clickable {
+                            val url = "https://www.github.com"
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(intent)
+                        }
+                        .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                    headlineContent = { Text(stringResource(id = R.string.repository)) },
                     leadingContent = {
                         Icon(
                             Icons.Default.Info,
                             contentDescription = "Localized description",
                         )
                     },
-                    supportingContent = { Text(stringResource(id = R.string.githubDescription)) }
+                    supportingContent = { Text(stringResource(id = R.string.githubDescription)) },
                 )
-                Text(text = "Version ${getVersionName(context)}", modifier = Modifier.align(alignment = CenterHorizontally))
+                Text(text = "Version ${getVersionName(context)}",
+                    modifier = Modifier
+                        .align(alignment = CenterHorizontally)
+                        .padding(top = 10.dp))
             }
         }
     }

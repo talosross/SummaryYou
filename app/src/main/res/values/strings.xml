@@ -16,8 +16,15 @@
     <string name="githubDescription">Our Github repository</string>
     <string name="useUltraDark">Use Ultra Dark</string>
     <string name="useUltraDarkDescription">Use Ultra Dark Mode with real black</string>
-    <string name="use2lines">2 Lines for URL</string>
-    <string name="use2linesDescription">Use 2 lines in the URL-Field</string>
+    <string name="useMultiLines">More Lines for URL</string>
+    <string name="useMultiLinesDescription">Use more lines in the URL-Field</string>
     <string name="design">Design</string>
     <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="restartRequiredDescription">Restart the app to use the new changes.</string>
+    <string name="restartRequired">App restart required</string>
+    <string name="repository">Our Github-Project</string>
+    <string name="systemDesign">System</string>
+    <string name="lightDesign">Light</string>
+    <string name="darkDesign">Dark</string>
 </resources>

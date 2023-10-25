@@ -84,7 +84,12 @@ private val DarkColors = darkColorScheme(
 
 @Composable
 fun SummaryYouPythonTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    design: Int,
+    darkTheme: Boolean = when(design) {
+        1 -> true
+        2 -> false
+        else -> isSystemInDarkTheme()
+    },
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     OledModeEnabled: Boolean,
@@ -132,3 +137,4 @@ fun SummaryYouPythonTheme(
         content = content
     )
 }
+
