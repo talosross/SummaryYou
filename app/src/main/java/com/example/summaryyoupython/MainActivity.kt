@@ -74,6 +74,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 
@@ -266,6 +274,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     val options = listOf(stringResource(id = R.string.short_length), stringResource(id = R.string.middle_length), stringResource(id = R.string.long_length)) // Lengths
     val showCancelIcon by remember { derivedStateOf { url.isNotBlank() } }
     var isError by remember { mutableStateOf(false) }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
@@ -273,197 +282,244 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     ) as ClipboardManager
 
     Box() {
-        Column(
-            modifier = modifier
+        Scaffold(
+            modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Row(
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                LargeTopAppBar(
+                    modifier = Modifier
+                        .height(110.dp),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                    ),
+                    title = {
+
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { navController.navigate("settings") }
+                        ) {
+                            Icon(Icons.Outlined.Settings, contentDescription = "Settings")
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { navController.navigate("history") }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_library_books_24),
+                                contentDescription = "History"
+                            )
+                        }
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+            },
+        ) { innerPadding ->
+            LazyColumn(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .fillMaxSize(),
+                contentPadding = innerPadding,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(
-                    onClick = {navController.navigate("settings")},
-                    modifier = modifier.padding(start = 8.dp, top = 40.dp)
-                ) {
-                    Icon(Icons.Outlined.Settings, contentDescription = "Settings")
-                }
-                IconButton(
-                    onClick = {navController.navigate("history")},
-                    modifier = modifier.padding(end = 8.dp, top = 40.dp)
-                ) {
-                    Icon( painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_library_books_24), contentDescription = "History")
-                }
-            }
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(start = 20.dp, end = 20.dp)
-            ) {
-                Text(
-                    text = "Summary You",
-                    style = MaterialTheme.typography.headlineLarge
-                )
-                // Loading-Animation
-                if (isLoading) {
-                    LinearProgressIndicator(
+                item {
+                    Column(
                         modifier = modifier
-                            .fillMaxWidth()
-                            .padding(top = 5.dp)
-                    )
-                } else {
-                    Spacer(modifier = modifier.height(height = 9.dp))
-                }
-                OutlinedTextField(
-                    value = url,
-                    onValueChange = { url = it },
-                    label = { Text("URL") },
-                    isError = isError,
-                    supportingText = {
-                        if (isError) {
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = when (transcriptResult){
-                                    "Exception: no internet" -> stringResource(id = R.string.noInternet)
-                                    "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
-                                    "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
-                                    "Exception: no content" -> stringResource(id = R.string.noContent)
-                                    "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
-                                    "Exception: incorrect api" -> stringResource(id = R.string.incorrectApi)
-                                    "Exception: no api" -> stringResource(id = R.string.noApi)
-                                    else -> transcriptResult ?: "unknown error 3" },
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    },
-                    trailingIcon = {
-                        if (showCancelIcon) {
-                            IconButton(
-                                onClick = {
-                                    url = ""
-                                    transcriptResult = null
-                                    isError = false // No error
-                                    focusRequester.requestFocus()
-                                }
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_cancel_24),
-                                    contentDescription = "Cancel"
-                                )
-                            }
-                        }
-                    },
-                    singleLine = !viewModel.getMultiLineValue(),
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp)
-                        .focusRequester(focusRequester)
-                )
-                Box(
-                    modifier = if (isError) {
-                        Modifier.padding(top = 11.dp)
-                    } else {
-                        Modifier.padding(top = 15.dp)
-                    }
-                ) {
-                    SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
-                        options.forEachIndexed { index, label ->
-                            SegmentedButton(
-                                shape = SegmentedButtonDefaults.shape(position = index, count = options.size),
-                                onClick = { selectedIndex = index },
-                                selected = index == selectedIndex
-                            ) {
-                                Text(label)
-                            }
-                        }
-                    }
-                }
-                if (!transcriptResult.isNullOrEmpty() && isError == false) {
-                    Card(
-                        modifier = modifier
-                            .padding(top = 15.dp, bottom = 15.dp)
-                            .fillMaxWidth()
-                            .combinedClickable(
-                                onClick = {},
-                                onLongClick = {
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    // Copy the contents of the box to the clipboard
-                                    clipboardManager.setPrimaryClip(
-                                        ClipData.newPlainText(null, transcriptResult)
-                                    )
-                                }
-                            )
+                            .fillMaxSize()
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                            if(!title.isNullOrEmpty()) {
-                                Text(
-                                    text = title ?: "",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
+
+                        Column(
+                            modifier = modifier
+                                .fillMaxSize()
+                                .padding(top = 50.dp, start = 20.dp, end = 20.dp)
+                        ) {
+                            Text(
+                                text = "Summary You",
+                                style = MaterialTheme.typography.headlineLarge
+                            )
+                            // Loading-Animation
+                            if (isLoading) {
+                                LinearProgressIndicator(
                                     modifier = modifier
-                                        .padding(top = 12.dp, start = 12.dp, end = 12.dp)
+                                        .fillMaxWidth()
+                                        .padding(top = 5.dp)
                                 )
-                                if(!author.isNullOrEmpty()) {
-                                    Row {
+                            } else {
+                                Spacer(modifier = modifier.height(height = 9.dp))
+                            }
+                            OutlinedTextField(
+                                value = url,
+                                onValueChange = { url = it },
+                                label = { Text("URL") },
+                                isError = isError,
+                                supportingText = {
+                                    if (isError) {
                                         Text(
-                                            text = author ?: "",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            modifier = modifier
-                                                .padding(top = 4.dp, start = 12.dp, end = 12.dp)
+                                            modifier = Modifier.fillMaxWidth(),
+                                            text = when (transcriptResult) {
+                                                "Exception: no internet" -> stringResource(id = R.string.noInternet)
+                                                "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
+                                                "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
+                                                "Exception: no content" -> stringResource(id = R.string.noContent)
+                                                "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
+                                                "Exception: incorrect api" -> stringResource(id = R.string.incorrectApi)
+                                                "Exception: no api" -> stringResource(id = R.string.noApi)
+                                                else -> transcriptResult ?: "unknown error 3"
+                                            },
+                                            color = MaterialTheme.colorScheme.error
                                         )
-                                        if (isYouTubeLink(url)) {
+                                    }
+                                },
+                                trailingIcon = {
+                                    if (showCancelIcon) {
+                                        IconButton(
+                                            onClick = {
+                                                url = ""
+                                                transcriptResult = null
+                                                isError = false // No error
+                                                focusRequester.requestFocus()
+                                            }
+                                        ) {
                                             Icon(
-                                                painter = painterResource(id = com.example.summaryyoupython.R.drawable.youtube),
-                                                contentDescription = null,
-                                                modifier = Modifier.padding(top = 1.dp)
+                                                painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_cancel_24),
+                                                contentDescription = "Cancel"
                                             )
+                                        }
+                                    }
+                                },
+                                singleLine = !viewModel.getMultiLineValue(),
+                                modifier = modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 20.dp)
+                                    .focusRequester(focusRequester)
+                            )
+                            Box(
+                                modifier = if (isError) {
+                                    Modifier.padding(top = 11.dp)
+                                } else {
+                                    Modifier.padding(top = 15.dp)
+                                }
+                            ) {
+                                SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
+                                    options.forEachIndexed { index, label ->
+                                        SegmentedButton(
+                                            shape = SegmentedButtonDefaults.shape(
+                                                position = index,
+                                                count = options.size
+                                            ),
+                                            onClick = { selectedIndex = index },
+                                            selected = index == selectedIndex
+                                        ) {
+                                            Text(label)
                                         }
                                     }
                                 }
                             }
-                        Text(
-                            text = transcriptResult ?: stringResource(id = R.string.noTranscript),
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = modifier
-                                .padding(start=12.dp, end=12.dp, top=10.dp, bottom=12.dp)
-                        )
-                    }
-                    Column(
-                        modifier = Modifier
-                            .padding(top = 15.dp, bottom = 90.dp)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Button(
-                            onClick = {
-                                focusManager.clearFocus()
-                                isLoading = true // Start Loading-Animation
-                                isError = false // No error
-                                scope.launch {
-                                    title = getTitel(url)
-                                    author = getAuthor(url)
-                                    val (result, error) = summarize(url, selectedIndex, viewModel)
-                                    transcriptResult = result
-                                    isError = error
-                                    isLoading = false // Stop Loading-Animation
-                                    if(!isError){
-                                        viewModel.addTextSummary(title, author, transcriptResult) // Add to history
+                            if (!transcriptResult.isNullOrEmpty() && isError == false) {
+                                Card(
+                                    modifier = modifier
+                                        .padding(top = 15.dp, bottom = 15.dp)
+                                        .fillMaxWidth()
+                                        .combinedClickable(
+                                            onClick = {},
+                                            onLongClick = {
+                                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                // Copy the contents of the box to the clipboard
+                                                clipboardManager.setPrimaryClip(
+                                                    ClipData.newPlainText(null, transcriptResult)
+                                                )
+                                            }
+                                        )
+                                ) {
+                                    if (!title.isNullOrEmpty()) {
+                                        Text(
+                                            text = title ?: "",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = modifier
+                                                .padding(top = 12.dp, start = 12.dp, end = 12.dp)
+                                        )
+                                        if (!author.isNullOrEmpty()) {
+                                            Row {
+                                                Text(
+                                                    text = author ?: "",
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    modifier = modifier
+                                                        .padding(
+                                                            top = 4.dp,
+                                                            start = 12.dp,
+                                                            end = 12.dp
+                                                        )
+                                                )
+                                                if (isYouTubeLink(url)) {
+                                                    Icon(
+                                                        painter = painterResource(id = com.example.summaryyoupython.R.drawable.youtube),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.padding(top = 1.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Text(
+                                        text = transcriptResult
+                                            ?: stringResource(id = R.string.noTranscript),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        modifier = modifier
+                                            .padding(
+                                                start = 12.dp,
+                                                end = 12.dp,
+                                                top = 10.dp,
+                                                bottom = 12.dp
+                                            )
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier
+                                        .padding(top = 15.dp, bottom = 90.dp)
+                                        .fillMaxSize(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            focusManager.clearFocus()
+                                            isLoading = true // Start Loading-Animation
+                                            isError = false // No error
+                                            scope.launch {
+                                                title = getTitel(url)
+                                                author = getAuthor(url)
+                                                val (result, error) = summarize(
+                                                    url,
+                                                    selectedIndex,
+                                                    viewModel
+                                                )
+                                                transcriptResult = result
+                                                isError = error
+                                                isLoading = false // Stop Loading-Animation
+                                                if (!isError) {
+                                                    viewModel.addTextSummary(
+                                                        title,
+                                                        author,
+                                                        transcriptResult
+                                                    ) // Add to history
+                                                }
+                                            }
+                                        },
+                                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Refresh,
+                                            contentDescription = "Refresh",
+                                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                                        )
+                                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                        Text(stringResource(id = R.string.regenerate))
                                     }
                                 }
-                            },
-                            contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-                        ) {
-                            Icon(
-                                Icons.Filled.Refresh,
-                                contentDescription = "Refresh",
-                                modifier = Modifier.size(ButtonDefaults.IconSize)
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(stringResource(id = R.string.regenerate))
+                            }
                         }
                     }
                 }
