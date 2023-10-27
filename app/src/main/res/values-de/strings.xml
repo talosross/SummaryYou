@@ -5,7 +5,7 @@
     <string name="middle_length">Mittel</string>
     <string name="long_length">Lang</string>
     <string name="settings">Einstellungen</string>
-    <string name="history">Bibliothek</string>
+    <string name="history">Verlauf</string>
     <string name="regenerate">Regenerieren</string>
     <string name="invalidURL">ungültiger Link</string>
     <string name="noTranscript">Kein Transcript gefunden</string>

@@ -136,12 +136,12 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    fun addTextSummary(title: String?, author: String?, text: String?) {
+    fun addTextSummary(title: String?, author: String?, text: String?, youtubeLink: Boolean) {
         val nonNullTitle = title ?: ""
         val nonNullAuthor = author ?: ""
 
         if (text != null && text.isNotBlank() && text != "invalid link") {
-            val newTextSummary = TextSummary(nonNullTitle, nonNullAuthor, text)
+            val newTextSummary = TextSummary(nonNullTitle, nonNullAuthor, text, youtubeLink)
             textSummaries.add(newTextSummary)
             // Save text data in SharedPreferences
             saveTextSummaries()
@@ -153,7 +153,7 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
         sharedPreferences.edit().putString("textSummaries", textSummariesJson).apply()
     }
 
-    fun removeTextSummary(title: String?, author: String?, text: String?) {
+    fun removeTextSummary(title: String?, author: String?, text: String?, youtubeLink: Boolean) {
         // Find the TextSummary object to remove based on title, author, and text
         val textSummaryToRemove = textSummaries.firstOrNull { it.title == title && it.author == author && it.text == text }
 
@@ -223,7 +223,7 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
 }
 
 
-data class TextSummary(val title: String, val author: String, val text: String)
+data class TextSummary(val title: String, val author: String, val text: String, val youtubeLink: Boolean)
 
 @Composable
 fun AppNavigation(navController: NavHostController, applicationContext: Context, initialUrl: String? = null) {
@@ -499,12 +499,12 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                 transcriptResult = result
                                                 isError = error
                                                 isLoading = false // Stop Loading-Animation
-                                                if (!isError) {
-                                                    viewModel.addTextSummary(
-                                                        title,
-                                                        author,
-                                                        transcriptResult
-                                                    ) // Add to history
+                                                if(!isError){
+                                                    if (isYouTubeLink(url)) {
+                                                        viewModel.addTextSummary(title, author, transcriptResult, true) // Add to history
+                                                    }else{
+                                                        viewModel.addTextSummary(title, author, transcriptResult, false) // Add to history
+                                                    }
                                                 }
                                             }
                                         },
@@ -563,7 +563,11 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                         isError = error
                         isLoading = false // Stop Loading-Animation
                         if(!isError){
-                            viewModel.addTextSummary(title, author, transcriptResult) // Add to history
+                            if (isYouTubeLink(url)) {
+                                viewModel.addTextSummary(title, author, transcriptResult, true) // Add to history
+                            }else{
+                                viewModel.addTextSummary(title, author, transcriptResult, false) // Add to history
+                            }
                         }
                     }
                 },

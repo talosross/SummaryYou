@@ -6,6 +6,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -84,6 +86,7 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                     title = textSummary.title,
                     author = textSummary.author,
                     text = textSummary.text,
+                    youtubeLink = textSummary.youtubeLink,
                     viewModel = viewModel
                 )
             }
@@ -93,7 +96,7 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Textbox(modifier: Modifier = Modifier, title: String?, author: String?, text: String?, viewModel: TextSummaryViewModel) {
+fun Textbox(modifier: Modifier = Modifier, title: String?, author: String?, text: String?, youtubeLink: Boolean, viewModel: TextSummaryViewModel) {
     val haptics = LocalHapticFeedback.current // Vibrations
 
     Card(
@@ -104,7 +107,7 @@ fun Textbox(modifier: Modifier = Modifier, title: String?, author: String?, text
                 onClick = {},
                 onLongClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    viewModel.removeTextSummary(title, author, text)
+                    viewModel.removeTextSummary(title, author, text, youtubeLink)
                 }
             )
     ) {
@@ -117,19 +120,38 @@ fun Textbox(modifier: Modifier = Modifier, title: String?, author: String?, text
                     .padding(top = 12.dp, start = 12.dp, end = 12.dp)
             )
             if (!author.isNullOrEmpty()) {
-                Text(
-                    text = author,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = modifier
-                        .padding(top = 4.dp, start = 12.dp, end = 12.dp)
-                )
+                Row {
+                    Text(
+                        text = author,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .padding(
+                            top = 4.dp,
+                            start = 12.dp,
+                            end = 12.dp
+                        )
+                    )
+                    if(youtubeLink) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.youtube),
+                            contentDescription = null,
+                            modifier = Modifier.padding(top = 1.dp)
+                        )
+                    }
+                }
+
             }
         }
         Text(
             text = text ?: "",
             style = MaterialTheme.typography.labelLarge,
             modifier = modifier
-                .padding(12.dp)
+                .padding(
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = 10.dp,
+                    bottom = 12.dp
+                )
         )
     }
 }

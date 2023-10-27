@@ -104,7 +104,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
         if language == "the same language as the ":
             language = language + "video"
         if length == 0:
-            instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 20 words, in {language} using only 3 bullet points."
+            instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points. The very short summary should be in {language}."
         elif length == 1:
             instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
         else:
@@ -113,7 +113,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
         if language == "the same language as the ":
             language = language + "article"
         if length == 0:
-            instructions = f"You will be provided with an article, and your task is to generate a summary a very short, concise summary with a maximum of 20 words, in {language} using only 3 bullet points."
+            instructions = f"You will be provided with an article, and your task is to generate a summary a very short, concise summary with a maximum of 20 word of the transcript in {language} using only 3 bullet points."
         elif length == 1:
             instructions = f"You will be provided with an article, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that as in the end."
         else:
@@ -156,7 +156,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
 
             # Return the generated summary using "gpt-3.5-turbo-16k" with "16K" at the beginning
             generated_summary = response.choices[0].message.content.strip()
-            return f"16K: {generated_summary}"
+            return generated_summary
 
         except Exception as e:
             # If an error still occurs, handle it or return an error message
