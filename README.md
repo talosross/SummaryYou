@@ -55,7 +55,7 @@
 
 ## ⭐️ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=jeffconrad18/SummaryYouPython&type=Timeline)](https://star-history.com/#JunkFood02/Seal&Timeline)
+[![Star History Chart](https://api.star-history.com/svg?repos=talosross/SummaryYou&type=Timeline)](https://star-history.com/#JunkFood02/Seal&Timeline)
 
 
 ## 🧱 Credits
