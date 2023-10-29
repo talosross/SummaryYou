@@ -1,4 +1,4 @@
-package com.example.summaryyoupython
+package com.talosross.summaryyou
 
 import org.junit.Test
 

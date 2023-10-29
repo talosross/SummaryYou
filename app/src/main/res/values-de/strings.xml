@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Summary You Python</string>
     <string name="short_length">Kurz</string>
     <string name="middle_length">Mittel</string>
     <string name="long_length">Lang</string>

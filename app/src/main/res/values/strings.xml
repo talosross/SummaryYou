@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Summary You Python</string>
+    <string name="app_name" translatable="false">Summary You</string>
     <string name="short_length">Short</string>
     <string name="middle_length">Middle</string>
     <string name="long_length">Long</string>
