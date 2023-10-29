@@ -14,6 +14,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Summary You Python"
+rootProject.name = "Summary You"
 include(":app")
  
