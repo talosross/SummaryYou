@@ -1,8 +1,7 @@
-package com.example.summaryyoupython.ui.theme
+package com.talosross.summaryyou.ui.theme
 
 import android.app.Activity
 import android.os.Build
-import android.text.BoringLayout
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -83,7 +82,7 @@ private val DarkColors = darkColorScheme(
 )
 
 @Composable
-fun SummaryYouPythonTheme(
+fun SummaryYouTheme(
     design: Int,
     darkTheme: Boolean = when(design) {
         1 -> true

@@ -1,4 +1,4 @@
-package com.example.summaryyoupython
+package com.talosross.summaryyou
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -11,10 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
@@ -59,7 +56,7 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.compose.*
 import com.chaquo.python.*
 import com.chaquo.python.android.AndroidPlatform
-import com.example.summaryyoupython.ui.theme.SummaryYouPythonTheme
+import com.talosross.summaryyou.ui.theme.SummaryYouTheme
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -75,13 +72,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 
@@ -106,7 +101,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            SummaryYouPythonTheme(design = viewModel.getDesignNumber(), OledModeEnabled = viewModel.getUltraDarkValue()) {
+            SummaryYouTheme(design = viewModel.getDesignNumber(), OledModeEnabled = viewModel.getUltraDarkValue()) {
                 val navController = rememberNavController()
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -281,7 +276,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
         ClipboardManager::class.java
     ) as ClipboardManager
 
-    Box() {
+    Box {
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
@@ -307,7 +302,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                             onClick = { navController.navigate("history") }
                         ) {
                             Icon(
-                                painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_library_books_24),
+                                painter = painterResource(id = R.drawable.outline_library_books_24),
                                 contentDescription = "History"
                             )
                         }
@@ -383,7 +378,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                             }
                                         ) {
                                             Icon(
-                                                painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_cancel_24),
+                                                painter = painterResource(id = R.drawable.outline_cancel_24),
                                                 contentDescription = "Cancel"
                                             )
                                         }
@@ -455,7 +450,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                 )
                                                 if (isYouTubeLink(url)) {
                                                     Icon(
-                                                        painter = painterResource(id = com.example.summaryyoupython.R.drawable.youtube),
+                                                        painter = painterResource(id = R.drawable.youtube),
                                                         contentDescription = null,
                                                         modifier = Modifier.padding(top = 1.dp)
                                                     )
@@ -547,7 +542,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                 },
                 modifier = modifier.padding(bottom = 20.dp, end = 15.dp)
             ) {
-                Icon(painter = painterResource(id = com.example.summaryyoupython.R.drawable.outline_content_paste_24), "Paste")
+                Icon(painter = painterResource(id = R.drawable.outline_content_paste_24), "Paste")
             }
             FloatingActionButton(
                 onClick = {
