@@ -9,4 +9,25 @@
     <string name="invalidURL">ungültiger Link</string>
     <string name="noTranscript">Kein Transcript gefunden</string>
     <string name="noInternet">Keine Internet-Verbindung</string>
+    <string name="noContent">Kein Inhalt</string>
+    <string name="paywallDetected">Paywall gefunden, zusammenfassen nicht möglich</string>
+    <string name="incorrectApi">Fehler mit OpenAI, Update der App notwendig.</string>
+    <string name="noApi">Fehler mit OpenAI, kein API-Key gefunden</string>
+    <string name="useOriginalLanguage">Benutze Originalsprache</string>
+    <string name="useOriginalLanguageDescription">Benutze die Originalsprache anstelle der Appsprache.</string>
+    <string name="repository">Open Source Code</string>
+    <string name="githubDescription">Unser Github repository</string>
+    <string name="madeBy">Made with ❤ by talosross</string>
+    <string name="useUltraDark">Benutze Ultra Dark</string>
+    <string name="useUltraDarkDescription">Benutze Ultra Dark mit echtem schwarz</string>
+    <string name="useMultiLines">Mehrere Linien für URL</string>
+    <string name="useMultiLinesDescription">Benutze mehrere Linien im URL-Feld</string>
+    <string name="design">Design</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="ok">OK</string>
+    <string name="restartRequiredDescription">Starte die App neu, um die Änderungen anzuwenden.</string>
+    <string name="restartRequired">App-Neustart erforderlich</string>
+    <string name="systemDesign">System</string>
+    <string name="lightDesign">Hell</string>
+    <string name="darkDesign">Dunkel</string>
 </resources>

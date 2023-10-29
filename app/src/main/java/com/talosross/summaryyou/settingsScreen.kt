@@ -231,7 +231,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                 ListItem(
                     modifier = Modifier
                         .clickable {
-                            val url = "https://www.github.com"
+                            val url = "https://github.com/talosross/SummaryYou"
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                             context.startActivity(intent)
                         }
@@ -249,6 +249,15 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     modifier = Modifier
                         .align(alignment = CenterHorizontally)
                         .padding(top = 10.dp))
+                Text(text = stringResource(id = R.string.madeBy),
+                        modifier = Modifier
+                            .align(alignment = CenterHorizontally)
+                            .clickable {
+                                val url = "https://github.com/talosross"
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                context.startActivity(intent)
+                            }
+                )
             }
         }
     }
