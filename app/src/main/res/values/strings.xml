@@ -13,8 +13,10 @@
     <string name="paywallDetected">Paywall detected, summarizing not possible.</string>
     <string name="incorrectApi">Error with OpenAI, you have to update the App.</string>
     <string name="noApi">Error with OpenAI, you have to provide an API key.</string>
-    <string name="useOriginalLanguage">Use Original Language</string>
+    <string name="useOriginalLanguage">Original Language</string>
     <string name="useOriginalLanguageDescription">Use Original Language instead of your language.</string>
+    <string name="chooseLanguage">Language</string>
+    <string name="chooseLanguageDescription">Choose a language</string>
     <string name="repository">Open Source Code</string>
     <string name="githubDescription">Our Github repository</string>
     <string name="madeBy">Made with ❤ by talosross</string>

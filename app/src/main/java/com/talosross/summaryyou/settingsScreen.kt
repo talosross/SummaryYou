@@ -5,7 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,6 +52,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavHostController
 
 
@@ -94,6 +99,8 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     var showDialogDesign by remember { mutableStateOf(false) }
     var showDialogRestart by remember { mutableStateOf(false) }
     var design = viewModel.getDesignNumber()
+    val currentLocale = Resources.getSystem().configuration.locales[0]
+    val currentLanguage = currentLocale.language
 
     if (showDialogDesign) {
         AlertDialog(
@@ -172,6 +179,27 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                             )
                         }
                 )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                ListItem(
+                    modifier = Modifier
+                        .clickable {
+                            val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
+                            val uri = Uri.fromParts("package", context?.packageName, null)
+                            intent.data = uri
+
+                            context.startActivity(intent)
+
+                        }
+                        .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                    headlineContent = { Text(stringResource(id = R.string.chooseLanguage)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_language_24),
+                            contentDescription = "Localized description",
+                        )
+                    },
+                    supportingContent = { Text(stringResource(id = R.string.chooseLanguageDescription))},
+                ) }
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = { showDialogDesign = showDialogDesign.not() })

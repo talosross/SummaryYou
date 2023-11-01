@@ -13,8 +13,10 @@
     <string name="paywallDetected">Paywall gefunden, zusammenfassen nicht möglich</string>
     <string name="incorrectApi">Fehler mit OpenAI, Update der App notwendig.</string>
     <string name="noApi">Fehler mit OpenAI, kein API-Key gefunden</string>
-    <string name="useOriginalLanguage">Benutze Originalsprache</string>
+    <string name="useOriginalLanguage">Originalsprache</string>
     <string name="useOriginalLanguageDescription">Benutze die Originalsprache anstelle der Appsprache.</string>
+    <string name="chooseLanguage">Sprache</string>
+    <string name="chooseLanguageDescription">Wähle eine Sprache</string>
     <string name="repository">Open Source Code</string>
     <string name="githubDescription">Unser Github repository</string>
     <string name="madeBy">Made with ❤ by talosross</string>
