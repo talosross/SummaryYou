@@ -28,7 +28,7 @@
 
 ## 📖 Features
 
-- Summarize YouTube-Videos & Articles with the help of GPT-3.5
+- Summarize YouTube-Videos & Articles with AI
 
 - Set length of summary
 
