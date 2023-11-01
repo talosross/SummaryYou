@@ -179,7 +179,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                             )
                         }
                 )
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (Build.VERSION.SDK_INT >= 33) {
                 ListItem(
                     modifier = Modifier
                         .clickable {
