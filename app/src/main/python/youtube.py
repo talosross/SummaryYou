@@ -86,7 +86,7 @@ def get_video_transcript(video_id: str) -> str:
     Fetch the transcript of the provided YouTube video
     """
     try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['de', 'de-DE', 'en'])
+        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['af', 'ak', 'sq', 'am', 'as', 'ay', 'az', 'bn', 'eu', 'be', 'bho', 'bs', 'bg', 'my', 'ca', 'ceb', 'co', 'hr', 'cs', 'da', 'dv', 'eo', 'et', 'ee', 'fil', 'fi', 'gl', 'lg', 'ka', 'el', 'gn', 'gu', 'ht', 'ha', 'haw', 'iw', 'hmn', 'hu', 'is', 'ig', 'id', 'ga', 'it', 'jv', 'kn', 'kk', 'km', 'rw', 'ko', 'kri', 'ku', 'ky', 'lo', 'la', 'lv', 'ln', 'lt', 'lb', 'mk', 'mg', 'ms', 'ml', 'mt', 'mi', 'mr', 'mn', 'ne', 'nso', 'no', 'ny', 'or', 'om', 'ps', 'fa', 'pl', 'pt', 'pa', 'qu', 'ro', 'ru', 'sm', 'sa', 'gd', 'sr', 'sn', 'sd', 'si', 'sk', 'sl', 'so', 'st', 'es', 'su', 'sw', 'sv', 'tg', 'ta', 'tt', 'ti', 'ts', 'tr', 'tk', 'uk', 'ur', 'ug', 'uz', 'vi', 'cy', 'fy', 'xh', 'yi', 'yo', 'zu', 'de', 'en'])
     except TranscriptsDisabled:
         # The video doesn't have a transcript
         return None
@@ -105,19 +105,25 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
             language = language + "video"
         if length == 0:
             instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points. The very short summary should be in {language}."
+            max_tokens = 100
         elif length == 1:
             instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+            max_tokens = 160
         else:
             instructions = f"You will be provided with a transcript of a video, and your task is to generate a short, concise summary with a maximum of 120 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+            max_tokens = 230
     else:
         if language == "the same language as the ":
             language = language + "article"
         if length == 0:
             instructions = f"You will be provided with an article, and your task is to generate a summary a very short, concise summary with a maximum of 20 word of the transcript in {language} using only 3 bullet points."
+            max_tokens = 100
         elif length == 1:
             instructions = f"You will be provided with an article, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that as in the end."
+            max_tokens = 160
         else:
             instructions = f"You will be provided with an article, and your task is to generate a short, concise summary with a maximum of 120 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that as in the end."
+            max_tokens = 230
 
     try:
         response = openai.ChatCompletion.create(
@@ -128,7 +134,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
             ],
             temperature=0.2,
             n=1,
-            max_tokens=1000,
+            max_tokens=max_tokens,
             presence_penalty=0,
             frequency_penalty=0.1,
         )
@@ -149,7 +155,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
                 ],
                 temperature=0.2,
                 n=1,
-                max_tokens=1000,
+                max_tokens=max_tokens,
                 presence_penalty=0,
                 frequency_penalty=0.1,
             )
