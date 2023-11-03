@@ -41,18 +41,6 @@
 - [Material Design 3](https://m3.material.io/) style UI, with dynamic color theme.
 
 
-
-## ⬇️ Download
-
-- Download the latest stable version from [GitHub releases](https://github.com/JunkFood02/Seal/releases/latest)
-  - Install the [pre-release](https://github.com/JunkFood02/Seal/releases/) versions to help us test out new features & changes
-
-- Stable releases are also available on [F-Droid](https://f-droid.org/packages/com.junkfood.seal/)
-
-<!-- [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-     alt="Get it on F-Droid"
-     height="70">](https://f-droid.org/packages/com.junkfood.seal/) -->
-
 ## ⭐️ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=talosross/SummaryYou&type=Timeline)]
