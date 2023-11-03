@@ -28,7 +28,6 @@ android {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
         }
     }
-
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -36,6 +35,24 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+    flavorDimensions("myFlavorDimension")
+
+    productFlavors {
+        create("paid") {
+            dimension = "myFlavorDimension"
+            buildConfigField("boolean", "OPEN_SOURCE", "false")
+        }
+
+        create("openSource") {
+            dimension = "myFlavorDimension"
+            buildConfigField("boolean", "OPEN_SOURCE", "true")
+        }
+    }
+    externalNativeBuild {
+        ndkBuild {
+            path = file("src/main/jni/Android.mk")
         }
     }
     compileOptions {
@@ -47,6 +64,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.3"

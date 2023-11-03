@@ -31,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -98,6 +99,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     val context2 = LocalContext.current as Activity
     var showDialogDesign by remember { mutableStateOf(false) }
     var showDialogRestart by remember { mutableStateOf(false) }
+    var showDialogKey by remember { mutableStateOf(false) }
     var design = viewModel.getDesignNumber()
     val currentLocale = Resources.getSystem().configuration.locales[0]
     val currentLanguage = currentLocale.language
@@ -145,6 +147,37 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
             },
             dismissButton = {
                 TextButton(onClick = { showDialogRestart = false }) {
+                    Text(stringResource(id = R.string.cancel))
+                }
+            }
+        )
+    }
+
+    if(showDialogKey) {
+        var apiTextFieldValue by remember { mutableStateOf(viewModel.getApiKeyValue()?.toString() ?: "") }
+        AlertDialog(
+            onDismissRequest = { showDialogDesign = false },
+            title = { Text(stringResource(id = R.string.design)) },
+            text = {
+                OutlinedTextField(
+                    value = apiTextFieldValue,
+                    onValueChange = {
+                        apiTextFieldValue = it // Update the value in the local variable
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.setApiKeyValue(apiTextFieldValue) // Set the API key to the value from the text field
+                        showDialogKey = false
+                    }
+                ) {
+                    Text(stringResource(id = R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialogKey = false }) {
                     Text(stringResource(id = R.string.cancel))
                 }
             }
@@ -256,6 +289,21 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                         )
                     }
                 )
+                if (BuildConfig.OPEN_SOURCE) {
+                    ListItem(
+                        modifier = Modifier
+                            .clickable(onClick = { showDialogKey = showDialogKey.not() })
+                            .fillMaxWidth(),
+                        headlineContent = { Text(stringResource(id = R.string.setApiKey)) },
+                        supportingContent = { Text(stringResource(id = R.string.setApiKeyDescription)) },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.baseline_vpn_key_24),
+                                contentDescription = "Localized description",
+                            )
+                        }
+                    )
+                }
                 ListItem(
                     modifier = Modifier
                         .clickable {

@@ -11,7 +11,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imeNestedScroll
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
@@ -23,14 +36,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -44,6 +61,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -53,32 +71,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
-import androidx.navigation.compose.*
-import com.chaquo.python.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.chaquo.python.PyException
+import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.talosross.summaryyou.ui.theme.SummaryYouTheme
-import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.navigation.NavHostController
-import androidx.lifecycle.ViewModel
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import java.util.Locale
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 
 class MainActivity : ComponentActivity() {
     private var sharedUrl: String? = null
@@ -114,7 +123,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 
 class TextSummaryViewModel(private val context: Context) : ViewModel() {
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences("TextSummaries", Context.MODE_PRIVATE)
@@ -214,6 +222,18 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
 
     fun getDesignNumber(): Int {
         return _designNumberLiveData.value ?: 1 // Standardwert 1, wenn der Wert null ist
+    }
+
+    // API Key
+    var apiKey by mutableStateOf(sharedPreferences.getString("apiKey", null))
+
+    fun setApiKeyValue(newValue: String?) {
+        apiKey = newValue
+        sharedPreferences.edit().putString("apiKey", newValue).apply()
+    }
+
+    fun getApiKeyValue(): String? {
+        return apiKey
     }
 }
 
@@ -359,7 +379,13 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                 "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
                                                 "Exception: no content" -> stringResource(id = R.string.noContent)
                                                 "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
-                                                "Exception: incorrect api" -> stringResource(id = R.string.incorrectApi)
+                                                "Exception: incorrect api" -> {
+                                                    if (BuildConfig.OPEN_SOURCE) {
+                                                        stringResource(id = R.string.incorrectApiOpenSource)
+                                                    } else {
+                                                        stringResource(id = R.string.incorrectApi)
+                                                    }
+                                                }
                                                 "Exception: no api" -> stringResource(id = R.string.noApi)
                                                 else -> transcriptResult ?: "unknown error 3"
                                             },
@@ -577,11 +603,13 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
 suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel): Pair<String, Boolean> {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
-    val dotenv = dotenv {
-        directory = "/assets"
-        filename = "env"
+    val key: String
+
+    if (!BuildConfig.OPEN_SOURCE) {
+        key = APIKeyLibrary.getAPIKey()
+    }else{
+        key = viewModel.getApiKeyValue().toString()
     }
-    val key = dotenv["OPEN_AI_KEY"]
 
     // Get the currently set language
     val currentLocale: Locale = Resources.getSystem().configuration.locale
@@ -640,4 +668,5 @@ fun isYouTubeLink(input: String): Boolean {
     val youtubePattern = Regex("""^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.*$""")
     return youtubePattern.matches(input)
 }
+
 
