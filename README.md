@@ -33,6 +33,8 @@
 - Set length of summary
 
 - History-Section
+  
+- intelligent paywall detection
 
 - OLED-Dark Mode
 
