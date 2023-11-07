@@ -59,7 +59,7 @@ Some of the UI designs and codes are borrowed from [Seal](https://github.com/Jun
 
 ## 📃 License
 
-[![GitHub](<img src="SummaryYouLicense.svg" />)](https://github.com/talosross/SummaryYou/blob/master/LICENSE.txt)
+[(<img src="SummaryYouLicense.svg" />)](https://github.com/talosross/SummaryYou/blob/master/LICENSE.txt)
 
 >**Warning**
 >
