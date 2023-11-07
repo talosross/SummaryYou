@@ -59,7 +59,7 @@ Some of the UI designs and codes are borrowed from [Seal](https://github.com/Jun
 
 ## 📃 License
 
-[![GitHub](https://img.shields.io/github/license/JunkFood02/Seal?style=for-the-badge)](https://github.com/talosross/SummaryYou/blob/master/LICENSE.txt)
+[![GitHub](<img src="SummaryYouLicense.svg" />)](https://github.com/talosross/SummaryYou/blob/master/LICENSE.txt)
 
 >**Warning**
 >
