@@ -14,12 +14,12 @@
 
 <div align="center">
 <div>
-<img src="Screenshot_20230927-164030.png" width="30%" />
-<img src="Screenshot_20230927-164034.png" width="30%" />
-<img src="Screenshot_20230927-164055.png" width="30%" />
-<img src="Screenshot_20230927-164211.png" width="30%" />
-<img src="Screenshot_20230927-164300.png" width="30%" />
-<img src="Screenshot_20230927-170348.png" width="30%" />
+<img src="Screenshot_20231103-155348.png" width="30%" />
+<img src="Screenshot_20231103-155607.png" width="30%" />
+<img src="Screenshot_20231103-155534.png" width="30%" />
+<img src="Screenshot_20231107-095714.png" width="30%" />
+<img src="Screenshot_20231107-095638.png" width="30%" />
+<img src="Screenshot_20231107-095659.png" width="30%" />
 
 </div>
 </div>
@@ -33,6 +33,8 @@
 - Set length of summary
 
 - History-Section
+  
+- intelligent paywall detection
 
 - OLED-Dark Mode
 
@@ -40,18 +42,6 @@
 
 - [Material Design 3](https://m3.material.io/) style UI, with dynamic color theme.
 
-
-
-## ⬇️ Download
-
-- Download the latest stable version from [GitHub releases](https://github.com/JunkFood02/Seal/releases/latest)
-  - Install the [pre-release](https://github.com/JunkFood02/Seal/releases/) versions to help us test out new features & changes
-
-- Stable releases are also available on [F-Droid](https://f-droid.org/packages/com.junkfood.seal/)
-
-<!-- [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-     alt="Get it on F-Droid"
-     height="70">](https://f-droid.org/packages/com.junkfood.seal/) -->
 
 ## ⭐️ Star History
 
@@ -69,14 +59,7 @@ Some of the UI designs and codes are borrowed from [Seal](https://github.com/Jun
 
 ## 📃 License
 
-[![GitHub](https://img.shields.io/github/license/JunkFood02/Seal?style=for-the-badge)](https://github.com/JunkFood02/Seal/blob/main/LICENSE)
-
->**Warning**
->
->Except for the source code licensed under the GPLv3 license,
->all other parties are prohibited from using Seal's name as a downloader app,
->and the same is true for Seal's derivatives.
->Derivatives include but are not limited to forks and unofficial builds.
+[<img src="SummaryYouLicense.svg" />](https://github.com/talosross/SummaryYou/blob/master/LICENSE.txt)
 
 <div align="right">
 <table><td>
