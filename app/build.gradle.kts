@@ -37,17 +37,21 @@ android {
             )
         }
     }
-    flavorDimensions("myFlavorDimension")
+    flavorDimensions += "version"
 
     productFlavors {
         create("paid") {
-            dimension = "myFlavorDimension"
+            dimension = "version"
             buildConfigField("boolean", "OPEN_SOURCE", "false")
+            applicationIdSuffix = ".paid"
+            versionNameSuffix = "-paid"
         }
 
         create("openSource") {
-            dimension = "myFlavorDimension"
+            dimension = "version"
             buildConfigField("boolean", "OPEN_SOURCE", "true")
+            applicationIdSuffix = ".openSource"
+            versionNameSuffix = "-openSource"
         }
     }
     externalNativeBuild {
