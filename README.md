@@ -61,13 +61,6 @@ Some of the UI designs and codes are borrowed from [Seal](https://github.com/Jun
 
 [<img src="SummaryYouLicense.svg" />](https://github.com/talosross/SummaryYou/blob/master/LICENSE.txt)
 
->**Warning**
->
->Except for the source code licensed under the GPLv3 license,
->all other parties are prohibited from using Seal's name as a downloader app,
->and the same is true for Seal's derivatives.
->Derivatives include but are not limited to forks and unofficial builds.
-
 <div align="right">
 <table><td>
 <a href="#start-of-content">👆 Scroll to top</a>
