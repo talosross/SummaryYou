@@ -1,6 +1,6 @@
 <div align="center">
 
-<img width="" src="Bildschirmfoto_vom_2023-09-08_01-39-34-removebg-preview.png"  width=160 height=160  align="center">
+<img width="" src=".github/logo.png"  width=160 height=160  align="center">
 
 # Summary You
 
