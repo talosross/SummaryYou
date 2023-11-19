@@ -14,7 +14,7 @@ android {
         applicationId = "com.talosross.summaryyou"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
+        versionCode = 20231119
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -35,28 +35,43 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
+        }
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     flavorDimensions += "version"
 
+    sourceSets {
+        getByName("main") {
+            java.srcDirs("src/main/java")
+        }
+
+        create("paid") {
+            java.srcDirs("src/main/java")
+            jniLibs.srcDirs("src/paid/jni")
+        }
+
+        create("openSource") {
+            java.srcDirs("src/main/java")
+            jniLibs.srcDirs("src/openSource/jni")
+        }
+    }
     productFlavors {
         create("paid") {
             dimension = "version"
             buildConfigField("boolean", "OPEN_SOURCE", "false")
-            applicationIdSuffix = ".paid"
-            versionNameSuffix = "-paid"
+            signingConfig = signingConfigs.getByName("debug")
         }
-
         create("openSource") {
             dimension = "version"
             buildConfigField("boolean", "OPEN_SOURCE", "true")
-            applicationIdSuffix = ".openSource"
-            versionNameSuffix = "-openSource"
         }
     }
     externalNativeBuild {
         ndkBuild {
-            path = file("src/main/jni/Android.mk")
+            path = file("src/paid/jni/Android.mk")
         }
     }
     compileOptions {
@@ -89,6 +104,7 @@ chaquopy {
             install("openai")
             install("pytube")
             install("newspaper3k")
+            install("pydantic<2")
             }
     }
 }

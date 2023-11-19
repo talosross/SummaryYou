@@ -10,7 +10,7 @@
     <string name="noTranscript">Kein Transcript gefunden</string>
     <string name="noInternet">Keine Internet-Verbindung</string>
     <string name="noContent">Kein Inhalt</string>
-    <string name="paywallDetected">Paywall gefunden, zusammenfassen nicht möglich</string>
+    <string name="paywallDetected">Paywall gefunden, Zusammenfassen nicht möglich</string>
     <string name="incorrectApi">Fehler mit OpenAI, Update der App notwendig.</string>
     <string name="noApi">Fehler mit OpenAI, kein API-Key gefunden</string>
     <string name="useOriginalLanguage">Originalsprache</string>
@@ -24,6 +24,8 @@
     <string name="useUltraDarkDescription">Benutze Ultra Dark mit echtem schwarz</string>
     <string name="useMultiLines">Mehrere Linien für URL</string>
     <string name="useMultiLinesDescription">Benutze mehrere Linien im URL-Feld</string>
+    <string name="setApiKey">API-Schlüssel</string>
+    <string name="setApiKeyDescription">Setze deinen OpenAI API Schlüssel</string>
     <string name="design">Design</string>
     <string name="cancel">Abbrechen</string>
     <string name="ok">OK</string>

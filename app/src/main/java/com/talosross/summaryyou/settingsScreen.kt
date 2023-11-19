@@ -157,7 +157,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
         var apiTextFieldValue by remember { mutableStateOf(viewModel.getApiKeyValue()?.toString() ?: "") }
         AlertDialog(
             onDismissRequest = { showDialogDesign = false },
-            title = { Text(stringResource(id = R.string.design)) },
+            title = { Text(stringResource(id = R.string.setApiKey)) },
             text = {
                 OutlinedTextField(
                     value = apiTextFieldValue,
