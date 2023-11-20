@@ -16,8 +16,6 @@ def internet_connection():
 def get_title(url):
     try:
         yt_video = YouTube(url)
-
-        # Titel des Videos abrufen
         video_title = yt_video.title
 
         return video_title
