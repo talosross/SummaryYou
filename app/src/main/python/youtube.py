@@ -15,7 +15,6 @@ def internet_connection():
 
 def get_title(url):
     try:
-        # YouTube-Video-Objekt erstellen
         yt_video = YouTube(url)
 
         # Titel des Videos abrufen
