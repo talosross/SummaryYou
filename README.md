@@ -1,6 +1,6 @@
 <div align="center">
 
-<img width="" src="Bildschirmfoto_vom_2023-09-08_01-39-34-removebg-preview.png"  width=160 height=160  align="center">
+<img width="" src=".github/logo.png"  width=160 height=160  align="center">
 
 # Summary You
 
@@ -14,12 +14,12 @@
 
 <div align="center">
 <div>
-<img src="Screenshot_20231103-155348.png" width="30%" />
-<img src="Screenshot_20231103-155607.png" width="30%" />
-<img src="Screenshot_20231103-155534.png" width="30%" />
-<img src="Screenshot_20231107-095714.png" width="30%" />
-<img src="Screenshot_20231107-095638.png" width="30%" />
-<img src="Screenshot_20231107-095659.png" width="30%" />
+<img src=".github/Screenshots/1.jpg" width="30%" />
+<img src=".github/Screenshots/2.jpg" width="30%" />
+<img src=".github/Screenshots/3.jpg" width="30%" />
+<img src=".github/Screenshots/4.jpg" width="30%" />
+<img src=".github/Screenshots/5.jpg" width="30%" />
+<img src=".github/Screenshots/6.jpg" width="30%" />
 
 </div>
 </div>
@@ -34,7 +34,7 @@
 
 - History-Section
   
-- intelligent paywall detection
+- Intelligent paywall detection
 
 - OLED-Dark Mode
 
