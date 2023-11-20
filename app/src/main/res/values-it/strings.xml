@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><resources>
+
+    <string name="app_name" translatable="false">Summary You</string>
+
+    <string name="short_length">Corto</string>
+
+    <string name="middle_length">Mezzo</string>
+
+    <string name="long_length">Lungo</string>
+
+    <string name="settings">Impostazioni</string>
+
+    <string name="history">Storia</string>
+
+    <string name="regenerate">Rigenerare</string>
+
+    <string name="invalidURL">URL non valido</string>
+
+    <string name="noTranscript">Nessuna trascrizione trovata</string>
+
+    <string name="noContent">Nessun contenuto</string>
+
+    <string name="noInternet">Nessuna connessione internet</string>
+
+    <string name="paywallDetected">Paywall rilevato, riepilogo impossibile.</string>
+
+    <string name="incorrectApi">Errore con OpenAI, devi aggiornare l\'app.</string>
+
+    <string name="incorrectApiOpenSource">Chiave API errata</string>
+
+    <string name="noApi">Errore con OpenAI, devi fornire una chiave API.</string>
+
+    <string name="useOriginalLanguage">Lingua originale</string>
+
+    <string name="useOriginalLanguageDescription">Utilizza la lingua originale invece della tua lingua.</string>
+
+    <string name="chooseLanguage">Lingua</string>
+
+    <string name="chooseLanguageDescription">Scegli una lingua</string>
+
+    <string name="repository">Codice sorgente aperto</string>
+
+    <string name="githubDescription">Il nostro repository Github</string>
+
+    <string name="madeBy">Realizzato con ❤ da talosross</string>
+
+    <string name="useUltraDark">Usa Ultra scuro</string>
+
+    <string name="useUltraDarkDescription">Usa la modalità Ultra Dark con il nero reale</string>
+
+    <string name="useMultiLines">Più righe per l\'URL</string>
+
+    <string name="useMultiLinesDescription">Utilizza più righe nel campo URL</string>
+
+    <string name="setApiKey">Imposta la chiave API</string>
+
+    <string name="setApiKeyDescription">Imposta la chiave API OpenAI</string>
+
+    <string name="design">Progetto</string>
+
+    <string name="cancel">Annulla</string>
+
+    <string name="ok">OK</string>
+
+    <string name="restartRequiredDescription">Riavvia l\'app per utilizzare le nuove modifiche.</string>
+
+    <string name="restartRequired">È necessario il riavvio dell\'app</string>
+
+    <string name="systemDesign">Sistema</string>
+
+    <string name="lightDesign">Leggero</string>
+
+    <string name="darkDesign">Buio</string>
+
+</resources>

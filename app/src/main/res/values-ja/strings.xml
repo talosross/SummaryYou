@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><resources>
+
+    <string name="app_name" translatable="false">Summary You</string>
+
+    <string name="short_length">短い</string>
+
+    <string name="middle_length">真ん中</string>
+
+    <string name="long_length">長さ</string>
+
+    <string name="settings">設定</string>
+
+    <string name="history">歴史</string>
+
+    <string name="regenerate">再生する</string>
+
+    <string name="invalidURL">無効な URL</string>
+
+    <string name="noTranscript">トランスクリプトが見つかりませんでした</string>
+
+    <string name="noContent">コンテンツなし</string>
+
+    <string name="noInternet">インターネット接続なし</string>
+
+    <string name="paywallDetected">ペイウォールが検出されました。要約はできません。</string>
+
+    <string name="incorrectApi">OpenAI でエラーが発生しました。アプリを更新する必要があります。</string>
+
+    <string name="incorrectApiOpenSource">API キーが間違っています</string>
+
+    <string name="noApi">OpenAI でエラーが発生しました。API キーを指定する必要があります。</string>
+
+    <string name="useOriginalLanguage">元の言語</string>
+
+    <string name="useOriginalLanguageDescription">自分の言語の代わりに元の言語を使用してください。</string>
+
+    <string name="chooseLanguage">言語</string>
+
+    <string name="chooseLanguageDescription">言語を選択してください</string>
+
+    <string name="repository">オープンソースコード</string>
+
+    <string name="githubDescription">Github リポジトリ</string>
+
+    <string name="madeBy">タロスロスの❤で作りました</string>
+
+    <string name="useUltraDark">ウルトラダークを使用する</string>
+
+    <string name="useUltraDarkDescription">リアルブラックでウルトラダークモードを使用する</string>
+
+    <string name="useMultiLines">URL の行数を増やす</string>
+
+    <string name="useMultiLinesDescription">URL フィールドでより多くの行を使用します</string>
+
+    <string name="setApiKey">API キーの設定</string>
+
+    <string name="setApiKeyDescription">OpenAI API キーを設定する</string>
+
+    <string name="design">デザイン</string>
+
+    <string name="cancel">キャンセル</string>
+
+    <string name="ok">わかりました</string>
+
+    <string name="restartRequiredDescription">新しい変更を使用するには、アプリを再起動します。</string>
+
+    <string name="restartRequired">アプリの再起動が必要です</string>
+
+    <string name="systemDesign">システム</string>
+
+    <string name="lightDesign">ライト</string>
+
+    <string name="darkDesign">暗い</string>
+
+</resources>

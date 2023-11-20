@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><resources>
+
+    <string name="app_name" translatable="false">Summary You</string>
+
+    <string name="short_length">短的</string>
+
+    <string name="middle_length">中间</string>
+
+    <string name="long_length">长的</string>
+
+    <string name="settings">设置</string>
+
+    <string name="history">历史</string>
+
+    <string name="regenerate">再生</string>
+
+    <string name="invalidURL">无效的网址</string>
+
+    <string name="noTranscript">未找到文字记录</string>
+
+    <string name="noContent">无内容</string>
+
+    <string name="noInternet">没有网络连接</string>
+
+    <string name="paywallDetected">检测到付费墙，无法进行总结。</string>
+
+    <string name="incorrectApi">OpenAI 出错，您必须更新应用程序。</string>
+
+    <string name="incorrectApiOpenSource">API 密钥不正确</string>
+
+    <string name="noApi">OpenAI 出错，您必须提供 API 密钥。</string>
+
+    <string name="useOriginalLanguage">原始语言</string>
+
+    <string name="useOriginalLanguageDescription">使用原始语言而不是您的语言。</string>
+
+    <string name="chooseLanguage">语言</string>
+
+    <string name="chooseLanguageDescription">选择语言</string>
+
+    <string name="repository">开源代码</string>
+
+    <string name="githubDescription">我们的 Github 存储库</string>
+
+    <string name="madeBy">由 talosross 用 ❤ 制作</string>
+
+    <string name="useUltraDark">使用超暗</string>
+
+    <string name="useUltraDarkDescription">使用超暗模式和纯黑色</string>
+
+    <string name="useMultiLines">网址 的更多行</string>
+
+    <string name="useMultiLinesDescription">在 网址 字段中使用更多行</string>
+
+    <string name="setApiKey">设置 API 密钥</string>
+
+    <string name="setApiKeyDescription">设置您的 OpenAI API 密钥</string>
+
+    <string name="design">设计</string>
+
+    <string name="cancel">取消</string>
+
+    <string name="ok">好的</string>
+
+    <string name="restartRequiredDescription">重新启动应用程序以使用新的更改。</string>
+
+    <string name="restartRequired">需要重新启动应用程序</string>
+
+    <string name="systemDesign">系统</string>
+
+    <string name="lightDesign">光</string>
+
+    <string name="darkDesign">黑暗的</string>
+
+</resources>

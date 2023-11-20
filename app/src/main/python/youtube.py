@@ -1,6 +1,6 @@
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 import re
-import openai
+from openai import OpenAI
 from pytube import YouTube
 from newspaper import Article
 import socket
@@ -99,7 +99,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
     Generate a summary of the provided text using OpenAI API
     """
     # Initialize the OpenAI API client
-    openai.api_key = key
+    client = OpenAI( api_key = key)
     if article == False:
         if language == "the same language as the ":
             language = language + "video"
@@ -126,7 +126,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
             max_tokens = 230
 
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": instructions},
@@ -147,7 +147,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
 
         try:
             # Attempt to generate a summary using "gpt-3.5-turbo-16k" if there was an error with the previous model
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo-16k",
                 messages=[
                     {"role": "system", "content": instructions},

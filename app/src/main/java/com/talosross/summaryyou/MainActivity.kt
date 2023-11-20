@@ -426,8 +426,8 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                 SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
                                     options.forEachIndexed { index, label ->
                                         SegmentedButton(
-                                            shape = SegmentedButtonDefaults.shape(
-                                                position = index,
+                                            shape = SegmentedButtonDefaults.itemShape(
+                                                index = index,
                                                 count = options.size
                                             ),
                                             onClick = { selectedIndex = index },

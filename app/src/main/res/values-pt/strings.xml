@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><resources>
+
+    <string name="app_name" translatable="false">Summary You</string>
+
+    <string name="short_length">Curto</string>
+
+    <string name="middle_length">Meio</string>
+
+    <string name="long_length">Longo</string>
+
+    <string name="settings">Configurações</string>
+
+    <string name="history">História</string>
+
+    <string name="regenerate">Regenerado</string>
+
+    <string name="invalidURL">URL inválida</string>
+
+    <string name="noTranscript">Nenhuma transcrição encontrada</string>
+
+    <string name="noContent">Sem conteúdo</string>
+
+    <string name="noInternet">Sem conexão com a Internet</string>
+
+    <string name="paywallDetected">Paywall detectado, resumindo não é possível.</string>
+
+    <string name="incorrectApi">Erro com OpenAI, é necessário atualizar o App.</string>
+
+    <string name="incorrectApiOpenSource">Chave de API incorreta</string>
+
+    <string name="noApi">Erro com OpenAI, você precisa fornecer uma chave de API.</string>
+
+    <string name="useOriginalLanguage">Linguagem original</string>
+
+    <string name="useOriginalLanguageDescription">Use o idioma original em vez do seu idioma.</string>
+
+    <string name="chooseLanguage">Linguagem</string>
+
+    <string name="chooseLanguageDescription">Escolha um idioma</string>
+
+    <string name="repository">Código-fonte aberto</string>
+
+    <string name="githubDescription">Nosso repositório Github</string>
+
+    <string name="madeBy">Feito com ❤ por talosross</string>
+
+    <string name="useUltraDark">Usar Ultra Escuro</string>
+
+    <string name="useUltraDarkDescription">Use o modo Ultra Dark com preto real</string>
+
+    <string name="useMultiLines">Mais linhas para URL</string>
+
+    <string name="useMultiLinesDescription">Use mais linhas no campo URL</string>
+
+    <string name="setApiKey">Definir chave de API</string>
+
+    <string name="setApiKeyDescription">Defina sua chave de API OpenAI</string>
+
+    <string name="design">Projeto</string>
+
+    <string name="cancel">Cancelar</string>
+
+    <string name="ok">OK</string>
+
+    <string name="restartRequiredDescription">Reinicie o aplicativo para usar as novas alterações.</string>
+
+    <string name="restartRequired">É necessário reiniciar o aplicativo</string>
+
+    <string name="systemDesign">Sistema</string>
+
+    <string name="lightDesign">Luz</string>
+
+    <string name="darkDesign">Escuro</string>
+
+</resources>
