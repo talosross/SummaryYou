@@ -1,50 +1,51 @@
 on:
   push:
-    branches: master
+    branches: 
+      - master
     tags:
       - v*
 
-release_build:
-  runs-on: ubuntu-latest
-  if: startsWith(github.ref, 'refs/tags/')
+jobs:
+  release_build:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
 
-  steps:
-    - uses: actions/checkout@v2.6.0
+    steps:
+      - uses: actions/checkout@v2.6.0
 
-    - name: Setup JAVA 11
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'corretto'
-        java-version: 11
+      - name: Setup JAVA 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: 11
 
-    - name: Cache Gradle and wrapper
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+      - name: Cache Gradle and wrapper
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
 
-    - name: Build Release apk
-      run: ./gradlew assembleRelease
+      - name: Build Release apk
+        run: ./gradlew assembleRelease
 
-    - name: Build Release bundle
-      run: ./gradlew bundleRelease
+      - name: Build Release bundle
+        run: ./gradlew bundleRelease
 
-    - name: Upload Release Build to Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: release-artifacts
-        paths: |
-          app/build/outputs/apk/release/
-          app/build/outputs/bundle/release/
+      - name: Upload Release Build to Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-artifacts
+          paths: |
+            app/build/outputs/apk/release/
+            app/build/outputs/bundle/release/
 
-    - name: Create Github Release
-      uses: softprops/action-gh-release@v1
-      with:
-        generate_release_notes: true
-        prerelease: true
-        files: |
-          app/build/outputs/apk/release/app-release.apk
-          app/build/outputs/bundle/release/app-release.aab
-
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          prerelease: true
+          files: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
