@@ -71,6 +71,5 @@
     <string name="lightDesign">ライト</string>
 
     <string name="darkDesign">暗い</string>
-    <string name="incorrectApiOpenSource">不正なAPIキー</string>
 
 </resources>

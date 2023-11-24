@@ -51,7 +51,6 @@
     <string name="useMultiLines">网址 的更多行</string>
 
     <string name="useMultiLinesDescription">在 网址 字段中使用更多行</string>
-    <string name="incorrectApiOpenSource">错误的API密钥</string>
 
     <string name="setApiKey">设置 API 密钥</string>
 
