@@ -34,4 +34,5 @@
     <string name="systemDesign">System</string>
     <string name="lightDesign">Hell</string>
     <string name="darkDesign">Dunkel</string>
+    <string name="incorrectApiOpenSource">Falscher API-Schlüssel</string>
 </resources>
