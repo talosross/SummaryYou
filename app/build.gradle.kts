@@ -66,9 +66,6 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    lint {
-        baseline = file("lint-baseline.xml")
-    }
 }
 
 chaquopy {
