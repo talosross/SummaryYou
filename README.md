@@ -26,6 +26,10 @@
 
 <br>
 
+## Download Version without key necessary (paid)
+
+<a href='https://play.google.com/store/apps/details?id=com.talosross.summaryyou'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='300'/></a>
+
 ## 📖 Features
 
 - Summarize YouTube-Videos & Articles with AI
