@@ -1,3 +1,5 @@
+name: Build APK
+
 on:
   push:
     branches: master
