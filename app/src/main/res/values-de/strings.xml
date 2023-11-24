@@ -12,6 +12,7 @@
     <string name="noContent">Kein Inhalt</string>
     <string name="paywallDetected">Paywall gefunden, Zusammenfassen nicht möglich</string>
     <string name="incorrectApi">Fehler mit OpenAI, Update der App notwendig.</string>
+    <string name="incorrectApiOpenSource">Falscher API-Schlüssel</string>
     <string name="noApi">Fehler mit OpenAI, kein API-Key gefunden</string>
     <string name="useOriginalLanguage">Originalsprache</string>
     <string name="useOriginalLanguageDescription">Benutze die Originalsprache anstelle der Appsprache.</string>
@@ -34,5 +35,4 @@
     <string name="systemDesign">System</string>
     <string name="lightDesign">Hell</string>
     <string name="darkDesign">Dunkel</string>
-    <string name="incorrectApiOpenSource">Falscher API-Schlüssel</string>
 </resources>
