@@ -88,7 +88,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
-
 class MainActivity : ComponentActivity() {
     private var sharedUrl: String? = null
 
@@ -290,6 +289,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     val showCancelIcon by remember { derivedStateOf { url.isNotBlank() } }
     var isError by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val key: String = APIKeyLibrary.getAPIKey()
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
@@ -380,7 +380,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                 "Exception: no content" -> stringResource(id = R.string.noContent)
                                                 "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
                                                 "Exception: incorrect api" -> {
-                                                    if (BuildConfig.OPEN_SOURCE) {
+                                                    if (key.isEmpty()) {
                                                         stringResource(id = R.string.incorrectApiOpenSource)
                                                     } else {
                                                         stringResource(id = R.string.incorrectApi)
@@ -603,11 +603,9 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
 suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel): Pair<String, Boolean> {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
-    val key: String
+    var key: String = APIKeyLibrary.getAPIKey()
 
-    if (!BuildConfig.OPEN_SOURCE) {
-        key = APIKeyLibrary.getAPIKey()
-    }else{
+    if (key.isEmpty()) {
         key = viewModel.getApiKeyValue().toString()
     }
 

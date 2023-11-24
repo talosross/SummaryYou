@@ -14,8 +14,8 @@ android {
         applicationId = "com.talosross.summaryyou"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2023112019
-        versionName = "1.0"
+        versionCode = 20231124
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -41,37 +41,10 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-    flavorDimensions += "version"
 
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("src/main/java")
-        }
-
-        create("paid") {
-            java.srcDirs("src/main/java")
-            jniLibs.srcDirs("src/paid/jni")
-        }
-
-        create("openSource") {
-            java.srcDirs("src/main/java")
-            jniLibs.srcDirs("src/openSource/jni")
-        }
-    }
-    productFlavors {
-        create("paid") {
-            dimension = "version"
-            buildConfigField("boolean", "OPEN_SOURCE", "false")
-            signingConfig = signingConfigs.getByName("debug")
-        }
-        create("openSource") {
-            dimension = "version"
-            buildConfigField("boolean", "OPEN_SOURCE", "true")
-        }
-    }
     externalNativeBuild {
         ndkBuild {
-            path = file("src/paid/jni/Android.mk")
+            path = file("jni/Android.mk")
         }
     }
     compileOptions {
@@ -129,4 +102,5 @@ dependencies {
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
     implementation("androidx.navigation:navigation-compose:2.7.5")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.android.material:material:1.12.0-alpha01")
 }

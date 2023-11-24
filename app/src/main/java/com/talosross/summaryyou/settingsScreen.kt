@@ -9,7 +9,6 @@ import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -53,7 +52,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavHostController
 
 
@@ -103,6 +101,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     var design = viewModel.getDesignNumber()
     val currentLocale = Resources.getSystem().configuration.locales[0]
     val currentLanguage = currentLocale.language
+    val key: String = APIKeyLibrary.getAPIKey()
 
     if (showDialogDesign) {
         AlertDialog(
@@ -289,7 +288,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                         )
                     }
                 )
-                if (BuildConfig.OPEN_SOURCE) {
+                if (key.isEmpty()) {
                     ListItem(
                         modifier = Modifier
                             .clickable(onClick = { showDialogKey = showDialogKey.not() })
