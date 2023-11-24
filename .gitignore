@@ -10,6 +10,7 @@
 .cxx
 local.properties
 app/jni/
+app/jni/api-keys.c
 # Built application files
 *.apk
 *.aar
