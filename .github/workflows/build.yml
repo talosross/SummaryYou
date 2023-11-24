@@ -5,7 +5,7 @@ env:
   main_project_module: app
 
   # The name of the Play Store
-  playstore_name: MY-Project
+  playstore_name: SummaryYou
 
 # Controls when the workflow will run
 on:
@@ -58,7 +58,25 @@ jobs:
 
       # Run Build Project
       - name: Build gradle project
-        run: ./gradlew build
+        run: |
+          echo "Running Gradle Build..."
+          ./gradlew build
+
+          # Print the content of build directory for debugging
+          echo "Contents of build directory:"
+          ls -R build
+
+          # Print the content of outputs directory for debugging
+          echo "Contents of outputs directory:"
+          ls -R ${{ env.main_project_module }}/build/outputs
+
+          # Print the content of outputs/apk directory for debugging
+          echo "Contents of outputs/apk directory:"
+          ls -R ${{ env.main_project_module }}/build/outputs/apk
+
+          # Print the content of outputs/apk/debug directory for debugging
+          echo "Contents of outputs/apk/debug directory:"
+          ls -R ${{ env.main_project_module }}/build/outputs/apk/debug
 
       # Create APK Debug
       - name: Build apk debug project (APK) - ${{ env.main_project_module }} module
