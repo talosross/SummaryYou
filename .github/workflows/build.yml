@@ -46,8 +46,7 @@ jobs:
          if: startsWith(github.ref, 'refs/tags/')
          uses: softprops/action-gh-release@v1
          with:
-           tag_name: ${{ steps.get_version_name.outputs.version_name }}
-           name: Release ${{ steps.get_version_name.outputs.version_name }}
+           tag_name: ${{ steps.tag.outputs.tag }}
            generate_release_notes: true
            prerelease: true
            files: |
