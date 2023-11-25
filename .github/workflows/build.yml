@@ -1,12 +1,11 @@
 name: Build APK
 
 on:
-  push:
-    branches: master
-    tags:
-      - v*
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
-release_build:
+jobs:
+  release_build:
      runs-on: ubuntu-latest
      if: startsWith(github.ref, 'refs/tags/')
  
@@ -40,7 +39,7 @@ release_build:
            paths: |
              app/build/outputs/apk/release/
              app/build/outputs/bundle/release/
-       #4      
+      
        - name: Create Github Release
          uses: softprops/action-gh-release@v1
          with:
