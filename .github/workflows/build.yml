@@ -30,6 +30,9 @@ jobs:
           echo "Version Name: ${VERSION_NAME}"
           echo "Version Code: ${VERSION_CODE}"
 
+      - name: Create release folder
+        run: mkdir -p app/build/outputs/apk/release
+
       - name: Build release APK
         run: ./gradlew assembleRelease
         
