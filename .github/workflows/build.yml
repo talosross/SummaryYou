@@ -21,10 +21,12 @@ jobs:
         id: extract-versions
         run: |
           set -e
-          VERSION_NAME=$(grep -E 'versionName\s' app/build.gradle.kts | sed -n 's/.*"([^"]+)".*/\1/p')
+          VERSION_NAME=$(grep -E 'versionName\s' app/build.gradle.kts | sed -n 's/.*versionName\s*=\s*["'\'']\([^"'\'']*\)["'\''].*/\1/p')
           VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | awk '{print $2}')
           echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
           echo "VERSION_CODE=${VERSION_CODE}" >> $GITHUB_ENV
+          echo "Version Name: ${VERSION_NAME}"
+          echo "Version Code: ${VERSION_CODE}"
 
       - name: Build release APK
         run: ./gradlew assembleRelease
