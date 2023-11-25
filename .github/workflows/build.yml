@@ -23,7 +23,6 @@ jobs:
            path: |
              ~/.gradle/caches
              ~/.gradle/wrapper
-           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
            
        - name: Build Release apk
          run: ./gradlew assembleRelease
@@ -44,6 +43,7 @@ jobs:
              app/build/outputs/bundle/release/
       
        - name: Create Github Release
+         if: startsWith(github.ref, 'refs/tags/')
          uses: softprops/action-gh-release@v1
          with:
            tag_name: ${{ steps.get_version_name.outputs.version_name }}
