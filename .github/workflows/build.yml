@@ -44,7 +44,7 @@ jobs:
              app/build/outputs/bundle/release/
       
        - name: Create Github Release
-         uses: softprops/action-gh-release@v3
+         uses: softprops/action-gh-release@v1
          with:
            tag_name: ${{ steps.get_version_name.outputs.version_name }}
            name: Release ${{ steps.get_version_name.outputs.version_name }}
