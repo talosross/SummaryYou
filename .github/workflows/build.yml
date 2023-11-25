@@ -15,22 +15,40 @@ jobs:
          uses: actions/setup-java@v3
          with:
           java-version: '17'
-          distribution: 'temurin'
+          distribution: 'zulu'
           cache: gradle
 
        - name: Setup Android SDK
          uses: android-actions/setup-android@v2
 
        - uses: gradle/gradle-build-action@v2
-       - run: gradle assembleRelease
+       - name: Build release APK
+         run: gradle assembleRelease
 
        - name: Get Version Name
          id: get_version_name
          run: echo "::set-output name=version_name::$(grep 'versionName' app/build.gradle | sed -E 's/.*"(.+)"$/\1/')"
-       - name: Releasing using Hub
-         uses: kyze8439690/action-release-releaseapk@master
-         env:
-           GITHUB_TOKEN: ${{ secrets.ADMIN_TOKEN }}
-           APP_FOLDER: app
-       
-    
+
+       - name: Upload artifact
+         uses: actions/upload-artifact@v3
+         with:
+           name: Release APK
+           path: ${{ github.event.inputs.artifactName }}
+
+       - name: Download artifact
+         uses: actions/download-artifact@v3
+         with:
+           name: Release APK
+           path: artifacts/release-apk
+      
+      
+       - name: Publish GitHub release
+         uses: softprops/action-gh-release@v1
+         with:
+           tag_name: ${{ github.event.inputs.tagName }}
+           prerelease: ${{ github.events.inputs.prerelease }}
+           draft: true
+           body_path: ${{ github.workspace }}/GITHUB_CHANGELOG.md
+           files: artifacts/release-apk/${{ github.event.inputs.artifactName }}
+           name: ${{ steps.get_version_name.outputs.version_name }}       
+
