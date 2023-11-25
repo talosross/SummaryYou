@@ -31,6 +31,10 @@ jobs:
        - name: Build Release bundle
          run: ./gradlew bundleRelease
 
+       - name: Get Version Name
+         id: get_version_name
+         run: echo "::set-output name=version_name::$(grep 'versionName' app/build.gradle | sed -E 's/.*"(.+)"$/\1/')"
+
        - name: Upload Release Build to Artifacts
          uses: actions/upload-artifact@v3
          with:
@@ -42,6 +46,8 @@ jobs:
        - name: Create Github Release
          uses: softprops/action-gh-release@v1
          with:
+           tag_name: ${{ steps.get_version_name.outputs.version_name }}
+           release_name: Release ${{ steps.get_version_name.outputs.version_name }}
            generate_release_notes: true
            prerelease: true
            files: |
