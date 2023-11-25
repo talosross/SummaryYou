@@ -1,8 +1,7 @@
 name: Release update
 on:
-  push:
-    branches:
-      - main  # Ändere dies entsprechend deinem Standardzweig
+  workflow_dispatch:
+    inputs:
 
 jobs:
   build-release-apk:
