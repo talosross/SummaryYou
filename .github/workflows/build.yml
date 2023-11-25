@@ -54,8 +54,8 @@ jobs:
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "v${{ env.VERSION_NAME }} (${{ env.VERSION_CODE }})"
+          tag_name: "v${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }})"
           prerelease: false
           draft: false
-          token: ${{ secrets.ADMIN_TOKEN }} 
+          token: ${{ secrets.ADMIN_TOKEN }}
           files: /home/runner/work/SummaryYou/SummaryYou/app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
