@@ -22,7 +22,7 @@ jobs:
         run: |
           set -e
           VERSION_NAME=$(grep -E 'versionName\s' app/build.gradle.kts | sed -n 's/.*versionName\s*=\s*["'\'']\([^"'\'']*\)["'\''].*/\1/p')
-          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | awk '{print $2}')
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | sed -n 's/.*versionCode\s*=\s*\([0-9]*\).*/\1/p')
           echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
           echo "VERSION_CODE=${VERSION_CODE}" >> $GITHUB_ENV
           echo "Version Name: ${VERSION_NAME}"
@@ -53,7 +53,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: Release APK
-          path: artifacts/release-apk
+          path: app/build/outputs/apk/release
           
       - name: Set up environment variables
         run: |
@@ -67,4 +67,4 @@ jobs:
           prerelease: false
           draft: true
           body_path: ${{ github.workspace }}/GITHUB_CHANGELOG.md
-          files: artifacts/release-apk/SummaryYou-${{ env.VERSION_NAME }}-${{ env.VERSION_CODE }}.apk
+          files: app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}-${{ env.VERSION_CODE }}.apk
