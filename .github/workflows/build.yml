@@ -58,4 +58,4 @@ jobs:
           prerelease: false
           draft: false
           token: ${{ secrets.ADMIN_TOKEN }}
-          files: /home/runner/work/SummaryYou/SummaryYou/app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
+          files: SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
