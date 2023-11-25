@@ -33,14 +33,11 @@ jobs:
       - name: Build release APK
         run: ./gradlew assembleRelease
         
-      - name: Rename artifact
-        run: mv "app/build/outputs/apk/release/app-release.apk" "app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
-        
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: Summary You-${{ env.VERSION_NAME }} (${{ env.VERSION_CODE }})
-          path: app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
+          path: app/build/outputs/apk/release/
 
       - name: Check out repository
         uses: actions/checkout@v4
@@ -49,7 +46,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: Summary You-${{ env.VERSION_NAME }} (${{ env.VERSION_CODE }})
-          path: app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
+          path: app/build/outputs/apk/release/
+
+      - name: Rename artifact
+        run: mv "app/build/outputs/apk/release/app-release.apk" "app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
           
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v1
@@ -58,4 +58,4 @@ jobs:
           prerelease: false
           draft: false
           token: ${{ secrets.ADMIN_TOKEN }}
-          files: SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
+          files: app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
