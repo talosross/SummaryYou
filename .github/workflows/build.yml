@@ -57,4 +57,5 @@ jobs:
           tag_name: "v${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }})"
           prerelease: false
           draft: true
+          token: ${{ secrets.ADMIN_TOKEN }}
           files: app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
