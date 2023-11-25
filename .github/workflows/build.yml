@@ -32,13 +32,13 @@ jobs:
         run: ./gradlew assembleRelease
         
       - name: Rename artifact
-        run: mv "app/build/outputs/apk/release/app-release.apk" "SummaryYou-${{ env.VERSION_NAME }}-${{ env.VERSION_CODE }}.apk"
+        run: mv "app/build/outputs/apk/release/app-release.apk" "app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
         
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: Release APK
-          path: app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}-${{ env.VERSION_CODE }}.apk
+          path: app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
  
   publish-github-release:
     runs-on: ubuntu-latest
@@ -67,4 +67,4 @@ jobs:
           prerelease: false
           draft: true
           body_path: ${{ github.workspace }}/GITHUB_CHANGELOG.md
-          files: app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}-${{ env.VERSION_CODE }}.apk
+          files: app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
