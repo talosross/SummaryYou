@@ -27,12 +27,10 @@ jobs:
        - name: Get Version Name
          id: get_version_name
          run: echo "::set-output name=version_name::$(grep 'versionName' app/build.gradle | sed -E 's/.*"(.+)"$/\1/')"
-
-       - name: Upload Release Build to Artifacts
-         uses: actions/upload-artifact@v3
-         with:
-           name: release-artifacts
-           path: |
-             app/build/outputs/apk/release/
-             app/build/outputs/bundle/release/
+       - name: Releasing using Hub
+         uses: kyze8439690/action-release-releaseapk@master
+         env:
+           GITHUB_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+           APP_FOLDER: app
+       
     
