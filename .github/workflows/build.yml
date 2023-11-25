@@ -44,10 +44,10 @@ jobs:
              app/build/outputs/bundle/release/
       
        - name: Create Github Release
-         uses: softprops/action-gh-release@v1
+         uses: softprops/action-gh-release@v3
          with:
            tag_name: ${{ steps.get_version_name.outputs.version_name }}
-           release_name: Release ${{ steps.get_version_name.outputs.version_name }}
+           name: Release ${{ steps.get_version_name.outputs.version_name }}
            generate_release_notes: true
            prerelease: true
            files: |
