@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="short_length">Короткий</string>
+<string name="middle_length">Середній</string>
+<string name="long_length">Довгий</string>
+<string name="settings">Налаштування</string>
+<string name="history">Історія</string>
+<string name="regenerate">Відновити</string>
+<string name="invalidURL">Невірна URL-адреса</string>
+<string name="noTranscript">Транскрипт не знайдено</string>
+<string name="noContent">Немає вмісту</string>
+<string name="noInternet">Немає підключення до Інтернету</string>
+<string name="paywallDetected">Виявлено платіжний бар'єр, узагальнення неможливе.</string>
+<string name="incorrectApi">Помилка з OpenAI, потрібно оновити програму.</string>
+<string name="incorrectApiOpenSource">Неправильний ключ API</string>
+<string name="noApi">Помилка з OpenAI, потрібно надати ключ API.</string>
+<string name="useOriginalLanguage">Оригінальна мова</string>
+<string name="useOriginalLanguageDescription">Використовуйте оригінальну мову замість своєї мови.</string>
+<string name="chooseLanguage">Мова</string>
+<string name="chooseLanguageDescription">Виберіть мову</string>
+<string name="repository">Відкритий вихідний код</string>
+<string name="githubDescription">Наш репозиторій на GitHub</string>
+<string name="madeBy">Створено з ❤ talosross</string>
+<string name="useUltraDark">Використовуйте Ультра Темний</string>
+<string name="useUltraDarkDescription">Використовуйте режим Ультра Темний з справжнім чорним</string>
+<string name="useMultiLines">Більше рядків для URL</string>
+<string name="useMultiLinesDescription">Використовуйте більше рядків в полі URL</string>
+<string name="setApiKey">Встановити ключ API</string>
+<string name="setApiKeyDescription">Встановіть свій ключ API OpenAI</string>
+<string name="design">Дизайн</string>
+<string name="cancel">Скасувати</string>
+<string name="ok">OK</string>
+<string name="restartRequiredDescription">Перезапустіть програму, щоб застосувати нові зміни.</string>
+<string name="restartRequired">Необхіден перезапуск програми</string>
+<string name="systemDesign">Системний</string>
+<string name="lightDesign">Світлий</string>
+<string name="darkDesign">Темний</string>
+</resources>
