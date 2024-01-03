@@ -1,5 +1,6 @@
 package com.talosross.summaryyou
 
+import android.content.ClipData
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,124 +26,306 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
+import android.content.ClipboardManager
+import android.widget.Toast
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissState
+import androidx.compose.material3.DismissValue
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.rememberDismissState
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun historyScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    var searchText by remember { mutableStateOf("") } // Query for SearchBar
+    var active by remember { mutableStateOf(false) } // Active state for SearchBar
+    val focusManager = LocalFocusManager.current // Hide cursor
+    val focusRequester = remember { FocusRequester() } // Show cursor after removing
+    var searchResults by remember { mutableStateOf(emptyList<TextSummary>()) }
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            LargeTopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(),
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.history),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {navController.navigate("home")}) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Localized description"
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior
-            )
-        },
-    ) { innerPadding ->
-        LazyColumn(
+
+    if (active == false) {
+        Scaffold(
             modifier = Modifier
-                .padding(start=20.dp, end=20.dp)
-                .fillMaxSize(),
-            contentPadding = innerPadding,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            itemsIndexed(viewModel.textSummaries.reversed()) { index, textSummary ->
-                Textbox(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = textSummary.title,
-                    author = textSummary.author,
-                    text = textSummary.text,
-                    youtubeLink = textSummary.youtubeLink,
-                    viewModel = viewModel
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun Textbox(modifier: Modifier = Modifier, title: String?, author: String?, text: String?, youtubeLink: Boolean, viewModel: TextSummaryViewModel) {
-    val haptics = LocalHapticFeedback.current // Vibrations
-
-    Card(
-        modifier = modifier
-            .padding(top = 15.dp, bottom = 15.dp)
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = {},
-                onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    viewModel.removeTextSummary(title, author, text, youtubeLink)
-                }
-            )
-    ) {
-        if(!title.isNullOrEmpty()) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = modifier
-                    .padding(top = 12.dp, start = 12.dp, end = 12.dp)
-            )
-            if (!author.isNullOrEmpty()) {
-                Row {
-                    Text(
-                        text = author,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier
-                            .padding(
-                            top = 4.dp,
-                            start = 12.dp,
-                            end = 12.dp
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                LargeTopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(),
+                    title = {
+                        Text(
+                            text = stringResource(id = R.string.history),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                    )
-                    if(youtubeLink) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.youtube),
-                            contentDescription = null,
-                            modifier = Modifier.padding(top = 1.dp)
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigate("home") }) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { active = true }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_search_24),
+                                contentDescription = "Search"
+                            )
+                        }
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+            },
+        ) { innerPadding ->
+            var reversedList = remember { mutableStateListOf<String>() }
+
+            LaunchedEffect(viewModel.textSummaries) {
+                // Aktualisieren Sie die Liste, wenn sich die Originalliste ändert
+                reversedList.clear()
+                reversedList.addAll(viewModel.getAllTextSummaries())
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .padding(start = 20.dp, end = 20.dp)
+                    .fillMaxSize(),
+                contentPadding = innerPadding,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(reversedList) { textSummaryId ->
+                    val textSummary =
+                        viewModel.textSummaries.firstOrNull { it.id == textSummaryId.toString() }
+                    if (textSummary != null) {
+                        Textbox(
+                            modifier = Modifier.fillMaxWidth(),
+                            id = textSummary.id,
+                            title = textSummary.title,
+                            author = textSummary.author,
+                            text = textSummary.text,
+                            youtubeLink = textSummary.youtubeLink,
+                            viewModel = viewModel
                         )
                     }
                 }
-
             }
         }
-        Text(
-            text = text ?: "",
-            style = MaterialTheme.typography.labelLarge,
-            modifier = modifier
-                .padding(
-                    start = 12.dp,
-                    end = 12.dp,
-                    top = 10.dp,
-                    bottom = 12.dp
+    } else {
+        var searchResults = remember { mutableStateListOf<String>() }
+        SearchBar(
+            modifier = Modifier
+                .focusRequester(focusRequester)
+                .fillMaxWidth(),
+            query = searchText,
+            onQueryChange = {
+                searchText = it
+                searchResults.clear()
+                searchResults.addAll(viewModel.searchTextSummary(searchText))
+            },
+            onSearch = {
+                focusManager.clearFocus()
+            },
+            active = active,
+            onActiveChange = {
+                active = it
+            },
+            placeholder = {
+                Text(text = "Suchen")
+            },
+            leadingIcon = {
+                IconButton(onClick = { navController.navigate("history") }) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+            },
+            trailingIcon = {
+                IconButton(
+                    onClick = {
+                        if(searchText == "" || searchText.isNullOrEmpty()) {
+                            navController.navigate("history")
+                        }else{
+                            searchText = ""
+                            focusRequester.requestFocus()
+                        }
+                    }
+                ) {
+                    Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+                }
+            }
+        ) {
+                if (searchText.isNotEmpty() && searchResults.isNullOrEmpty()) {
+                        Text(
+                            text = "Keine Ergebnisse gefunden",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(start = 20.dp, end = 20.dp)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(searchResults) { textSummaryId ->
+                            val textSummary =
+                                viewModel.textSummaries.firstOrNull { it.id == textSummaryId.toString() }
+                            if (textSummary != null) {
+                                Textbox(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    id = textSummary.id,
+                                    title = textSummary.title,
+                                    author = textSummary.author,
+                                    text = textSummary.text,
+                                    youtubeLink = textSummary.youtubeLink,
+                                    viewModel = viewModel
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun Textbox(modifier: Modifier = Modifier, id: String, title: String?, author: String?, text: String?, youtubeLink: Boolean, viewModel: TextSummaryViewModel) {
+    val haptics = LocalHapticFeedback.current // Vibrations
+    val context = LocalContext.current // Clipboard
+    val clipboardManager = ContextCompat.getSystemService(
+        context,
+        ClipboardManager::class.java
+    ) as ClipboardManager
+    val dismissState = rememberDismissState(
+        positionalThreshold = {
+            it / 2 }
+    )
+    val contextForToast = LocalContext.current.applicationContext
+    if (dismissState.isDismissed(direction = DismissDirection.StartToEnd)) {
+        Toast.makeText(contextForToast, stringResource(id = R.string.deleted), Toast.LENGTH_SHORT).show()
+        viewModel.removeTextSummary(id)
+    }
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = modifier.fillMaxSize(),
+        directions = setOf(DismissDirection.StartToEnd),
+        backgroundContent = {
+            val iconScale by animateFloatAsState(
+                targetValue = if (dismissState.targetValue == DismissValue.DismissedToEnd) 1.2f else 0.9f
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .scale(iconScale)
+                        .padding(end = 170.dp)
+                        .align(Alignment.Center),
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = "Delete"
                 )
-        )
+            }
+        }
+    ) {
+        Card(
+            modifier = modifier
+                .padding(top = 15.dp, bottom = 15.dp)
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        //viewModel.removeTextSummary(title, author, text, youtubeLink)
+                        clipboardManager.setPrimaryClip(
+                            ClipData.newPlainText(null, text)
+                        )
+                    }
+                )
+        ) {
+            if (!title.isNullOrEmpty()) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = modifier
+                        .padding(top = 12.dp, start = 12.dp, end = 12.dp)
+                )
+                if (!author.isNullOrEmpty()) {
+                    Row {
+                        Text(
+                            text = author,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier
+                                .padding(
+                                    top = 4.dp,
+                                    start = 12.dp,
+                                    end = 12.dp
+                                )
+                        )
+                        if (youtubeLink) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.youtube),
+                                contentDescription = null,
+                                modifier = Modifier.padding(top = 1.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            Text(
+                text = text ?: "",
+                style = MaterialTheme.typography.labelLarge,
+                modifier = modifier
+                    .padding(
+                        start = 12.dp,
+                        end = 12.dp,
+                        top = 10.dp,
+                        bottom = 12.dp
+                    )
+            )
+        }
     }
 }
+

@@ -4,6 +4,7 @@ from openai import OpenAI
 from pytube import YouTube
 from newspaper import Article
 import socket
+import google.generativeai as genai
 
 def internet_connection():
     try:
@@ -97,6 +98,12 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
     """
     # Initialize the OpenAI API client
     client = OpenAI( api_key = key)
+
+    """
+    # Initialize Gemini
+    genai.configure( api_key = key)
+    model = genai.GenerativeModel(model_name='gemini-pro-vision')
+    """
     if article == False:
         if language == "the same language as the ":
             language = language + "video"
@@ -138,8 +145,15 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
 
         # Return the generated summary
         return response.choices[0].message.content.strip()
-
+        """
+        prompt = instructions + text
+        response = model.generate_content(prompt)
+        return response
+        """
     except Exception as e:
+        """
+        print("Text is too long.")
+        """
         print(f"An error occurred with 'gpt-3.5-turbo': {str(e)}")
 
         try:

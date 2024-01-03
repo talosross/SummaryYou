@@ -14,8 +14,8 @@ android {
         applicationId = "com.talosross.summaryyou"
         minSdk = 24
         targetSdk = 34
-        versionCode = 20231231
-        versionName = "1.0.3"
+        versionCode = 20240103
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -78,6 +78,7 @@ chaquopy {
             install("pytube")
             install("newspaper3k")
             install("pydantic<2")
+            install("google-generativeai")
             }
     }
 }

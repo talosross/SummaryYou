@@ -88,6 +88,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import java.util.UUID
+
 class MainActivity : ComponentActivity() {
     private var sharedUrl: String? = null
 
@@ -143,7 +145,8 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
         val nonNullAuthor = author ?: ""
 
         if (text != null && text.isNotBlank() && text != "invalid link") {
-            val newTextSummary = TextSummary(nonNullTitle, nonNullAuthor, text, youtubeLink)
+            val uniqueId = UUID.randomUUID().toString()
+            val newTextSummary = TextSummary(uniqueId, nonNullTitle, nonNullAuthor, text, youtubeLink)
             textSummaries.add(newTextSummary)
             // Save text data in SharedPreferences
             saveTextSummaries()
@@ -155,9 +158,9 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
         sharedPreferences.edit().putString("textSummaries", textSummariesJson).apply()
     }
 
-    fun removeTextSummary(title: String?, author: String?, text: String?, youtubeLink: Boolean) {
-        // Find the TextSummary object to remove based on title, author, and text
-        val textSummaryToRemove = textSummaries.firstOrNull { it.title == title && it.author == author && it.text == text }
+    fun removeTextSummary(id: String) {
+        // Find the TextSummary object to remove based on id
+        val textSummaryToRemove = textSummaries.firstOrNull { it.id == id }
 
         // Check whether a matching TextSummary object was found and remove it
         textSummaryToRemove?.let {
@@ -167,6 +170,24 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
             saveTextSummaries()
         }
     }
+
+    fun searchTextSummary(searchText: String): List<String> {
+        return textSummaries
+            .filter { it.title.contains(searchText, ignoreCase = true) or it.author.contains(searchText, ignoreCase = true) or it.text.contains(searchText, ignoreCase = true)  }
+            .map { it.id }
+            .takeIf { it.isNotEmpty() }
+            ?.toList()
+            ?: emptyList()
+    }
+
+    fun getAllTextSummaries(): List<String> {
+        return textSummaries
+            .map { it.id }
+            .takeIf { it.isNotEmpty() }
+            ?.toList()
+            ?: emptyList()
+    }
+
 
     // Original Language in summary
     var useOriginalLanguage by mutableStateOf(sharedPreferences.getBoolean("useOriginalLanguage", false))
@@ -237,7 +258,7 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
 }
 
 
-data class TextSummary(val title: String, val author: String, val text: String, val youtubeLink: Boolean)
+data class TextSummary(val id: String, val title: String, val author: String, val text: String, val youtubeLink: Boolean)
 
 @Composable
 fun AppNavigation(navController: NavHostController, applicationContext: Context, initialUrl: String? = null) {

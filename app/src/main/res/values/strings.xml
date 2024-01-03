@@ -35,4 +35,5 @@
     <string name="systemDesign">System</string>
     <string name="lightDesign">Light</string>
     <string name="darkDesign">Dark</string>
+    <string name="deleted">Summary deleted</string>
 </resources>
