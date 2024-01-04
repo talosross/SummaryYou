@@ -71,5 +71,14 @@
     <string name="lightDesign">光</string>
 
     <string name="darkDesign">黑暗的</string>
-
+    <string name="deleted">摘要已删除</string>
+    <string name="search">搜索</string>
+    <string name="nothingFound">未找到任何内容</string>
+    <string name="welcome">欢迎使用Summary You！</string>
+    <string name="welcomeDescription">总结网站、文章和YouTube视频</string>
+    <string name="instruction">只需粘贴网站、文章或YouTube视频的链接即可生成摘要。</string>
+    <string name="instructionsShare">或者轻松与应用程序共享链接以生成摘要。</string>
+    <string name="instructionsHistory">在“历史”部分查看以前的摘要。</string>
+    <string name="finishButton">完成</string>
+    <string name="continueButton">继续</string>
 </resources>

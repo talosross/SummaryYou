@@ -111,7 +111,7 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.outline_search_24),
-                                contentDescription = "Search"
+                                contentDescription = stringResource(id = R.string.search)
                             )
                         }
                     },
@@ -122,7 +122,6 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
             var reversedList = remember { mutableStateListOf<String>() }
 
             LaunchedEffect(viewModel.textSummaries) {
-                // Aktualisieren Sie die Liste, wenn sich die Originalliste ändert
                 reversedList.clear()
                 reversedList.addAll(viewModel.getAllTextSummaries())
             }
@@ -145,7 +144,8 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                             author = textSummary.author,
                             text = textSummary.text,
                             youtubeLink = textSummary.youtubeLink,
-                            viewModel = viewModel
+                            viewModel = viewModel,
+                            search = false
                         )
                     }
                 }
@@ -171,7 +171,7 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                 active = it
             },
             placeholder = {
-                Text(text = "Suchen")
+                Text(text = stringResource(id = R.string.search))
             },
             leadingIcon = {
                 IconButton(onClick = { navController.navigate("history") }) {
@@ -195,7 +195,7 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
         ) {
                 if (searchText.isNotEmpty() && searchResults.isNullOrEmpty()) {
                         Text(
-                            text = "Keine Ergebnisse gefunden",
+                            text = stringResource(id = R.string.nothingFound),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp)
@@ -218,7 +218,8 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                                     author = textSummary.author,
                                     text = textSummary.text,
                                     youtubeLink = textSummary.youtubeLink,
-                                    viewModel = viewModel
+                                    viewModel = viewModel,
+                                    search = true
                                 )
                             }
                         }
@@ -230,7 +231,7 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun Textbox(modifier: Modifier = Modifier, id: String, title: String?, author: String?, text: String?, youtubeLink: Boolean, viewModel: TextSummaryViewModel) {
+fun Textbox(modifier: Modifier = Modifier, id: String, title: String?, author: String?, text: String?, youtubeLink: Boolean, viewModel: TextSummaryViewModel, search: Boolean) {
     val haptics = LocalHapticFeedback.current // Vibrations
     val context = LocalContext.current // Clipboard
     val clipboardManager = ContextCompat.getSystemService(
@@ -270,6 +271,9 @@ fun Textbox(modifier: Modifier = Modifier, id: String, title: String?, author: S
         }
     ) {
         Card(
+            colors = CardDefaults.cardColors(
+                containerColor = if (search) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+            ),
             modifier = modifier
                 .padding(top = 15.dp, bottom = 15.dp)
                 .fillMaxWidth()

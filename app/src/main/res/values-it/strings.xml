@@ -71,5 +71,14 @@
     <string name="lightDesign">Leggero</string>
 
     <string name="darkDesign">Buio</string>
-
+    <string name="deleted">Riassunto eliminato</string>
+    <string name="search">Ricerca</string>
+    <string name="nothingFound">Niente trovato</string>
+    <string name="welcome">Benvenuto su Summary You!</string>
+    <string name="welcomeDescription">Sintetizza siti web, articoli e video YouTube</string>
+    <string name="instruction">Incolla semplicemente il link di un sito web, un articolo o un video YouTube per generare un riassunto.</string>
+    <string name="instructionsShare">O condividi facilmente un link con l\'app per generare un riassunto.</string>
+    <string name="instructionsHistory">Accedi ai tuoi riassunti passati nella sezione Cronologia.</string>
+    <string name="finishButton">Fine</string>
+    <string name="continueButton">Continua</string>
 </resources>

@@ -71,5 +71,16 @@
     <string name="lightDesign">Lumière</string>
 
     <string name="darkDesign">Sombre</string>
+    <string name="deleted">Résumé supprimé</string>
+    <string name="search">Recherche</string>
+    <string name="nothingFound">Rien trouvé</string>
+    <string name="welcome">Bienvenue sur Summary You !</string>
+    <string name="welcomeDescription">Résumez des sites web, des articles et des vidéos YouTube</string>
+    <string name="instruction">Collez simplement le lien d\'un site web, d\'un article ou d\'une vidéo YouTube pour générer un résumé.</string>
+    <string name="instructionsShare">Ou partagez facilement un lien avec l\'application pour générer un résumé.</string>
+    <string name="instructionsHistory">Accédez à vos résumés passés dans la section Historique.</string>
+    <string name="finishButton">Terminer</string>
+    <string name="continueButton">Continuer</string>
+
 
 </resources>
