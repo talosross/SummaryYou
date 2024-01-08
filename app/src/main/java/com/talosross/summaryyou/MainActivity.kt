@@ -434,6 +434,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                 "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
                                                 "Exception: no content" -> stringResource(id = R.string.noContent)
                                                 "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
+                                                "Exception: too long" -> stringResource(id = R.string.tooLong)
                                                 "Exception: incorrect api" -> {
                                                     if (key.isEmpty()) {
                                                         stringResource(id = R.string.incorrectApiOpenSource)

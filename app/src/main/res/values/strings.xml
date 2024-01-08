@@ -14,6 +14,7 @@
     <string name="incorrectApi">Error with OpenAI, you have to update the App.</string>
     <string name="incorrectApiOpenSource">Incorrect API key</string>
     <string name="noApi">Error with OpenAI, you have to provide an API key.</string>
+    <string name="tooLong">Provided medium is too long.</string>
     <string name="useOriginalLanguage">Original Language</string>
     <string name="useOriginalLanguageDescription">Use Original Language instead of your language.</string>
     <string name="chooseLanguage">Language</string>

@@ -14,6 +14,7 @@
     <string name="incorrectApi">Fehler mit OpenAI, Update der App notwendig.</string>
     <string name="incorrectApiOpenSource">Falscher API-Schlüssel</string>
     <string name="noApi">Fehler mit OpenAI, kein API-Key gefunden</string>
+    <string name="tooLong">Das Medium ist zu lang.</string>
     <string name="useOriginalLanguage">Originalsprache</string>
     <string name="useOriginalLanguageDescription">Benutze die Originalsprache anstelle der Appsprache.</string>
     <string name="chooseLanguage">Sprache</string>

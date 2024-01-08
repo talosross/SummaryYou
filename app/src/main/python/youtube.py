@@ -246,6 +246,8 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
                 raise Exception("incorrect api")
             elif "You didn't provide an API key" in str(e):
                 raise Exception("no api")
+            elif "Please reduce the length of the messages" in str(e):
+                raise Exception("too long")
             else:
                 raise e
 
