@@ -736,179 +736,147 @@ fun OnboardingScreen(
     modifier: Modifier = Modifier
 ) {
     var screen by remember { mutableStateOf(1) }
-
-    when (screen) {
-        1 -> {
-            Column(
-                modifier = modifier
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
-                    modifier = Modifier
-                        .size(width = 150.dp, height = 150.dp)
-                )
-                Text(
-                    text = stringResource(id = R.string.welcome),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 19.sp,
-                    modifier = Modifier.padding(top=20.dp)
-                )
-                Text(
-                    text = stringResource(id = R.string.welcomeDescription),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(start = 12.dp, end = 12.dp, top = 15.dp)
-                )
-                Button(
-                    modifier = Modifier.padding(vertical = 18.dp),
-                    onClick = { screen = 2 }
-                ) {
-                    Text(text = stringResource(id = R.string.continueButton))
-                }
+    val context = LocalContext.current
+    val imageLoader = ImageLoader.Builder(context)
+        .components {
+            //Konfigurieren basierend auf der Android-Version
+            if (SDK_INT >= 28) {
+                add(ImageDecoderDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
             }
         }
+        .build()
 
-        2 -> {
-            Column(
-                modifier = modifier
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                val context = LocalContext.current
-                val imageLoader = ImageLoader.Builder(context)
-                    .components {
-                        if (SDK_INT >= 28) {
-                            add(ImageDecoderDecoder.Factory())
-                        } else {
-                            add(GifDecoder.Factory())
-                        }
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        item {
+            when (screen) {
+                1 -> {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "Logo",
+                        modifier = Modifier
+                            .size(width = 150.dp, height = 150.dp)
+                    )
+                    Text(
+                        text = stringResource(id = R.string.welcome),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 19.sp,
+                        modifier = Modifier.padding(top = 20.dp)
+                    )
+                    Text(
+                        text = stringResource(id = R.string.welcomeDescription),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp, end = 12.dp, top = 15.dp)
+                    )
+                    Button(
+                        modifier = Modifier
+                            .padding(vertical = 18.dp),
+                        onClick = { screen = 2 }
+                    ) {
+                        Text(text = stringResource(id = R.string.continueButton))
                     }
-                    .build()
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(context)
-                            .data(data = R.drawable.screen1)
-                            .apply(block = {
-                                size(Size.ORIGINAL)
-                            })
-                            .build(), imageLoader = imageLoader
-                    ),
-                    contentDescription = null,
-                    modifier = modifier
-                        .padding(top = 40.dp)
-                        .clip(shape = RoundedCornerShape(20.dp)),
-                )
-                Text(
-                    text = stringResource(id = R.string.instruction),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(start = 12.dp, end = 12.dp, top = 18.dp)
-                )
-                Button(
-                    modifier = Modifier.padding(vertical = 18.dp),
-                    onClick = { screen = 3 }
-                ) {
-                    Text(text = stringResource(id = R.string.continueButton))
                 }
-            }
-        }
 
-        3 -> {
-            Column(
-                modifier = modifier
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                val context = LocalContext.current
-                val imageLoader = ImageLoader.Builder(context)
-                    .components {
-                        if (SDK_INT >= 28) {
-                            add(ImageDecoderDecoder.Factory())
-                        } else {
-                            add(GifDecoder.Factory())
-                        }
+                2 -> {
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            ImageRequest.Builder(context)
+                                .data(data = R.drawable.screen1)
+                                .apply(block = {
+                                    size(Size.ORIGINAL)
+                                })
+                                .build(), imageLoader = imageLoader
+                        ),
+                        contentDescription = null,
+                        modifier = modifier
+                            .padding(top = 60.dp, start = 40.dp, end = 40.dp, bottom = 0.dp)
+                            .clip(shape = RoundedCornerShape(20.dp)),
+                    )
+                    Text(
+                        text = stringResource(id = R.string.instruction),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp, end = 12.dp, top = 18.dp)
+                    )
+                    Button(
+                        modifier = Modifier.padding(vertical = 18.dp),
+                        onClick = { screen = 3 }
+                    ) {
+                        Text(text = stringResource(id = R.string.continueButton))
                     }
-                    .build()
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(context)
-                            .data(data = R.drawable.screen2)
-                            .apply(block = {
-                                size(Size.ORIGINAL)
-                            })
-                            .build(), imageLoader = imageLoader
-                    ),
-                    contentDescription = null,
-                    modifier = modifier
-                        .padding(top = 40.dp)
-                        .clip(shape = RoundedCornerShape(20.dp)),
-                )
-                Text(
-                    text = stringResource(id = R.string.instructionsShare),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(start = 12.dp, end = 12.dp, top = 15.dp)
-                )
-                Button(
-                    modifier = Modifier.padding(vertical = 18.dp),
-                    onClick = { screen = 4 }
-                ) {
-                    Text(text = stringResource(id = R.string.continueButton))
+                    Spacer(modifier = modifier.padding(top = 18.dp))
                 }
-            }
-        }
-        4 -> {
-            Column(
-                modifier = modifier
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                val context = LocalContext.current
-                val imageLoader = ImageLoader.Builder(context)
-                    .components {
-                        if (SDK_INT >= 28) {
-                            add(ImageDecoderDecoder.Factory())
-                        } else {
-                            add(GifDecoder.Factory())
-                        }
+
+                3 -> {
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            ImageRequest.Builder(context)
+                                .data(data = R.drawable.screen2)
+                                .apply(block = {
+                                    size(Size.ORIGINAL)
+                                })
+                                .build(), imageLoader = imageLoader
+                        ),
+                        contentDescription = null,
+                        modifier = modifier
+                            .padding(top = 60.dp, start = 40.dp, end = 40.dp, bottom = 0.dp)
+                            .clip(shape = RoundedCornerShape(20.dp)),
+                    )
+                    Text(
+                        text = stringResource(id = R.string.instructionsShare),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp, end = 12.dp, top = 15.dp)
+                    )
+                    Button(
+                        modifier = Modifier.padding(vertical = 18.dp),
+                        onClick = { screen = 4 }
+                    ) {
+                        Text(text = stringResource(id = R.string.continueButton))
                     }
-                    .build()
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(context)
-                            .data(data = R.drawable.screen3)
-                            .apply(block = {
-                                size(Size.ORIGINAL)
-                            })
-                            .build(), imageLoader = imageLoader
-                    ),
-                    contentDescription = null,
-                    modifier = modifier
-                        .padding(top = 40.dp)
-                        .clip(shape = RoundedCornerShape(20.dp)),
-                )
-                Text(
-                    text = stringResource(id = R.string.instructionsHistory),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(start = 12.dp, end = 12.dp, top = 15.dp)
-                )
-                Button(
-                    modifier = Modifier.padding(vertical = 18.dp),
-                    onClick = onContinueClicked
-                ) {
-                    Text(text = stringResource(id = R.string.finishButton))
+                    Spacer(modifier = modifier.padding(top = 18.dp))
+                }
+
+                4 -> {
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            ImageRequest.Builder(context)
+                                .data(data = R.drawable.screen3)
+                                .apply(block = {
+                                    size(Size.ORIGINAL)
+                                })
+                                .build(), imageLoader = imageLoader
+                        ),
+                        contentDescription = null,
+                        modifier = modifier
+                            .padding(top = 60.dp, start = 40.dp, end = 40.dp, bottom = 0.dp)
+                            .clip(shape = RoundedCornerShape(20.dp)),
+                    )
+                    Text(
+                        text = stringResource(id = R.string.instructionsHistory),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp, end = 12.dp, top = 15.dp)
+                    )
+                    Button(
+                        modifier = Modifier
+                            .padding(vertical = 18.dp),
+                        onClick = onContinueClicked
+                    ) {
+                        Text(text = stringResource(id = R.string.finishButton))
+                    }
+                    Spacer(modifier = modifier.padding(top = 18.dp))
                 }
             }
         }
