@@ -32,10 +32,10 @@ def get_title(url):
 
 def get_author(url):
     try:
-        # YouTube-Video-Objekt erstellen
+        # Create YouTube video object
         yt_video = YouTube(url)
 
-        # Autor des Videos abrufen
+        # Get the author of the video
         video_author = yt_video.author
         if video_author == "unknown":
             try:
@@ -45,8 +45,8 @@ def get_author(url):
                 authors = site.authors
                 for element in authors:
                     if element and len(element.split()) > 0:
-                        # Wenn das Element nicht leer ist und mindestens ein Wort enthält
-                        # Zeige das Element und beende die Schleife
+                        # If the element is not empty and contains at least one word
+                        # Show the element and end the loop
                         return element
                 return None
             except Exception as e:
@@ -61,8 +61,8 @@ def get_author(url):
             authors = site.authors
             for element in authors:
                 if element and len(element.split()) > 0:
-                    # Wenn das Element nicht leer ist und mindestens ein Wort enthält
-                    # Zeige das Element und beende die Schleife
+                    # If the element is not empty and contains at least one word
+                    # Show the element and end the loop
                     return element
             return None
         except Exception as e:
@@ -84,7 +84,7 @@ def get_video_transcript(video_id: str) -> str:
     Fetch the transcript of the provided YouTube video
     """
     try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['af', 'ak', 'sq', 'am', 'as', 'ay', 'az', 'bn', 'eu', 'be', 'bho', 'bs', 'bg', 'my', 'ca', 'ceb', 'co', 'hr', 'cs', 'da', 'dv', 'eo', 'et', 'ee', 'fil', 'fi', 'gl', 'lg', 'ka', 'el', 'gn', 'gu', 'ht', 'ha', 'haw', 'iw', 'hmn', 'hu', 'is', 'ig', 'id', 'ga', 'it', 'jv', 'kn', 'kk', 'km', 'rw', 'ko', 'kri', 'ku', 'ky', 'lo', 'la', 'lv', 'ln', 'lt', 'lb', 'mk', 'mg', 'ms', 'ml', 'mt', 'mi', 'mr', 'mn', 'ne', 'nso', 'no', 'ny', 'or', 'om', 'ps', 'fa', 'pl', 'pt', 'pa', 'qu', 'ro', 'ru', 'sm', 'sa', 'gd', 'sr', 'sn', 'sd', 'si', 'sk', 'sl', 'so', 'st', 'es', 'su', 'sw', 'sv', 'tg', 'ta', 'tt', 'ti', 'ts', 'tr', 'tk', 'uk', 'ur', 'ug', 'uz', 'vi', 'cy', 'fy', 'xh', 'yi', 'yo', 'zu', 'de', 'en'])
+        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['af', 'ak', 'sq', 'am', 'as', 'ay', 'az', 'bn', 'eu', 'be', 'bho', 'bs', 'bg', 'my', 'ca', 'ceb', 'co', 'hr', 'cs', 'da', 'dv', 'eo', 'et', 'ee', 'fil', 'fi', 'gl', 'lg', 'ka', 'el', 'gn', 'gu', 'ht', 'ha', 'haw', 'iw', 'hmn', 'hu', 'is', 'ig', 'id', 'ga', 'it', 'jv', 'kn', 'kk', 'km', 'rw', 'ko', 'kri', 'ku', 'ky', 'lo', 'la', 'lv', 'ln', 'lt', 'lb', 'mk', 'mg', 'ms', 'ml', 'mt', 'mi', 'mr', 'mn', 'ne', 'nso', 'no', 'ny', 'or', 'om', 'ps', 'fa', 'pl', 'pt', 'pa', 'qu', 'ro', 'ru', 'sm', 'sa', 'gd', 'sr', 'sn', 'sd', 'si', 'sk', 'sl', 'so', 'st', 'es', 'su', 'sw', 'sv', 'tg', 'ta', 'tt', 'ti', 'ts', 'tr', 'tk', 'uk', 'ur', 'ug', 'uz', 'vi', 'cy', 'fy', 'xh', 'yi', 'yo', 'zu', 'de', 'en', 'en-US', 'en-GB', 'de-AT'])
     except TranscriptsDisabled:
         # The video doesn't have a transcript
         return None
