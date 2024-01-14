@@ -84,13 +84,17 @@ def get_video_transcript(video_id: str) -> str:
     Fetch the transcript of the provided YouTube video
     """
     try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['af', 'ak', 'sq', 'am', 'as', 'ay', 'az', 'bn', 'eu', 'be', 'bho', 'bs', 'bg', 'my', 'ca', 'ceb', 'co', 'hr', 'cs', 'da', 'dv', 'eo', 'et', 'ee', 'fil', 'fi', 'gl', 'lg', 'ka', 'el', 'gn', 'gu', 'ht', 'ha', 'haw', 'iw', 'hmn', 'hu', 'is', 'ig', 'id', 'ga', 'it', 'jv', 'kn', 'kk', 'km', 'rw', 'ko', 'kri', 'ku', 'ky', 'lo', 'la', 'lv', 'ln', 'lt', 'lb', 'mk', 'mg', 'ms', 'ml', 'mt', 'mi', 'mr', 'mn', 'ne', 'nso', 'no', 'ny', 'or', 'om', 'ps', 'fa', 'pl', 'pt', 'pa', 'qu', 'ro', 'ru', 'sm', 'sa', 'gd', 'sr', 'sn', 'sd', 'si', 'sk', 'sl', 'so', 'st', 'es', 'su', 'sw', 'sv', 'tg', 'ta', 'tt', 'ti', 'ts', 'tr', 'tk', 'uk', 'ur', 'ug', 'uz', 'vi', 'cy', 'fy', 'xh', 'yi', 'yo', 'zu', 'de', 'en', 'en-US', 'en-GB', 'de-AT'])
+        # Get the transcript languages
+        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+        language = [transcript.language_code for transcript in transcript_list]
+        # Get the transcript
+        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=[language[0]])
     except TranscriptsDisabled:
         # The video doesn't have a transcript
         return None
-
     text = " ".join([line["text"] for line in transcript])
-    return text or "Fehler"
+    return text
+
 
 def generate_summary(text: str, key: str, length: int, article: bool, language: str) -> str:
     """
