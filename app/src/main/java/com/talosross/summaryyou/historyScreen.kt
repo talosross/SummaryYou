@@ -123,7 +123,7 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
 
             LaunchedEffect(viewModel.textSummaries) {
                 reversedList.clear()
-                reversedList.addAll(viewModel.getAllTextSummaries())
+                reversedList.addAll(viewModel.getAllTextSummaries().reversed())
             }
 
             LazyColumn(
@@ -161,7 +161,7 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
             onQueryChange = {
                 searchText = it
                 searchResults.clear()
-                searchResults.addAll(viewModel.searchTextSummary(searchText))
+                searchResults.addAll(viewModel.searchTextSummary(searchText).reversed())
             },
             onSearch = {
                 focusManager.clearFocus()
