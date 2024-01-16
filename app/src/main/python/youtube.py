@@ -113,25 +113,25 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
             language = language + "video"
         if length == 0:
             instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points. The very short summary should be in {language}."
-            max_tokens = 100
+            max_tokens = 110
         elif length == 1:
             instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
-            max_tokens = 160
+            max_tokens = 170
         else:
             instructions = f"You will be provided with a transcript of a video, and your task is to generate a short, concise summary with a maximum of 120 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
-            max_tokens = 230
+            max_tokens = 240
     else:
         if language == "the same language as the ":
             language = language + "article"
         if length == 0:
             instructions = f"You will be provided with an article, and your task is to generate a summary a very short, concise summary with a maximum of 20 word of the transcript in {language} using only 3 bullet points."
-            max_tokens = 100
+            max_tokens = 110
         elif length == 1:
             instructions = f"You will be provided with an article, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that as in the end."
-            max_tokens = 160
+            max_tokens = 170
         else:
             instructions = f"You will be provided with an article, and your task is to generate a short, concise summary with a maximum of 120 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that as in the end."
-            max_tokens = 230
+            max_tokens = 240
 
     try:
         response = client.chat.completions.create(
