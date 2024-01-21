@@ -14,7 +14,7 @@
 
     <string name="regenerate">再生する</string>
 
-    <string name="invalidURL">無効な URL</string>
+    <string name="invalidURL">無効なリンク: 要約できません</string>
 
     <string name="noTranscript">トランスクリプトが見つかりませんでした</string>
 

@@ -14,7 +14,7 @@
 
     <string name="regenerate">再生</string>
 
-    <string name="invalidURL">无效的网址</string>
+    <string name="invalidURL">无效链接：无法进行摘要</string>
 
     <string name="noTranscript">未找到文字记录</string>
 

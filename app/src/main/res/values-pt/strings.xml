@@ -14,7 +14,7 @@
 
     <string name="regenerate">Regenerado</string>
 
-    <string name="invalidURL">URL inválida</string>
+    <string name="invalidURL">Link inválido: Resumo não é possível</string>
 
     <string name="noTranscript">Nenhuma transcrição encontrada</string>
 
