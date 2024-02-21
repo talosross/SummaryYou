@@ -1,5 +1,8 @@
 name: Release update
 on:
+  push:
+    paths:
+      - 'app/build.gradle.kts'
   workflow_dispatch:
     inputs:
 
