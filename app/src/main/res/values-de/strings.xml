@@ -46,4 +46,8 @@
     <string name="instructionsHistory">Greife im Bereich Verlauf auf deine vergangenen Zusammenfassungen zu.</string>
     <string name="finishButton">Fertig</string>
     <string name="continueButton">Weiter</string>
+    <string name="googlePlay">Google Play Store</string>
+    <string name="googlePlayDescription">Bewerten Sie uns</string>
+    <string name="tutorial">Tutorial</string>
+    <string name="tutorialDescription">Wiederhole das Tutorial</string>
 </resources>

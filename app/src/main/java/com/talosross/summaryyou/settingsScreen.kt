@@ -9,6 +9,7 @@ import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,12 +19,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,17 +46,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import coil.ImageLoader
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
+import coil.size.Size
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,7 +91,7 @@ fun settingsScreen(modifier: Modifier = Modifier, navController: NavHostControll
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {navController.navigate("home")}) {
+                    IconButton(onClick = { navController.navigate("home") }) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Localized description"
@@ -102,6 +117,16 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     val currentLocale = Resources.getSystem().configuration.locales[0]
     val currentLanguage = currentLocale.language
     val key: String = APIKeyLibrary.getAPIKey()
+    var showTutorial by remember { mutableStateOf(false) }
+
+    // Existing code...
+
+    if (showTutorial) {
+        OnboardingScreen(
+            onContinueClicked = { showTutorial = false },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
 
     if (showDialogDesign) {
         AlertDialog(
@@ -320,6 +345,39 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     supportingContent = { Text(stringResource(id = R.string.githubDescription)) },
                 )
+                ListItem(
+                    modifier = Modifier
+                        .clickable {
+                            val url =
+                                "https://play.google.com/store/apps/details?id=com.talosross.summaryyou"
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(intent)
+                        }
+                        .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                    headlineContent = { Text(stringResource(id = R.string.googlePlay)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.round_star_rate_24),
+                            contentDescription = "Localized description",
+                        )
+                    },
+                    supportingContent = { Text(stringResource(id = R.string.googlePlayDescription)) },
+                )
+                /*
+                ListItem(
+                    modifier = Modifier
+                        .clickable(onClick = { showTutorial = true })
+                        .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                    headlineContent = { Text(stringResource(id = R.string.tutorial)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.round_help_center_24),
+                            contentDescription = "Localized description",
+                        )
+                    },
+                    supportingContent = { Text(stringResource(id = R.string.tutorialDescription)) },
+                )
+                */
                 Text(text = "Version ${getVersionName(context)}",
                     modifier = Modifier
                         .align(alignment = CenterHorizontally)
