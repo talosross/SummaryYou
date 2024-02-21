@@ -1,0 +1,64 @@
+name: Release update
+on:
+  workflow_dispatch:
+    inputs:
+
+jobs:
+  build-release-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 17
+          
+      - name: Extract version info
+        id: extract-versions
+        run: |
+          set -e
+          VERSION_NAME=$(grep -E 'versionName\s' app/build.gradle.kts | sed -n 's/.*versionName\s*=\s*["'\'']\([^"'\'']*\)["'\''].*/\1/p')
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | sed -n 's/.*versionCode\s*=\s*\([0-9]*\).*/\1/p')
+          echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
+          echo "VERSION_CODE=${VERSION_CODE}" >> $GITHUB_ENV
+          echo "Version Name: ${VERSION_NAME}"
+          echo "Version Code: ${VERSION_CODE}"
+
+      - name: Create release folder
+        run: mkdir -p app/build/outputs/apk/release
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Summary You-${{ env.VERSION_NAME }} (${{ env.VERSION_CODE }})
+          path: app/build/outputs/apk/release/
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: Summary You-${{ env.VERSION_NAME }} (${{ env.VERSION_CODE }})
+          path: app/build/outputs/apk/release/
+
+      - name: Rename artifact
+        run: mv "app/build/outputs/apk/release/app-release.apk" "app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
+          
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }})"
+          prerelease: false
+          draft: false
+          token: ${{ secrets.ADMIN_TOKEN }}
+          files: app/build/outputs/apk/release/SummaryYou-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
