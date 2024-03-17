@@ -118,8 +118,8 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
             instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
             max_tokens = 170
         else:
-            instructions = f"You will be provided with a transcript of a video, and your task is to generate a short, concise summary with a maximum of 120 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
-            max_tokens = 240
+            instructions = f"You will be provided with a transcript of a video, and your task is to generate a summary with of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+            max_tokens = 350
     else:
         if language == "the same language as the ":
             language = language + "article"
@@ -127,11 +127,11 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
             instructions = f"You will be provided with an article, and your task is to generate a summary a very short, concise summary with a maximum of 20 word of the transcript in {language} using only 3 bullet points."
             max_tokens = 110
         elif length == 1:
-            instructions = f"You will be provided with an article, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that as in the end."
+            instructions = f"You will be provided with an article, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
             max_tokens = 170
-        else:
-            instructions = f"You will be provided with an article, and your task is to generate a short, concise summary with a maximum of 120 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that as in the end."
-            max_tokens = 240
+        else:#
+            instructions = f"You will be provided with an article, and your task is to generate a summary with a maximum of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+            max_tokens = 350
 
     try:
         response = client.chat.completions.create(
