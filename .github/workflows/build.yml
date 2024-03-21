@@ -4,7 +4,6 @@ on:
     paths:
       - 'app/build.gradle.kts'
   workflow_dispatch:
-    inputs:
 
 jobs:
   build-release-apk:
