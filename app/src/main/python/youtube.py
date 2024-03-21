@@ -4,7 +4,8 @@ from openai import OpenAI
 from pytube import YouTube
 from newspaper import Article
 import socket
-import google.generativeai as genai
+#import google.generativeai as genai
+from groq import Groq
 
 def internet_connection():
     try:
@@ -96,74 +97,87 @@ def get_video_transcript(video_id: str) -> str:
     return text
 
 
-def generate_summary(text: str, key: str, length: int, article: bool, language: str) -> str:
+def generate_summary(text: str, key: str, length: int, article: bool, language: str, title: str) -> str:
     """
-    Generate a summary of the provided text using OpenAI API
+    Generate a summary of the provided text
     """
-    # Initialize the OpenAI API client
-    client = OpenAI( api_key = key)
+    model = "OpenAI" # "OpenAI" or "Google"
 
-    """
-    # Initialize Gemini
-    genai.configure( api_key = key)
-    model = genai.GenerativeModel(model_name='gemini-pro-vision')
-    """
+    if model == "OpenAI":
+        # Initialize the OpenAI API client
+        client = OpenAI(api_key=key)
+        MODEL = "gpt-3.5-turbo"
+
+        # Prompts
+        promptVideo0 = f"You will be provided with a transcript of the video{title}, and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points. The very short summary should be in {language}."
+        promptVideo1 = f"You will be provided with a transcript of the video{title}, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptVideo3 = f"You will be provided with a transcript of the video with{title}, and your task is to generate a summary of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptArticle0 = f"You will be provided with the article{title}, and your task is to generate a summary a very short, concise summary with a maximum of 20 word of the transcript in {language} using only 3 bullet points."
+        promptArticle1 = f"You will be provided with the article{title}, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptArticle3 = f"You will be provided with the article{title}, and your task is to generate a summary of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+
+    elif model == "Gemini":
+        # Initialize Gemini
+        genai.configure(api_key=key)
+        model = genai.GenerativeModel(model_name='gemini-pro-vision')
+
+        # Prompts
+        promptVideo0 = f"You will be provided with a transcript of the video{title}, and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points. The very short summary should be in {language}."
+        promptVideo1 = f"You will be provided with a transcript of the video{title}, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptVideo3 = f"You will be provided with a transcript of the video with{title}, and your task is to generate a summary of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptArticle0 = f"You will be provided with the article{title}, and your task is to generate a summary a very short, concise summary with a maximum of 20 word of the transcript in {language} using only 3 bullet points."
+        promptArticle1 = f"You will be provided with the article{title}, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptArticle3 = f"You will be provided with the article{title}, and your task is to generate a summary of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+
+    elif model == "Groq":
+        # Initialize Groq
+        client = Groq(api_key=key)
+        MODEL = "mixtral-8x7b-32768"
+
+        # Prompts
+        promptVideo0 = f"You will be provided with a transcript of the video{title}, and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points. The very short summary should be in {language}."
+        promptVideo1 = f"You will be provided with a transcript of the video{title}, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptVideo3 = f"You will be provided with a transcript of the video with{title}, and your task is to generate a summary of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptArticle0 = f"You will be provided with the article{title}, and your task is to generate a summary a very short, concise summary with a maximum of 20 word of the transcript in {language} using only 3 bullet points."
+        promptArticle1 = f"You will be provided with the article{title}, and your task is to generate a very short, concise summary with a maximum of 50 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptArticle3 = f"You will be provided with the article{title}, and your task is to generate a compact summary of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+
+    if title is not None:
+        title = " with the title " + title
+    else:
+        title = ""
+
+
     if article == False:
         if language == "the same language as the ":
             language = language + "video"
         if length == 0:
-            instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points. The very short summary should be in {language}."
+            instructions = promptVideo0
             max_tokens = 110
         elif length == 1:
-            instructions = f"You will be provided with a transcript of a video, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+            instructions = promptVideo1
             max_tokens = 170
         else:
-            instructions = f"You will be provided with a transcript of a video, and your task is to generate a summary with of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+            instructions = promptVideo3
             max_tokens = 350
     else:
         if language == "the same language as the ":
             language = language + "article"
         if length == 0:
-            instructions = f"You will be provided with an article, and your task is to generate a summary a very short, concise summary with a maximum of 20 word of the transcript in {language} using only 3 bullet points."
+            instructions = promptArticle0
             max_tokens = 110
         elif length == 1:
-            instructions = f"You will be provided with an article, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+            instructions = promptArticle1
             max_tokens = 170
-        else:#
-            instructions = f"You will be provided with an article, and your task is to generate a summary with a maximum of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        else:
+            instructions = promptArticle3
             max_tokens = 350
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": instructions},
-                {"role": "user", "content": text}
-            ],
-            temperature=0.2,
-            n=1,
-            max_tokens=max_tokens,
-            presence_penalty=0,
-            frequency_penalty=0.1,
-        )
+        if model == "OpenAI" or model == "Groq":
 
-        # Return the generated summary
-        return response.choices[0].message.content.strip()
-        """
-        prompt = instructions + text
-        response = model.generate_content(prompt)
-        return response
-        """
-    except Exception as e:
-        """
-        print("Text is too long.")
-        """
-        print(f"An error occurred with 'gpt-3.5-turbo': {str(e)}")
-
-        try:
-            # Attempt to generate a summary using "gpt-3.5-turbo-16k" if there was an error with the previous model
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo-16k",
+                model=MODEL,
                 messages=[
                     {"role": "system", "content": instructions},
                     {"role": "user", "content": text}
@@ -175,14 +189,21 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
                 frequency_penalty=0.1,
             )
 
-            # Return the generated summary using "gpt-3.5-turbo-16k" with "16K" at the beginning
-            generated_summary = response.choices[0].message.content.strip()
-            return generated_summary
+            # Return the generated summary
+            return response.choices[0].message.content.strip()
 
-        except Exception as e:
-            # If an error still occurs, handle it or return an error message
-            print(f"An error occurred with 'gpt-3.5-turbo-16k': {str(e)}")
-            raise e
+        elif model == "Gemini":
+            prompt = instructions + text
+            response = model.generate_content(prompt)
+            return response
+
+    except Exception as e:
+        """
+        print("Text is too long.")
+        """
+        print(f"An error occurred with '{MODEL}': {str(e)}")
+
+
 
 def get_site_transcript(url: str) -> str:
     try:
@@ -217,6 +238,8 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
         # Extract the video ID from the URL
         video_id = extract_youtube_video_id(url)
 
+        title = get_title(url)
+
         # Error message: Invalid link
         if not video_id:
             transcript = get_site_transcript(url)
@@ -226,7 +249,7 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
                 raise Exception("paywall detected")
             else:
                 try:
-                    summary = generate_summary(transcript, key, length, True, language)
+                    summary = generate_summary(transcript, key, length, True, language, title)
                     return summary
                 except Exception as e:
                     if "Incorrect API" in str(e):
@@ -244,7 +267,7 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
             raise Exception("no transcript")
 
         try:
-            summary = generate_summary(transcript, key, length, False, language)
+            summary = generate_summary(transcript, key, length, False, language, title)
         except Exception as e:
             if "Incorrect API" in str(e):
                 raise Exception("incorrect api")

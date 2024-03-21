@@ -14,7 +14,7 @@ android {
         applicationId = "com.talosross.summaryyou"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2024031712
+        versionCode = 2024032120
         versionName = "1.1.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -79,6 +79,8 @@ chaquopy {
             install("newspaper3k")
             install("pydantic<2")
             install("google-generativeai")
+            install("groq")
+            install("grpcio")
             }
     }
 }

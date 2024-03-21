@@ -50,4 +50,5 @@
     <string name="googlePlayDescription">Bewerten Sie uns</string>
     <string name="tutorial">Tutorial</string>
     <string name="tutorialDescription">Wiederhole das Tutorial</string>
+    <string name="noHistory">Du hast noch nichts zusammengefasst.</string>
 </resources>

@@ -45,6 +45,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
@@ -100,7 +101,7 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                     navigationIcon = {
                         IconButton(onClick = { navController.navigate("home") }) {
                             Icon(
-                                imageVector = Icons.Filled.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Localized description"
                             )
                         }
@@ -133,19 +134,32 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                 contentPadding = innerPadding,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(reversedList) { textSummaryId ->
-                    val textSummary =
-                        viewModel.textSummaries.firstOrNull { it.id == textSummaryId.toString() }
-                    if (textSummary != null) {
-                        Textbox(
-                            modifier = Modifier.fillMaxWidth(),
-                            id = textSummary.id,
-                            title = textSummary.title,
-                            author = textSummary.author,
-                            text = textSummary.text,
-                            youtubeLink = textSummary.youtubeLink,
-                            viewModel = viewModel,
-                            search = false
+                if (viewModel.textSummaries.isNotEmpty()) {
+                    items(reversedList) { textSummaryId ->
+                        val textSummary =
+                            viewModel.textSummaries.firstOrNull { it.id == textSummaryId.toString() }
+                        if (textSummary != null) {
+                            Textbox(
+                                modifier = Modifier.fillMaxWidth(),
+                                id = textSummary.id,
+                                title = textSummary.title,
+                                author = textSummary.author,
+                                text = textSummary.text,
+                                youtubeLink = textSummary.youtubeLink,
+                                viewModel = viewModel,
+                                search = false
+                            )
+                        }
+                    }
+                } else {
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                    item {
+                        Text(
+                            text = stringResource(id = R.string.noHistory),
+                            modifier = Modifier
+                                .fillMaxWidth()
                         )
                     }
                 }
