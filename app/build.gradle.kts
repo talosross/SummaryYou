@@ -14,8 +14,8 @@ android {
         applicationId = "com.talosross.summaryyou"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2024032120
-        versionName = "1.1.9"
+        versionCode = 2024032918
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
