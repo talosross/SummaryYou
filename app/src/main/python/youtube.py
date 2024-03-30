@@ -7,13 +7,13 @@ import socket
 #import google.generativeai as genai
 from groq import Groq
 import random
+import requests
 
 def internet_connection():
     try:
-        host = socket.gethostbyname("www.google.com")
-        socket.create_connection((host, 80), timeout=5)
+        requests.get('https://www.wikipedia.org', timeout=5)
         return True
-    except (socket.gaierror, socket.error):
+    except requests.ConnectionError:
         return False
 
 def get_title(url):
@@ -102,7 +102,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
     """
     Generate a summary of the provided text
     """
-    model = "OpenAI" # "OpenAI" or "Google"
+    model = "Groq" # "OpenAI" or "Google"
 
     if model == "OpenAI":
         # Initialize the OpenAI API client
