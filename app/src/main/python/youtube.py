@@ -102,7 +102,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
     """
     Generate a summary of the provided text
     """
-    model = "Groq" # "OpenAI" or "Google"
+    model = "OpenAI" # "OpenAI" or "Google"
 
     if model == "OpenAI":
         # Initialize the OpenAI API client
