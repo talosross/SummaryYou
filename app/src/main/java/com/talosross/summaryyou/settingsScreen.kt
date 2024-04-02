@@ -9,6 +9,7 @@ import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -363,11 +364,15 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     supportingContent = { Text(stringResource(id = R.string.googlePlayDescription)) },
                 )
-                /*
                 ListItem(
                     modifier = Modifier
-                        .clickable(onClick = { showTutorial = true })
-                        .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                        .clickable(onClick = {
+                            viewModel.setShowOnboardingScreenValue(true)
+                            val intent = Intent(context, context.javaClass)
+                            context.startActivity(intent)
+                            (context as? ComponentActivity)?.finish()
+                        })
+                        .fillMaxWidth(),
                     headlineContent = { Text(stringResource(id = R.string.tutorial)) },
                     leadingContent = {
                         Icon(
@@ -377,7 +382,6 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     supportingContent = { Text(stringResource(id = R.string.tutorialDescription)) },
                 )
-                */
                 Text(text = "Version ${getVersionName(context)}",
                     modifier = Modifier
                         .align(alignment = CenterHorizontally)
