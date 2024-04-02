@@ -46,6 +46,7 @@
     <string name="instructionsHistory">Access your past summaries in the History section.</string>
     <string name="finishButton">Finish</string>
     <string name="continueButton">Continue</string>
+    <string name="skip">Skip</string>
     <string name="googlePlay">Google Play Store</string>
     <string name="googlePlayDescription">Rate us</string>
     <string name="tutorial">Tutorial</string>

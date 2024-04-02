@@ -46,6 +46,7 @@
     <string name="instructionsHistory">اطلع على ملخصاتك السابقة في قسم السجل.</string>
     <string name="finishButton">انتهاء</string>
     <string name="continueButton">متابعة</string>
+    <string name="skip">يتخطى</string>
     <string name="googlePlay">متجر Google Play</string>
     <string name="googlePlayDescription">قيمنا</string>
     <string name="tutorial">الدليل</string>
