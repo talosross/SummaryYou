@@ -46,7 +46,8 @@
 
 - [Material Design 3](https://m3.material.io/) style UI, with dynamic color theme.
 
-
+It uses GPT-3.5 OpenAI/Mixtral 8x7B Groq to summarize.
+  
 ## ⭐️ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=talosross/SummaryYou&type=Timeline)]
