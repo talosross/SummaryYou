@@ -36,7 +36,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import android.content.ClipboardManager
+import android.content.Intent
+import android.os.Build
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -50,6 +56,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DismissDirection
 import androidx.compose.material3.DismissState
@@ -70,6 +77,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -343,6 +351,134 @@ fun Textbox(modifier: Modifier = Modifier, id: String, title: String?, author: S
                         bottom = 12.dp
                     )
             )
+            var tts: TextToSpeech? by remember { mutableStateOf(null) }
+            var isSpeaking by remember { mutableStateOf(false) }
+            var isPaused by remember { mutableStateOf(false) }
+            var currentPosition by remember { mutableStateOf(0) }
+            var utteranceId by remember { mutableStateOf("") }
+            val copied = stringResource(id = R.string.copied)
+            val transcript = text
+
+            val utteranceProgressListener = object : UtteranceProgressListener() {
+                override fun onStart(utteranceId: String) {
+                    // Is called when an utterance starts
+                }
+
+                override fun onDone(utteranceId: String) {
+                    // Is called when an utterance is done
+                    currentPosition = 0
+                    isSpeaking = false
+                    isPaused = false
+                }
+
+                override fun onError(utteranceId: String) {
+                    // Is called when an error occurs
+                }
+
+                override fun onRangeStart(utteranceId: String, start: Int, end: Int, frame: Int) {
+                    // Is called when a new range of text is being spoken
+                    currentPosition = end
+                }
+            }
+            tts?.setOnUtteranceProgressListener(utteranceProgressListener)
+            DisposableEffect(Unit) {
+                tts = TextToSpeech(context) { status ->
+                    if (status == TextToSpeech.SUCCESS) {
+                        // TTS-Engine successfully initialized
+                        Log.d("TTS", "Text-to-Speech engine was successfully initialized.")
+                    } else {
+                        // Error initializing the TTS-Engine
+                        Log.d("TTS", "Error initializing the Text-to-Speech engine.")
+                    }
+                }
+                onDispose {
+                    tts?.stop()
+                    tts?.shutdown()
+                }
+            }
+            Row {
+                IconButton(
+                    onClick = {
+                        if (isSpeaking) {
+                            tts?.stop()
+                            isSpeaking = false
+                            isPaused = false
+                            currentPosition = 0
+                        } else {
+                            if (transcript != null) {
+                                utteranceId = UUID.randomUUID().toString()
+                                tts?.speak(transcript, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                                isSpeaking = true
+                            }
+                        }
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.outline_volume_up_24),
+                        contentDescription = if (isSpeaking) "Beenden" else "Vorlesen"
+                    )
+                }
+
+                AnimatedVisibility(visible = isSpeaking) {
+                    IconButton(
+                        onClick = {
+                            if (isPaused) {
+                                if (transcript != null) {
+                                    val remainingText = transcript.substring(currentPosition)
+                                    utteranceId = UUID.randomUUID().toString()
+                                    tts?.speak(remainingText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                                    isPaused = false
+                                }
+                            } else {
+                                tts?.stop()
+                                isPaused = true
+                            }
+                        }
+                    ) {
+                        Icon(
+                            painter = if (isPaused) {
+                                painterResource(id = R.drawable.outline_play_circle_filled_24)
+                            } else {
+                                painterResource(id = R.drawable.outline_pause_circle_filled_24)
+                            },
+                            contentDescription = if (isPaused) "Fortsetzen" else "Pausieren"
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.weight(1f))
+
+                IconButton(
+                    onClick = {
+                        clipboardManager.setPrimaryClip(
+                            ClipData.newPlainText(null, text)
+                        )
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                            Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.outline_content_copy_24),
+                        contentDescription = "Kopieren"
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, text)
+                        }
+                        val chooserIntent = Intent.createChooser(shareIntent, null)
+                        context.startActivity(chooserIntent)
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = "Teilen"
+                    )
+                }
+            }
         }
     }
 }

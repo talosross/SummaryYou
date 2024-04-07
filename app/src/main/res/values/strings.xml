@@ -9,12 +9,14 @@
     <string name="invalidURL">Invalid link: Summary not possible</string>
     <string name="noTranscript">No Transcript found</string>
     <string name="noContent">No Content</string>
+    <string name="invalidInput">Invalid Input</string>
     <string name="noInternet">No Internet-Connection</string>
     <string name="paywallDetected">Paywall detected, summarizing not possible.</string>
-    <string name="incorrectApi">Error with OpenAI, you have to update the App.</string>
-    <string name="incorrectApiOpenSource">Incorrect API key</string>
-    <string name="noApi">Error with OpenAI, you have to provide an API key.</string>
+    <string name="incorrectKey">Error with server, you have to update the App.</string>
+    <string name="incorrectKeyOpenSource">Incorrect API key</string>
+    <string name="noKey">Error with server, you have to provide an API key.</string>
     <string name="tooLong">Provided medium is too long.</string>
+    <string name="rateLimit">Server overloaded, try again later.</string>
     <string name="useOriginalLanguage">Original Language</string>
     <string name="useOriginalLanguageDescription">Use Original Language instead of your language.</string>
     <string name="chooseLanguage">Language</string>
@@ -28,6 +30,8 @@
     <string name="useMultiLinesDescription">Use more lines in the URL-Field</string>
     <string name="setApiKey">Set API-Key</string>
     <string name="setApiKeyDescription">Set your OpenAI API Key</string>
+    <string name="setModel">AI-Model</string>
+    <string name="setModelDescription">Set the model for the summary</string>
     <string name="design">Design</string>
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
@@ -52,4 +56,5 @@
     <string name="tutorial">Tutorial</string>
     <string name="tutorialDescription">Rewatch the Tutorial</string>
     <string name="noHistory">You haven\'t summarized anything yet.</string>
+    <string name="copied">Copied</string>
 </resources>

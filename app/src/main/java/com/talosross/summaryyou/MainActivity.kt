@@ -6,10 +6,19 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
+import android.net.Uri
+import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
@@ -26,22 +35,28 @@ import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
@@ -52,6 +67,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -67,11 +83,15 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalAccessibilityManager
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.AccessibilityAction
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -97,6 +117,9 @@ import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.talosross.summaryyou.ui.theme.SummaryYouTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -224,7 +247,7 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
     }
 
     // Multiline URL-Field
-    var multiLine by mutableStateOf(sharedPreferences.getBoolean("multiLine", false))
+    var multiLine by mutableStateOf(sharedPreferences.getBoolean("multiLine", true))
 
     fun setMultiLineValue(newValue: Boolean) {
         multiLine = newValue
@@ -276,6 +299,18 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
 
     fun getApiKeyValue(): String? {
         return apiKey
+    }
+
+    // AI-Model
+    var model by mutableStateOf(sharedPreferences.getString("model", "Groq"))
+
+    fun setModelValue(newValue: String?) {
+        model = newValue
+        sharedPreferences.edit().putString("model", newValue).apply()
+    }
+
+    fun getModelValue(): String? {
+        return model
     }
 
     // OnboardingScreen
@@ -345,11 +380,44 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     var isError by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val key: String = APIKeyLibrary.getAPIKey()
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
         ClipboardManager::class.java
     ) as ClipboardManager
+
+    /*
+    fun extractTextFromDocument(uri: Uri) {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val fileData = inputStream?.readBytes()
+
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        val image = InputImage.fromByteArray(fileData, 0, fileData.size, 0, InputImage.IMAGE_FORMAT_JPEG)
+        recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                val extractedText = visionText.text
+                Log.d("TextExtraction", "Extracted Text: $extractedText")
+                // Verarbeite den extrahierten Text weiter
+            }
+            .addOnFailureListener { e ->
+                Log.e("TextExtraction", "Text extraction failed", e)
+                // Behandle den Fehler
+                // ...
+            }
+    }
+    */
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        selectedFileUri = uri
+        //selectedFileUri?.let { fileUri ->
+        //    extractTextFromDocument(fileUri)
+        //}
+    }
+
+    fun openFilePicker() {
+       launcher.launch(arrayOf("*/*"))
+    }
 
     Box {
         Scaffold(
@@ -419,59 +487,77 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                             } else {
                                 Spacer(modifier = modifier.height(height = 9.dp))
                             }
-                            OutlinedTextField(
-                                value = url,
-                                onValueChange = { url = it },
-                                label = { Text("URL") },
-                                isError = isError,
-                                supportingText = {
-                                    if (isError) {
-                                        Text(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            text = when (transcriptResult) {
-                                                "Exception: no internet" -> stringResource(id = R.string.noInternet)
-                                                "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
-                                                "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
-                                                "Exception: no content" -> stringResource(id = R.string.noContent)
-                                                "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
-                                                "Exception: too long" -> stringResource(id = R.string.tooLong)
-                                                "Exception: incorrect api" -> {
-                                                    if (key.isEmpty()) {
-                                                        stringResource(id = R.string.incorrectApiOpenSource)
-                                                    } else {
-                                                        stringResource(id = R.string.incorrectApi)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedTextField(
+                                    value = url,
+                                    onValueChange = { url = it },
+                                    label = { Text("URL/Text") },
+                                    isError = isError,
+                                    supportingText = {
+                                        if (isError) {
+                                            Text(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                text = when (transcriptResult) {
+                                                    "Exception: no internet" -> stringResource(id = R.string.noInternet)
+                                                    "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
+                                                    "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
+                                                    "Exception: no content" -> stringResource(id = R.string.noContent)
+                                                    "Exception: invalid input" -> stringResource(id = R.string.invalidInput)
+                                                    "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
+                                                    "Exception: too long" -> stringResource(id = R.string.tooLong)
+                                                    "Exception: incorrect key" -> {
+                                                        if (key.isEmpty()) {
+                                                            stringResource(id = R.string.incorrectKeyOpenSource)
+                                                        } else {
+                                                            stringResource(id = R.string.incorrectKey)
+                                                        }
                                                     }
-                                                }
-                                                "Exception: no api" -> stringResource(id = R.string.noApi)
-                                                else -> transcriptResult ?: "unknown error 3"
-                                            },
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                },
-                                trailingIcon = {
-                                    if (showCancelIcon) {
-                                        IconButton(
-                                            onClick = {
-                                                url = ""
-                                                transcriptResult = null
-                                                isError = false // No error
-                                                focusRequester.requestFocus()
-                                            }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.outline_cancel_24),
-                                                contentDescription = "Cancel"
+                                                    "Exception: rate limit" -> stringResource(id = R.string.rateLimit)
+                                                    "Exception: no key" -> stringResource(id = R.string.noKey)
+                                                    else -> transcriptResult ?: "unknown error 3"
+                                                },
+                                                color = MaterialTheme.colorScheme.error
                                             )
                                         }
-                                    }
-                                },
-                                singleLine = !viewModel.getMultiLineValue(),
-                                modifier = modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 20.dp)
-                                    .focusRequester(focusRequester)
-                            )
+                                    },
+                                    trailingIcon = {
+                                        if (showCancelIcon) {
+                                            IconButton(
+                                                onClick = {
+                                                    url = ""
+                                                    transcriptResult = null
+                                                    isError = false // No error
+                                                    focusRequester.requestFocus()
+                                                }
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.outline_cancel_24),
+                                                    contentDescription = "Cancel"
+                                                )
+                                            }
+                                        }
+                                    },
+                                    singleLine = !viewModel.getMultiLineValue(),
+                                    modifier = modifier
+                                        .weight(1f)
+                                        .padding(top = 20.dp)
+                                        .focusRequester(focusRequester)
+                                )
+                                /*
+                                Spacer(modifier = Modifier.width(16.dp))
+                                OutlinedButton(
+                                    onClick = { openFilePicker() },
+                                    modifier = modifier
+                                        .height(72.dp)
+                                        .padding(top = 15.dp)
+                                ) {
+                                    Icon(Icons.Filled.AddCircle, "Floating action button.")
+                                }
+                                */
+                            }
                             Box(
                                 modifier = if (isError) {
                                     Modifier.padding(top = 11.dp)
@@ -552,6 +638,136 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                 bottom = 12.dp
                                             )
                                     )
+                                    var tts: TextToSpeech? by remember { mutableStateOf(null) }
+                                    var isSpeaking by remember { mutableStateOf(false) }
+                                    var isPaused by remember { mutableStateOf(false) }
+                                    var currentPosition by remember { mutableStateOf(0) }
+                                    var utteranceId by remember { mutableStateOf("") }
+                                    val copied = stringResource(id = R.string.copied)
+
+                                    val utteranceProgressListener = object : UtteranceProgressListener() {
+                                        override fun onStart(utteranceId: String) {
+                                            // Is called when an utterance starts
+                                        }
+
+                                        override fun onDone(utteranceId: String) {
+                                            // Is called when an utterance is done
+                                            currentPosition = 0
+                                            isSpeaking = false
+                                            isPaused = false
+                                        }
+
+                                        override fun onError(utteranceId: String) {
+                                            // Is called when an error occurs
+                                        }
+
+                                        override fun onRangeStart(utteranceId: String, start: Int, end: Int, frame: Int) {
+                                            // Is called when a new range of text is being spoken
+                                            currentPosition = end
+                                        }
+                                    }
+                                    tts?.setOnUtteranceProgressListener(utteranceProgressListener)
+                                    DisposableEffect(Unit) {
+                                        tts = TextToSpeech(context) { status ->
+                                            if (status == TextToSpeech.SUCCESS) {
+                                                // TTS-Engine successfully initialized
+                                                Log.d("TTS", "Text-to-Speech engine was successfully initialized.")
+                                            } else {
+                                                // Error initializing the TTS-Engine
+                                                Log.d("TTS", "Error initializing the Text-to-Speech engine.")
+                                            }
+                                        }
+                                        onDispose {
+                                            tts?.stop()
+                                            tts?.shutdown()
+                                        }
+                                    }
+
+                                    Row {
+                                        IconButton(
+                                            onClick = {
+                                                if (isSpeaking) {
+                                                    tts?.stop()
+                                                    isSpeaking = false
+                                                    isPaused = false
+                                                    currentPosition = 0
+                                                } else {
+                                                    val transcript = transcriptResult
+                                                    if (transcript != null) {
+                                                        utteranceId = UUID.randomUUID().toString()
+                                                        tts?.speak(transcript, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                                                        isSpeaking = true
+                                                    }
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.outline_volume_up_24),
+                                                contentDescription = if (isSpeaking) "Beenden" else "Vorlesen"
+                                            )
+                                        }
+
+                                        AnimatedVisibility(visible = isSpeaking) {
+                                            IconButton(
+                                                onClick = {
+                                                    if (isPaused) {
+                                                        val transcript = transcriptResult
+                                                        if (transcript != null) {
+                                                            val remainingText = transcript.substring(currentPosition)
+                                                            utteranceId = UUID.randomUUID().toString()
+                                                            tts?.speak(remainingText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                                                            isPaused = false
+                                                        }
+                                                    } else {
+                                                        tts?.stop()
+                                                        isPaused = true
+                                                    }
+                                                }
+                                            ) {
+                                                Icon(
+                                                    painter = if (isPaused) {
+                                                        painterResource(id = R.drawable.outline_play_circle_filled_24)
+                                                    } else {
+                                                        painterResource(id = R.drawable.outline_pause_circle_filled_24)
+                                                    },
+                                                    contentDescription = if (isPaused) "Fortsetzen" else "Pausieren"
+                                                )
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.weight(1f))
+
+                                        IconButton(
+                                            onClick = {
+                                                clipboardManager.setPrimaryClip(
+                                                    ClipData.newPlainText(null, transcriptResult)
+                                                )
+                                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                                                    Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.outline_content_copy_24),
+                                                contentDescription = "Kopieren"
+                                            )
+                                        }
+
+                                        IconButton(
+                                            onClick = {
+                                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(Intent.EXTRA_TEXT, transcriptResult)
+                                                }
+                                                val chooserIntent = Intent.createChooser(shareIntent, null)
+                                                context.startActivity(chooserIntent)
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Share,
+                                                contentDescription = "Teilen"
+                                            )
+                                        }
+                                    }
                                 }
                                 Column(
                                     modifier = Modifier
@@ -656,10 +872,11 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     }
 }
 
-suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel): Pair<String, Boolean> {
+suspend fun summarize(text: String, length: Int, viewModel: TextSummaryViewModel): Pair<String, Boolean> {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
     var key: String = APIKeyLibrary.getAPIKey()
+    var model: String = viewModel.getModelValue().toString()
 
     if (key.isEmpty()) {
         key = viewModel.getApiKeyValue().toString()
@@ -676,7 +893,7 @@ suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel)
 
     try {
         val result = withContext(Dispatchers.IO) {
-            module.callAttr("summarize", url, key, length, language).toString()
+            module.callAttr("summarize", text, length, language, key, model).toString()
         }
         return Pair(result, false)
     } catch (e: PyException) {

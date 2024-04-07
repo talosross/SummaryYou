@@ -114,6 +114,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     var showDialogDesign by remember { mutableStateOf(false) }
     var showDialogRestart by remember { mutableStateOf(false) }
     var showDialogKey by remember { mutableStateOf(false) }
+    var showDialogModel by remember { mutableStateOf(false) }
     var design = viewModel.getDesignNumber()
     val currentLocale = Resources.getSystem().configuration.locales[0]
     val currentLanguage = currentLocale.language
@@ -181,7 +182,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     if(showDialogKey) {
         var apiTextFieldValue by remember { mutableStateOf(viewModel.getApiKeyValue()?.toString() ?: "") }
         AlertDialog(
-            onDismissRequest = { showDialogDesign = false },
+            onDismissRequest = { showDialogKey = false },
             title = { Text(stringResource(id = R.string.setApiKey)) },
             text = {
                 OutlinedTextField(
@@ -206,6 +207,39 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     Text(stringResource(id = R.string.cancel))
                 }
             }
+        )
+    }
+
+    if(showDialogModel) {
+        var selectedModel by remember { mutableStateOf(viewModel.getModelValue()) }
+        AlertDialog(
+            onDismissRequest = { showDialogModel = false },
+            title = { Text(stringResource(id = R.string.setModel)) },
+            text = {
+                Column {
+                    RadioButtonItem("Groq", selected = (selectedModel == "Groq")) {
+                        selectedModel = "Groq"
+                    }
+                    RadioButtonItem("OpenAI", selected = (selectedModel == "OpenAI")) {
+                        selectedModel = "OpenAI"
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.setModelValue(selectedModel)
+                        showDialogModel = false
+                    }
+                ) {
+                    Text(stringResource(id = R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialogModel = false }) {
+                    Text(stringResource(id = R.string.cancel))
+                }
+            },
         )
     }
 
@@ -329,6 +363,39 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                         }
                     )
                 }
+                if (key.isEmpty()) {
+                    ListItem(
+                        modifier = Modifier
+                            .clickable(onClick = { showDialogModel = showDialogModel.not() })
+                            .fillMaxWidth(),
+                        headlineContent = { Text(stringResource(id = R.string.setModel)) },
+                        supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_person_edit_24),
+                                contentDescription = "Localized description",
+                            )
+                        }
+                    )
+                }
+                ListItem(
+                    modifier = Modifier
+                        .clickable(onClick = {
+                            viewModel.setShowOnboardingScreenValue(true)
+                            val intent = Intent(context, context.javaClass)
+                            context.startActivity(intent)
+                            (context as? ComponentActivity)?.finish()
+                        })
+                        .fillMaxWidth(),
+                    headlineContent = { Text(stringResource(id = R.string.tutorial)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.round_help_center_24),
+                            contentDescription = "Localized description",
+                        )
+                    },
+                    supportingContent = { Text(stringResource(id = R.string.tutorialDescription)) },
+                )
                 ListItem(
                     modifier = Modifier
                         .clickable {
@@ -364,25 +431,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     supportingContent = { Text(stringResource(id = R.string.googlePlayDescription)) },
                 )
-                ListItem(
-                    modifier = Modifier
-                        .clickable(onClick = {
-                            viewModel.setShowOnboardingScreenValue(true)
-                            val intent = Intent(context, context.javaClass)
-                            context.startActivity(intent)
-                            (context as? ComponentActivity)?.finish()
-                        })
-                        .fillMaxWidth(),
-                    headlineContent = { Text(stringResource(id = R.string.tutorial)) },
-                    leadingContent = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.round_help_center_24),
-                            contentDescription = "Localized description",
-                        )
-                    },
-                    supportingContent = { Text(stringResource(id = R.string.tutorialDescription)) },
-                )
-                Text(text = "Version ${getVersionName(context)}",
+                Text(text = "Version ${getVersionName(context)} - ${viewModel.getModelValue()}",
                     modifier = Modifier
                         .align(alignment = CenterHorizontally)
                         .padding(top = 10.dp))

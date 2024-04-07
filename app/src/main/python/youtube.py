@@ -98,11 +98,10 @@ def get_video_transcript(video_id: str) -> str:
     return text
 
 
-def generate_summary(text: str, key: str, length: int, article: bool, language: str, title: str) -> str:
+def generate_summary(text: str, length: int, type: str, language: str, title: str, key: str, model: str) -> str:
     """
     Generate a summary of the provided text
     """
-    model = "OpenAI" # "OpenAI" or "Google"
 
     if model == "OpenAI":
         # Initialize the OpenAI API client
@@ -116,6 +115,12 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
         promptArticle0 = f"You will be provided with the article{title}, and your task is to generate a very short, concise summary with a maximum of 20 word of the text in {language} using only 3 bullet points." #Done
         promptArticle1 = f"You will be provided with the article{title}, and your task is to generate a very short, concise summary with a maximum of 60 words of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end." #Done
         promptArticle3 = f"You will be provided with the article{title}, and your task is to generate a summary of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end." #Done
+        promptText0 = f"You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 20 word of the text in {language} using only 3 bullet points."
+        promptText1 = f"You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 60 words of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptText3 = f"You will be provided with a text and your task is to generate a summary of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptDocument0 = f"You will be provided with a document, and your task is to generate a very short, concise summary with a maximum of 20 word of the document in {language} using only 3 bullet points."
+        promptDocument1 = f"You will be provided with a document, and your task is to generate a very short, concise summary with a maximum of 60 words of the document in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptDocument3 = f"You will be provided with a document, and your task is to generate a summary of the document in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
 
     elif model == "Gemini":
         # Initialize Gemini
@@ -129,6 +134,12 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
         promptArticle0 = f"You will be provided with the article{title}, and your task is to generate a very short, concise summary with a maximum of 20 word of the transcript in {language} using only 3 bullet points."
         promptArticle1 = f"You will be provided with the article{title}, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
         promptArticle3 = f"You will be provided with the article{title}, and your task is to generate a summary of the transcript in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptText0 = f"You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 20 word of the text in {language} using only 3 bullet points."
+        promptText1 = f"You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 60 words of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptText3 = f"You will be provided with a text and your task is to generate a summary of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptDocument0 = f"You will be provided with a document, and your task is to generate a very short, concise summary with a maximum of 20 word of the document in {language} using only 3 bullet points."
+        promptDocument1 = f"You will be provided with a document, and your task is to generate a very short, concise summary with a maximum of 60 words of the document in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptDocument3 = f"You will be provided with a document, and your task is to generate a summary of the document in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
 
     elif model == "Groq":
         # Initialize Groq
@@ -142,6 +153,12 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
         promptArticle0 = f"You will be provided with the article{title}, and your task is to summarize it in 3 very short and concise bullet points. Every bullet point should be a maximum of 5 words, start with a hyphen and not be a full sentences. Summarize it in {language}!" #Done in German
         promptArticle1 = f"You will be provided with the article{title}, and your task is to generate a very short, concise and compact summary with a maximum of 50 words of the text. If it includes a conclusion or key takeaway, make sure to include that in the end. Summarize it in {language}!" #Done in German
         promptArticle3 = f"You will be provided with the article{title}, and your task is to generate a compact summary of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end." #Done in German
+        promptText0 = f"You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 20 word of the text in {language} using only 3 bullet points."
+        promptText1 = f"You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 60 words of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptText3 = f"You will be provided with a text and your task is to generate a summary of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptDocument0 = f"You will be provided with a document, and your task is to generate a very short, concise summary with a maximum of 20 word of the document in {language} using only 3 bullet points."
+        promptDocument1 = f"You will be provided with a document, and your task is to generate a very short, concise summary with a maximum of 60 words of the document in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptDocument3 = f"You will be provided with a document, and your task is to generate a summary of the document in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
 
     if title is not None:
         title = " with the title " + title
@@ -149,30 +166,54 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
         title = ""
 
 
-    if article == False:
+    if type == "video":
         if language == "the same language as the ":
             language = language + "transcript"
         if length == 0:
             instructions = promptVideo0
-            max_tokens = 110
+            max_tokens = 150
         elif length == 1:
             instructions = promptVideo1
-            max_tokens = 170
+            max_tokens = 200
         else:
             instructions = promptVideo3
-            max_tokens = 350
-    else:
+            max_tokens = 400
+    elif type == "article":
         if language == "the same language as the ":
             language = language + "article"
         if length == 0:
             instructions = promptArticle0
-            max_tokens = 110
+            max_tokens = 150
         elif length == 1:
             instructions = promptArticle1
-            max_tokens = 180
+            max_tokens = 200
         else:
             instructions = promptArticle3
-            max_tokens = 350
+            max_tokens = 400
+    elif type == "text":
+        if language == "the same language as the ":
+            language = language + "text"
+        if length == 0:
+            instructions = promptText0
+            max_tokens = 150
+        elif length == 1:
+            instructions = promptText1
+            max_tokens = 200
+        else:
+            instructions = promptText3
+            max_tokens = 400
+    elif type == "document":
+        if language == "the same language as the ":
+            language = language + "document"
+        if length == 0:
+            instructions = promptDocument0
+            max_tokens = 150
+        elif length == 1:
+            instructions = promptDocument1
+            max_tokens = 200
+        else:
+            instructions = promptDocument3
+            max_tokens = 400
 
     try:
         if model == "OpenAI" or model == "Groq":
@@ -205,6 +246,7 @@ def generate_summary(text: str, key: str, length: int, article: bool, language: 
         print("Text is too long.")
         """
         print(f"An error occurred with '{MODEL}': {str(e)}")
+        raise e
 
 
 
@@ -224,11 +266,19 @@ def get_site_transcript(url: str) -> str:
     except Exception as e:
         return None
 
-def summarize(url: str, key: str, length: int, language: str) -> str:
-    """
-    Summarize the provided YouTube video
-    """
+def handle_exception(e: Exception) -> None:
+    if "Incorrect API" in str(e) or "Invalid API Key" in str(e):
+        raise Exception("incorrect key")
+    elif "Rate limit reached" in str(e):
+        raise Exception("rate limit")
+    elif "You didn't provide an API key" or "APIConnectionError" in str(e):
+        raise Exception("no key")
+    elif "Please reduce the length of the messages" in str(e):
+        raise Exception("too long")
+    else:
+        raise e
 
+def summarize(url: str, length: int, language: str, key: str, model: str) -> str:
     try:
         # Content-Detection
         if url == "":
@@ -237,6 +287,24 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
         # Internet-Connection
         if not internet_connection():
             raise Exception("no internet")
+
+        # Text ?
+        if not url.startswith("http"):
+            if len(url) > 100:
+                if url.startswith("Document:"):
+                    try:
+                        summary = generate_summary(url, length, "document", language, None, key, model)
+                        return summary
+                    except Exception as e:
+                        handle_exception(e)
+                else:
+                    try:
+                        summary = generate_summary(url, length, "text", language, None, key, model)
+                        return summary
+                    except Exception as e:
+                        handle_exception(e)
+            else:
+                raise Exception("invalid input")
 
         # Extract the video ID from the URL
         video_id = extract_youtube_video_id(url)
@@ -252,15 +320,10 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
                 raise Exception("paywall detected")
             else:
                 try:
-                    summary = generate_summary(transcript, key, length, True, language, title)
+                    summary = generate_summary(transcript, length, "article", language, title, key, model)
                     return summary
                 except Exception as e:
-                    if "Incorrect API" in str(e):
-                        raise Exception("incorrect api")
-                    elif "You didn't provide an API key" in str(e):
-                        raise Exception("no api")
-                    else:
-                        raise e
+                    handle_exception(e)
 
         # Fetch the video transcript
         transcript = get_video_transcript(video_id)
@@ -270,18 +333,11 @@ def summarize(url: str, key: str, length: int, language: str) -> str:
             raise Exception("no transcript")
 
         try:
-            summary = generate_summary(transcript, key, length, False, language, title)
+            summary = generate_summary(transcript, length, "video", language, title, key, model)
         except Exception as e:
-            if "Incorrect API" in str(e):
-                raise Exception("incorrect api")
-            elif "You didn't provide an API key" in str(e):
-                raise Exception("no api")
-            elif "Please reduce the length of the messages" in str(e):
-                raise Exception("too long")
-            else:
-                raise e
+            handle_exception(e)
 
-                # Return the summary
+        # Return the summary
         return summary
     except Exception as e:
         raise e

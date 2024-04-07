@@ -19,16 +19,14 @@
     <string name="noTranscript">Nessuna trascrizione trovata</string>
 
     <string name="noContent">Nessun contenuto</string>
-
-    <string name="noInternet">Nessuna connessione internet</string>
-
-    <string name="paywallDetected">Paywall rilevato, riepilogo impossibile.</string>
-
-    <string name="incorrectApi">Errore con OpenAI, devi aggiornare l\'app.</string>
-
-    <string name="incorrectApiOpenSource">Chiave API errata</string>
-
-    <string name="noApi">Errore con OpenAI, devi fornire una chiave API.</string>
+    <string name="invalidInput">Input non valido</string>
+    <string name="noInternet">Nessuna connessione Internet</string>
+    <string name="paywallDetected">Rilevato paywall, riepilogo non possibile.</string>
+    <string name="incorrectKey">Errore con il server, devi aggiornare l\'app.</string>
+    <string name="incorrectKeyOpenSource">Chiave API errata</string>
+    <string name="noKey">Errore con il server, devi fornire una chiave API.</string>
+    <string name="tooLong">Il supporto fornito è troppo lungo.</string>
+    <string name="rateLimit">Server sovraccarico, riprova più tardi.</string>
 
     <string name="useOriginalLanguage">Lingua originale</string>
 

@@ -20,15 +20,14 @@
 
     <string name="noContent">Pas de contenu</string>
 
+    <string name="invalidInput">Saisie invalide</string>
     <string name="noInternet">Pas de connexion Internet</string>
-
     <string name="paywallDetected">Paywall détecté, résumé impossible.</string>
-
-    <string name="incorrectApi">Erreur avec OpenAI, vous devez mettre à jour l\'application.</string>
-
-    <string name="incorrectApiOpenSource">Clé API incorrecte</string>
-
-    <string name="noApi">Erreur avec OpenAI, vous devez fournir une clé API.</string>
+    <string name="incorrectKey">Erreur avec le serveur, vous devez mettre à jour l\'application.</string>
+    <string name="incorrectKeyOpenSource">Clé API incorrecte</string>
+    <string name="noKey">Erreur avec le serveur, vous devez fournir une clé API.</string>
+    <string name="tooLong">Le support fourni est trop long.</string>
+    <string name="rateLimit">Serveur surchargé, réessayez plus tard.</string>
 
     <string name="useOriginalLanguage">Langue originale</string>
 
