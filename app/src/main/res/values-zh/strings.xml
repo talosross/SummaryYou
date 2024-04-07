@@ -24,11 +24,11 @@
 
     <string name="paywallDetected">检测到付费墙，无法进行总结。</string>
 
-    <string name="incorrectApi">OpenAI 出错，您必须更新应用程序。</string>
+    <string name="incorrectKey">OpenAI 出错，您必须更新应用程序。</string>
 
-    <string name="incorrectApiOpenSource">API 密钥不正确</string>
+    <string name="incorrectKeyOpenSource">API 密钥不正确</string>
 
-    <string name="noApi">OpenAI 出错，您必须提供 API 密钥。</string>
+    <string name="noKey">OpenAI 出错，您必须提供 API 密钥。</string>
 
     <string name="useOriginalLanguage">原始语言</string>
 

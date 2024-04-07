@@ -24,11 +24,11 @@
 
     <string name="paywallDetected">ペイウォールが検出されました。要約はできません。</string>
 
-    <string name="incorrectApi">OpenAI でエラーが発生しました。アプリを更新する必要があります。</string>
+    <string name="incorrectKey">OpenAI でエラーが発生しました。アプリを更新する必要があります。</string>
 
-    <string name="incorrectApiOpenSource">API キーが間違っています</string>
+    <string name="incorrectKeyOpenSource">API キーが間違っています</string>
 
-    <string name="noApi">OpenAI でエラーが発生しました。API キーを指定する必要があります。</string>
+    <string name="noKey">OpenAI でエラーが発生しました。API キーを指定する必要があります。</string>
 
     <string name="useOriginalLanguage">元の言語</string>
 

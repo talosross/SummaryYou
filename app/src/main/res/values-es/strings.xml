@@ -24,11 +24,11 @@
 
     <string name="paywallDetected">Se detectó un muro de pago, no es posible resumir.</string>
 
-    <string name="incorrectApi">Error con OpenAI, hay que actualizar la App.</string>
+    <string name="incorrectKey">Error con OpenAI, hay que actualizar la App.</string>
 
-    <string name="incorrectApiOpenSource">Clave API incorrecta</string>
+    <string name="incorrectKeyOpenSource">Clave API incorrecta</string>
 
-    <string name="noApi">Error con OpenAI, debes proporcionar una clave API.</string>
+    <string name="noKey">Error con OpenAI, debes proporcionar una clave API.</string>
 
     <string name="useOriginalLanguage">Idioma original</string>
 

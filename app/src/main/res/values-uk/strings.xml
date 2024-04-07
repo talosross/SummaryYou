@@ -11,9 +11,9 @@
     <string name="noContent">Немає вмісту</string>
     <string name="noInternet">Немає підключення до Інтернету</string>
     <string name="paywallDetected">Виявлено платіжний бар єр, узагальнення неможливе.</string>
-    <string name="incorrectApi">Помилка з OpenAI, потрібно оновити програму.</string>
-    <string name="incorrectApiOpenSource">Неправильний ключ API</string>
-    <string name="noApi">Помилка з OpenAI, потрібно надати ключ API.</string>
+    <string name="incorrectKey">Помилка з OpenAI, потрібно оновити програму.</string>
+    <string name="incorrectKeyOpenSource">Неправильний ключ API</string>
+    <string name="noKey">Помилка з OpenAI, потрібно надати ключ API.</string>
     <string name="useOriginalLanguage">Оригінальна мова</string>
     <string name="useOriginalLanguageDescription">Використовуйте оригінальну мову замість своєї мови.</string>
     <string name="chooseLanguage">Мова</string>

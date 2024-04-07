@@ -24,11 +24,11 @@
 
     <string name="paywallDetected">Paywall detectado, resumindo não é possível.</string>
 
-    <string name="incorrectApi">Erro com OpenAI, é necessário atualizar o App.</string>
+    <string name="incorrectKey">Erro com OpenAI, é necessário atualizar o App.</string>
 
-    <string name="incorrectApiOpenSource">Chave de API incorreta</string>
+    <string name="incorrectKeyOpenSource">Chave de API incorreta</string>
 
-    <string name="noApi">Erro com OpenAI, você precisa fornecer uma chave de API.</string>
+    <string name="noKey">Erro com OpenAI, você precisa fornecer uma chave de API.</string>
 
     <string name="useOriginalLanguage">Linguagem original</string>
 
