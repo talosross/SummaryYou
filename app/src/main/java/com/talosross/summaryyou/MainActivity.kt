@@ -1,15 +1,19 @@
 package com.talosross.summaryyou
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
@@ -18,6 +22,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -48,6 +53,7 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
@@ -121,9 +127,14 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.talosross.summaryyou.ui.theme.SummaryYouTheme
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import org.apache.poi.xwpf.usermodel.XWPFDocument
+import java.io.IOException
+import java.io.InputStream
 import java.util.Locale
 import java.util.UUID
 
@@ -368,6 +379,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     var title by remember { mutableStateOf<String?>(null) }
     var author by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) } // For Loading-Animation
+    var isExtracting by remember { mutableStateOf(false) } // For Loading-Animation
     var url by remember { mutableStateOf(initialUrl ?: "") }
     val scope = rememberCoroutineScope() // Python needs asynchronous call
     val context = LocalContext.current // Clipboard
@@ -380,44 +392,67 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     var isError by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val key: String = APIKeyLibrary.getAPIKey()
-    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-
+    var isDocument by remember { mutableStateOf(false) }
+    var textDocument by remember { mutableStateOf<String?>(null) }
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
         ClipboardManager::class.java
     ) as ClipboardManager
 
-    /*
-    fun extractTextFromDocument(uri: Uri) {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        val fileData = inputStream?.readBytes()
-
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-        val image = InputImage.fromByteArray(fileData, 0, fileData.size, 0, InputImage.IMAGE_FORMAT_JPEG)
-        recognizer.process(image)
-            .addOnSuccessListener { visionText ->
-                val extractedText = visionText.text
-                Log.d("TextExtraction", "Extracted Text: $extractedText")
-                // Verarbeite den extrahierten Text weiter
-            }
-            .addOnFailureListener { e ->
-                Log.e("TextExtraction", "Text extraction failed", e)
-                // Behandle den Fehler
-                // ...
-            }
-    }
-    */
+    val result = remember { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        selectedFileUri = uri
-        //selectedFileUri?.let { fileUri ->
-        //    extractTextFromDocument(fileUri)
-        //}
+        isExtracting = true
+        result.value = uri
+        if (uri != null) {
+            val mimeType = context.contentResolver.getType(uri)
+
+            scope.launch {
+                isDocument = true
+                url = getFileName(context, uri)
+                textDocument = if (mimeType == "application/pdf") {
+                    extractTextFromPdf(context, uri)
+                } else if (mimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                    extractTextFromDocx(context, uri)
+                } else {
+                    extractTextFromImage(context, uri)
+                }
+                isExtracting = false
+            }
+        }
     }
 
-    fun openFilePicker() {
-       launcher.launch(arrayOf("*/*"))
+    fun summarize() {
+        focusManager.clearFocus()
+        isLoading = true // Start Loading-Animation
+        if(isError){transcriptResult = ""}
+        isError = false // No error
+        scope.launch {
+            if (!isDocument) {
+                title = getTitel(url)
+                author = getAuthor(url)
+                val (result, error) = summarize(url, selectedIndex, viewModel)
+                transcriptResult = result
+                isError = error
+            }else {
+                title = url
+                author = ""
+                var text = "Document: " + textDocument
+                val (result, error) = summarize(text, selectedIndex, viewModel)
+                transcriptResult = result
+                isError = error
+            }
+            isLoading = false // Stop Loading-Animation
+            if(!isError){
+                if (isYouTubeLink(url)) {
+                    viewModel.addTextSummary(title, author, transcriptResult, true) // Add to history
+                }else{
+                    viewModel.addTextSummary(title, author, transcriptResult, false) // Add to history
+                }
+            }
+        }
     }
+
 
     Box {
         Scaffold(
@@ -531,6 +566,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                     transcriptResult = null
                                                     isError = false // No error
                                                     focusRequester.requestFocus()
+                                                    isDocument = false
                                                 }
                                             ) {
                                                 Icon(
@@ -546,17 +582,28 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                         .padding(top = 20.dp)
                                         .focusRequester(focusRequester)
                                 )
-                                /*
                                 Spacer(modifier = Modifier.width(16.dp))
                                 OutlinedButton(
-                                    onClick = { openFilePicker() },
+                                    onClick = { launcher.launch(arrayOf("application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/png", "image/jpeg", "image/jpg")) },
                                     modifier = modifier
                                         .height(72.dp)
                                         .padding(top = 15.dp)
                                 ) {
-                                    Icon(Icons.Filled.AddCircle, "Floating action button.")
+                                    Box {
+                                        if (isExtracting) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier
+                                                    .size(24.dp)
+                                                    .align(Alignment.Center)
+                                            )
+                                        }
+                                        Icon(
+                                            Icons.Filled.AddCircle,
+                                            contentDescription = "Floating action button",
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
                                 }
-                                */
                             }
                             Box(
                                 modifier = if (isError) {
@@ -778,28 +825,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                 ) {
                                     Button(
                                         onClick = {
-                                            focusManager.clearFocus()
-                                            isLoading = true // Start Loading-Animation
-                                            isError = false // No error
-                                            scope.launch {
-                                                title = getTitel(url)
-                                                author = getAuthor(url)
-                                                val (result, error) = summarize(
-                                                    url,
-                                                    selectedIndex,
-                                                    viewModel
-                                                )
-                                                transcriptResult = result
-                                                isError = error
-                                                isLoading = false // Stop Loading-Animation
-                                                if(!isError){
-                                                    if (isYouTubeLink(url)) {
-                                                        viewModel.addTextSummary(title, author, transcriptResult, true) // Add to history
-                                                    }else{
-                                                        viewModel.addTextSummary(title, author, transcriptResult, false) // Add to history
-                                                    }
-                                                }
-                                            }
+                                            summarize()
                                         },
                                         contentPadding = ButtonDefaults.ButtonWithIconContentPadding
                                     ) {
@@ -844,25 +870,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
             }
             FloatingActionButton(
                 onClick = {
-                    focusManager.clearFocus()
-                    isLoading = true // Start Loading-Animation
-                    if(isError){transcriptResult = ""}
-                    isError = false // No error
-                    scope.launch {
-                        title = getTitel(url)
-                        author = getAuthor(url)
-                        val (result, error) = summarize(url, selectedIndex, viewModel)
-                        transcriptResult = result
-                        isError = error
-                        isLoading = false // Stop Loading-Animation
-                        if(!isError){
-                            if (isYouTubeLink(url)) {
-                                viewModel.addTextSummary(title, author, transcriptResult, true) // Add to history
-                            }else{
-                                viewModel.addTextSummary(title, author, transcriptResult, false) // Add to history
-                            }
-                        }
-                    }
+                    summarize()
                 },
                 modifier = modifier.padding(bottom = 60.dp, end = 15.dp)
             ) {
@@ -940,5 +948,87 @@ fun isYouTubeLink(input: String): Boolean {
     return youtubePattern.matches(input)
 }
 
+suspend fun extractTextFromPdf(context: Context, selectedPdfUri: Uri): String {
+    // Open the PDF file
+    val pdfRenderer = PdfRenderer(context.contentResolver.openFileDescriptor(selectedPdfUri, "r")!!)
+
+    // Initialize the text recognizer
+    val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+    // Initialize the StringBuilder
+    val extractedText = StringBuilder()
+
+    // Iterate through the pages of the PDF
+    for (pageNumber in 0 until pdfRenderer.pageCount) {
+        // Get the page as an image
+        val page = pdfRenderer.openPage(pageNumber)
+        val pageImage = Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888)
+        page.render(pageImage, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+
+        // Create an input image from the page image
+        val inputImage = InputImage.fromBitmap(pageImage, 0)
+
+        // Recognize text from the page image
+        val result = textRecognizer.process(inputImage).await()
+        extractedText.append(result.text)
+
+        // Close the page
+        page.close()
+    }
+
+    // Close the PDF file
+    pdfRenderer.close()
+
+    // Return the extracted text
+    return extractedText.toString()
+}
 
 
+fun extractTextFromDocx(context: Context, selectedDocxUri: Uri): String {
+    // Öffne die DOCX-Datei als InputStream
+    val inputStream: InputStream? = context.contentResolver.openInputStream(selectedDocxUri)
+
+    // Erstelle ein XWPFDocument mit dem InputStream
+    val doc = XWPFDocument(inputStream)
+
+    // Initialisiere den StringBuilder für den extrahierten Text
+    val extractedText = StringBuilder()
+
+    // Gehe durch alle Paragraphen des Dokuments
+    doc.paragraphs.forEach { paragraph ->
+        // Füge den Text des Paragraphen zum StringBuilder hinzu
+        extractedText.append(paragraph.text).append("\n")
+    }
+
+    // Schließe das Dokument und den InputStream
+    doc.close()
+    inputStream?.close()
+
+    // Gebe den extrahierten Text zurück
+    return extractedText.toString()
+}
+
+suspend fun extractTextFromImage(context: Context, selectedImageUri: Uri): String = withContext(Dispatchers.IO) {
+    // Initialize the text recognizer
+    val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+    // Load the image from the URI
+    val inputImage = InputImage.fromFilePath(context, selectedImageUri)
+
+    // Recognize text from the image
+    val result = textRecognizer.process(inputImage).await()
+
+    // Return the extracted text
+    result.text
+}
+
+fun getFileName(context: Context, uri: Uri): String {
+    var name = ""
+    val cursor = context.contentResolver.query(uri, null, null, null, null)
+    cursor?.let {
+        it.moveToFirst()
+        name = cursor.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+        it.close()
+    }
+    return name
+}

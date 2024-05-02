@@ -149,10 +149,10 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
         # Prompts
         promptVideo0 = f"You will be provided with a transcript of the video{title}, and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points introduced by dashes. Every bullet point should be a maximum of 5 words, start with a hyphen and not be a full sentences. Please answer in {language}!!!!!!!!!!" #Done
         promptVideo1 = f"You will be provided with a transcript of the video{title}, and your task is to generate a very short, concise and compact summary with a maximum of 40 words of the transcript. If it includes a conclusion or key takeaway, make sure to include that in the end. Your answer should be in {language}!!!!!!!!!!!!1" #Done - just working with "1"
-        promptVideo3 = f"You will be provided with a transcript of the video with{title}, and your task is to generate a compact summary of the transcript in 130 words. If it includes a conclusion or key takeaway, make sure to include that in the end. Don't use the prefix 'summary' or 'conclusion'. Your answer should be in {language}!!!!!!!!!!!!1" #Done
+        promptVideo3 = f"You will be provided with a transcript of the video with{title}, and your task is to generate a summary of the transcript in 130 words. If it includes a conclusion or key takeaway, make sure to include that in the end. Don't use the prefix 'summary' or 'conclusion'. Your answer should be in {language}!!!!!!!!!!!!1" #Done
         promptArticle0 = f"You will be provided with the article{title}, and your task is to summarize it in 3 very short and concise bullet points. Every bullet point should be a maximum of 5 words, start with a hyphen and not be a full sentences. Summarize it in {language}!" #Done in German
         promptArticle1 = f"You will be provided with the article{title}, and your task is to generate a very short, concise and compact summary with a maximum of 50 words of the text. If it includes a conclusion or key takeaway, make sure to include that in the end. Summarize it in {language}!" #Done in German
-        promptArticle3 = f"You will be provided with the article{title}, and your task is to generate a compact summary of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end." #Done in German
+        promptArticle3 = f"You will be provided with the article{title}, and your task is to generate a summary of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end." #Done in German
         promptText0 = f"You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 20 word of the text in {language} using only 3 bullet points."
         promptText1 = f"You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 60 words of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
         promptText3 = f"You will be provided with a text and your task is to generate a summary of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
@@ -177,7 +177,7 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
             max_tokens = 200
         else:
             instructions = promptVideo3
-            max_tokens = 400
+            max_tokens = 600
     elif type == "article":
         if language == "the same language as the ":
             language = language + "article"
@@ -189,7 +189,7 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
             max_tokens = 200
         else:
             instructions = promptArticle3
-            max_tokens = 400
+            max_tokens = 600
     elif type == "text":
         if language == "the same language as the ":
             language = language + "text"
@@ -201,7 +201,7 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
             max_tokens = 200
         else:
             instructions = promptText3
-            max_tokens = 400
+            max_tokens = 600
     elif type == "document":
         if language == "the same language as the ":
             language = language + "document"
@@ -213,7 +213,7 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
             max_tokens = 200
         else:
             instructions = promptDocument3
-            max_tokens = 400
+            max_tokens = 600
 
     try:
         if model == "OpenAI" or model == "Groq":
