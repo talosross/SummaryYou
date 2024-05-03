@@ -42,6 +42,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
@@ -54,6 +55,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
@@ -394,6 +396,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     val key: String = APIKeyLibrary.getAPIKey()
     var isDocument by remember { mutableStateOf(false) }
     var textDocument by remember { mutableStateOf<String?>(null) }
+    var singleLine by remember { mutableStateOf(false) }
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
@@ -523,8 +526,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                 Spacer(modifier = modifier.height(height = 9.dp))
                             }
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier.fillMaxWidth()
                             ) {
                                 OutlinedTextField(
                                     value = url,
@@ -540,7 +542,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                     "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
                                                     "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
                                                     "Exception: no content" -> stringResource(id = R.string.noContent)
-                                                    "Exception: invalid input" -> stringResource(id = R.string.invalidInput)
+                                                    "Exception: too short" -> stringResource(id = R.string.tooShort)
                                                     "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
                                                     "Exception: too long" -> stringResource(id = R.string.tooLong)
                                                     "Exception: incorrect key" -> {
@@ -567,6 +569,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                     isError = false // No error
                                                     focusRequester.requestFocus()
                                                     isDocument = false
+                                                    singleLine = false
                                                 }
                                             ) {
                                                 Icon(
@@ -576,32 +579,62 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                             }
                                         }
                                     },
-                                    singleLine = !viewModel.getMultiLineValue(),
+                                    singleLine = if(viewModel.getMultiLineValue()) { singleLine } else { true },
                                     modifier = modifier
                                         .weight(1f)
                                         .padding(top = 20.dp)
                                         .focusRequester(focusRequester)
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
-                                OutlinedButton(
-                                    onClick = { launcher.launch(arrayOf("application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/png", "image/jpeg", "image/jpg")) },
-                                    modifier = modifier
-                                        .height(72.dp)
-                                        .padding(top = 15.dp)
-                                ) {
-                                    Box {
-                                        if (isExtracting) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier
-                                                    .size(24.dp)
-                                                    .align(Alignment.Center)
+                                Column {
+                                    OutlinedButton(
+                                        onClick = {
+                                            launcher.launch(
+                                                arrayOf(
+                                                    "application/pdf",
+                                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                    "image/png",
+                                                    "image/jpeg",
+                                                    "image/jpg"
+                                                )
+                                            )
+                                        },
+                                        modifier = modifier
+                                            .padding(top = 27.dp)
+                                            .height(58.dp)
+                                    ) {
+                                        Box {
+                                            if (isExtracting) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier
+                                                        .size(24.dp)
+                                                        .align(Alignment.Center)
+                                                )
+                                            }
+                                            Icon(
+                                                Icons.Filled.AddCircle,
+                                                contentDescription = "Floating action button",
+                                                modifier = Modifier.align(Alignment.Center)
                                             )
                                         }
-                                        Icon(
-                                            Icons.Filled.AddCircle,
-                                            contentDescription = "Floating action button",
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
+                                    }
+                                    if (viewModel.getMultiLineValue() && !singleLine) {
+                                        val textLength = url.length
+                                        val lineBreaks = url.count { it == '\n' }
+                                        val maxLength = 100 // Maximum length of the URL field
+                                        if (textLength >= maxLength || lineBreaks >= 1) {
+                                            Button(
+                                                onClick = { singleLine = true },
+                                                modifier = modifier
+                                                    .height(72.dp)
+                                                    .padding(top = 15.dp)
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.outline_keyboard_arrow_up_24),
+                                                    contentDescription = "minimize"
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }

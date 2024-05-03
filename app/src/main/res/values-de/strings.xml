@@ -15,6 +15,7 @@
     <string name="incorrectKeyOpenSource">Falscher API-Schlüssel</string>
     <string name="noKey">Fehler mit Server, kein API-Key gefunden</string>
     <string name="tooLong">Das Medium ist zu lang.</string>
+    <string name="tooShort">Das Medium ist zu kurz.</string>
     <string name="rateLimit">Server überlastet, versuchen Sie es später erneut.</string>
     <string name="useOriginalLanguage">Originalsprache</string>
     <string name="useOriginalLanguageDescription">Benutze die Originalsprache anstelle der Appsprache.</string>

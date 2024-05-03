@@ -171,10 +171,10 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
             language = language + "transcript"
         if length == 0:
             instructions = promptVideo0
-            max_tokens = 150
+            max_tokens = 200
         elif length == 1:
             instructions = promptVideo1
-            max_tokens = 200
+            max_tokens = 400
         else:
             instructions = promptVideo3
             max_tokens = 600
@@ -183,10 +183,10 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
             language = language + "article"
         if length == 0:
             instructions = promptArticle0
-            max_tokens = 150
+            max_tokens = 200
         elif length == 1:
             instructions = promptArticle1
-            max_tokens = 200
+            max_tokens = 400
         else:
             instructions = promptArticle3
             max_tokens = 600
@@ -195,10 +195,10 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
             language = language + "text"
         if length == 0:
             instructions = promptText0
-            max_tokens = 150
+            max_tokens = 200
         elif length == 1:
             instructions = promptText1
-            max_tokens = 200
+            max_tokens = 400
         else:
             instructions = promptText3
             max_tokens = 600
@@ -207,10 +207,10 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
             language = language + "document"
         if length == 0:
             instructions = promptDocument0
-            max_tokens = 150
+            max_tokens = 200
         elif length == 1:
             instructions = promptDocument1
-            max_tokens = 200
+            max_tokens = 400
         else:
             instructions = promptDocument3
             max_tokens = 600
@@ -304,7 +304,7 @@ def summarize(url: str, length: int, language: str, key: str, model: str) -> str
                     except Exception as e:
                         handle_exception(e)
             else:
-                raise Exception("invalid input")
+                raise Exception("too short")
 
         # Extract the video ID from the URL
         video_id = extract_youtube_video_id(url)
