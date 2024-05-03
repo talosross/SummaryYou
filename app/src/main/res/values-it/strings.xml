@@ -19,7 +19,6 @@
     <string name="noTranscript">Nessuna trascrizione trovata</string>
 
     <string name="noContent">Nessun contenuto</string>
-    <string name="invalidInput">Input non valido</string>
     <string name="noInternet">Nessuna connessione Internet</string>
     <string name="paywallDetected">Rilevato paywall, riepilogo non possibile.</string>
     <string name="incorrectKey">Errore con il server, devi aggiornare l\'app.</string>

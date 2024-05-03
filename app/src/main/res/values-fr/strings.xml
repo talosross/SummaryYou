@@ -20,7 +20,6 @@
 
     <string name="noContent">Pas de contenu</string>
 
-    <string name="invalidInput">Saisie invalide</string>
     <string name="noInternet">Pas de connexion Internet</string>
     <string name="paywallDetected">Paywall détecté, résumé impossible.</string>
     <string name="incorrectKey">Erreur avec le serveur, vous devez mettre à jour l\'application.</string>

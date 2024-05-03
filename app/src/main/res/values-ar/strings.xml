@@ -9,7 +9,6 @@
     <string name="invalidURL">رابط غير صالح: الإجمالي غير ممكن</string>
     <string name="noTranscript">لا توجد نصوص مترجمة</string>
     <string name="noContent">لا يوجد محتوى</string>
-    <string name="invalidInput">إدخال غير صالح</string>
     <string name="noInternet">لا يوجد اتصال بالإنترنت</string>
     <string name="paywallDetected">تم اكتشاف جدار الدفع ، التلخيص غير ممكن.</string>
     <string name="incorrectKey">خطأ في الخادم ، يجب عليك تحديث التطبيق.</string>
