@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Bitmap
+import android.graphics.Outline
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Build
@@ -44,9 +45,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Settings
@@ -101,6 +105,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.AccessibilityAction
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -533,6 +538,8 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     onValueChange = { url = it },
                                     label = { Text("URL/Text") },
                                     isError = isError,
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                    keyboardActions = KeyboardActions(onDone = { summarize() }),
                                     supportingText = {
                                         if (isError) {
                                             Text(
@@ -856,19 +863,38 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Button(
-                                        onClick = {
-                                            summarize()
-                                        },
-                                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-                                    ) {
-                                        Icon(
-                                            Icons.Filled.Refresh,
-                                            contentDescription = "Refresh",
-                                            modifier = Modifier.size(ButtonDefaults.IconSize)
-                                        )
-                                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                        Text(stringResource(id = R.string.regenerate))
+                                    Row() {
+                                        Button(
+                                            onClick = {
+                                                summarize()
+                                            },
+                                            contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                                        ) {
+                                            Icon(
+                                                Icons.Filled.Refresh,
+                                                contentDescription = "Refresh",
+                                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                                            )
+                                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                            Text(stringResource(id = R.string.regenerate))
+                                        }
+                                        /*
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Button(
+                                            onClick = {
+                                                summarize()
+                                            },
+                                            contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                                        ) {
+                                            Icon(
+                                                Icons.Filled.Create,
+                                                contentDescription = "Refresh",
+                                                modifier = Modifier.size(ButtonDefaults.IconSize)
+                                            )
+                                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                            Text("Fragen")
+                                        }
+                                         */
                                     }
                                 }
                             }
