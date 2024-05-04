@@ -50,6 +50,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Delete
@@ -76,6 +77,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -410,12 +412,12 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
 
     val result = remember { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        isExtracting = true
         result.value = uri
         if (uri != null) {
             val mimeType = context.contentResolver.getType(uri)
 
             scope.launch {
+                isExtracting = true
                 isDocument = true
                 url = getFileName(context, uri)
                 textDocument = if (mimeType == "application/pdf") {
@@ -619,7 +621,11 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                 )
                                             }
                                             Icon(
-                                                Icons.Filled.AddCircle,
+                                                if (isDocument && !isExtracting) {
+                                                    Icons.Filled.CheckCircle
+                                                } else {
+                                                    Icons.Filled.AddCircle
+                                                },
                                                 contentDescription = "Floating action button",
                                                 modifier = Modifier.align(Alignment.Center)
                                             )
@@ -934,6 +940,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                 modifier = modifier.padding(bottom = 60.dp, end = 15.dp)
             ) {
                 Icon(Icons.Filled.Check, "Check")
+                TextField(value = "", onValueChange = {})
             }
         }
     }
