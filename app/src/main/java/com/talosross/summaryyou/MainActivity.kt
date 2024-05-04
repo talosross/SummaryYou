@@ -142,6 +142,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.apache.poi.xwpf.usermodel.XWPFDocument
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
 import java.util.Locale
@@ -404,6 +405,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     var isDocument by remember { mutableStateOf(false) }
     var textDocument by remember { mutableStateOf<String?>(null) }
     var singleLine by remember { mutableStateOf(false) }
+    val stillLoading = stringResource(id = R.string.stillLoading)
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
@@ -935,12 +937,15 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
             }
             FloatingActionButton(
                 onClick = {
-                    summarize()
+                    if (isExtracting) {
+                        Toast.makeText(context, stillLoading, Toast.LENGTH_SHORT).show()
+                    }else {
+                        summarize()
+                    }
                 },
                 modifier = modifier.padding(bottom = 60.dp, end = 15.dp)
             ) {
                 Icon(Icons.Filled.Check, "Check")
-                TextField(value = "", onValueChange = {})
             }
         }
     }
@@ -1050,28 +1055,16 @@ suspend fun extractTextFromPdf(context: Context, selectedPdfUri: Uri): String {
 }
 
 
-fun extractTextFromDocx(context: Context, selectedDocxUri: Uri): String {
-    // Öffne die DOCX-Datei als InputStream
-    val inputStream: InputStream? = context.contentResolver.openInputStream(selectedDocxUri)
-
-    // Erstelle ein XWPFDocument mit dem InputStream
-    val doc = XWPFDocument(inputStream)
-
-    // Initialisiere den StringBuilder für den extrahierten Text
-    val extractedText = StringBuilder()
-
-    // Gehe durch alle Paragraphen des Dokuments
-    doc.paragraphs.forEach { paragraph ->
-        // Füge den Text des Paragraphen zum StringBuilder hinzu
-        extractedText.append(paragraph.text).append("\n")
-    }
-
-    // Schließe das Dokument und den InputStream
-    doc.close()
-    inputStream?.close()
-
-    // Gebe den extrahierten Text zurück
-    return extractedText.toString()
+suspend fun extractTextFromDocx(context: Context, selectedDocxUri: Uri): String = withContext(Dispatchers.IO) {
+    context.contentResolver.openInputStream(selectedDocxUri)?.use { inputStream ->
+        XWPFDocument(inputStream).use { doc ->
+            val extractedText = StringBuilder()
+            doc.paragraphs.forEach { paragraph ->
+                extractedText.append(paragraph.text).append("\n")
+            }
+            return@withContext extractedText.toString()
+        }
+    } ?: throw FileNotFoundException("Kann InputStream für die URI nicht öffnen: $selectedDocxUri")
 }
 
 suspend fun extractTextFromImage(context: Context, selectedImageUri: Uri): String = withContext(Dispatchers.IO) {

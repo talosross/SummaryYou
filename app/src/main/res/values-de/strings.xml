@@ -54,4 +54,5 @@
     <string name="tutorial">Tutorial</string>
     <string name="tutorialDescription">Wiederhole das Tutorial</string>
     <string name="noHistory">Du hast noch nichts zusammengefasst.</string>
+    <string name="stillLoading">Das Dokument wird noch verarbeitet...</string>
 </resources>
