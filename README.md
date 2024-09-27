@@ -4,7 +4,7 @@
 
 # Summary You
 
-### Summarize YouTube-Videos & Articles with AI
+### Summarize YouTube-Videos, Articles, Images and Documents with AI
 
 
 </div>
@@ -32,9 +32,11 @@
 
 ## 📖 Features
 
-- Summarize YouTube-Videos & Articles with AI
+- Summarize YouTube-Videos, Articles, Images and Documents with AI
 
 - Set length of summary
+
+- Read-Out the summaries
 
 - History-Section
   
@@ -50,7 +52,7 @@ It uses GPT-3.5 OpenAI/Mixtral 8x7B Groq to summarize.
   
 ## ⭐️ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=talosross/SummaryYou&type=Timeline)]
+![Star History Chart](https://api.star-history.com/svg?repos=talosross/SummaryYou&type=Timeline)
 
 
 ## 🧱 Credits
