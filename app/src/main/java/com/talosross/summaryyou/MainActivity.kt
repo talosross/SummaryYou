@@ -1,6 +1,7 @@
 package com.talosross.summaryyou
 
-import android.app.Activity
+import android.R.attr.direction
+import android.R.attr.orientation
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -8,11 +9,9 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.graphics.Outline
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.speech.tts.TextToSpeech
@@ -23,10 +22,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,26 +40,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -77,7 +68,6 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -92,26 +82,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalAccessibilityManager
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.AccessibilityAction
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.LiveData
@@ -121,13 +103,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import coil.ImageLoader
-import coil.compose.rememberAsyncImagePainter
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.request.ImageRequest
-import coil.size.Size
+import androidx.recyclerview.widget.RecyclerView.EdgeEffectFactory.DIRECTION_LEFT
 import com.chaquo.python.PyException
+import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.google.gson.Gson
@@ -136,17 +114,15 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.talosross.summaryyou.ui.theme.SummaryYouTheme
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.apache.poi.xwpf.usermodel.XWPFDocument
 import java.io.FileNotFoundException
-import java.io.IOException
-import java.io.InputStream
 import java.util.Locale
 import java.util.UUID
+
 
 class MainActivity : ComponentActivity() {
     private var sharedUrl: String? = null
@@ -440,20 +416,21 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
         if(isError){transcriptResult = ""}
         isError = false // No error
         scope.launch {
+            val result: SummaryResult
+
             if (!isDocument) {
-                title = getTitel(url)
-                author = getAuthor(url)
-                val (result, error) = summarize(url, selectedIndex, viewModel)
-                transcriptResult = result
-                isError = error
-            }else {
+                result = summarize(url, selectedIndex, viewModel)
+                title = result.title ?: ""
+                author = result.author ?: ""
+            } else {
                 title = url
                 author = ""
-                var text = "Document: " + textDocument
-                val (result, error) = summarize(text, selectedIndex, viewModel)
-                transcriptResult = result
-                isError = error
+                val text = "Document: $textDocument"
+                result = summarize(text, selectedIndex, viewModel)
             }
+
+            transcriptResult = result.summary ?: "No summary available"
+            isError = result.isError
             isLoading = false // Stop Loading-Animation
             if(!isError){
                 if (isYouTubeLink(url)) {
@@ -951,7 +928,14 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     }
 }
 
-suspend fun summarize(text: String, length: Int, viewModel: TextSummaryViewModel): Pair<String, Boolean> {
+data class SummaryResult(
+    val title: String?,
+    val author: String?,
+    val summary: String?,
+    val isError: Boolean = false
+)
+
+suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel): SummaryResult {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
     var key: String = APIKeyLibrary.getAPIKey()
@@ -970,19 +954,34 @@ suspend fun summarize(text: String, length: Int, viewModel: TextSummaryViewModel
         currentLocale.getDisplayLanguage(Locale.ENGLISH)
     }
 
-    try {
-        val result = withContext(Dispatchers.IO) {
-            module.callAttr("summarize", text, length, language, key, model).toString()
+    return try {
+        val result: Map<String, PyObject> = withContext(Dispatchers.IO) {
+            module.callAttr("summarize", url, length, language, key, model)
+                .asMap() as Map<String, PyObject>
         }
-        return Pair(result, false)
+
+        SummaryResult(
+            title = result["title"]?.toString(),
+            author = result["author"]?.toString(),
+            summary = result["summary"]?.toString(),
+            isError = false
+        )
     } catch (e: PyException) {
-        return Pair(e.message ?: "unknown error 2", true)
+        SummaryResult(
+            title = null,
+            author = null,
+            summary = e.message ?: "unknown error 2",
+            isError = true
+        )
     } catch (e: Exception) {
-        return Pair(e.message ?: "unknown error 3", true)
+        SummaryResult(
+            title = null,
+            author = null,
+            summary = e.message ?: "unknown error 3",
+            isError = true
+        )
     }
 }
-
-
 
 suspend fun getAuthor(url: String): String? {
     val py = Python.getInstance()

@@ -14,8 +14,8 @@ android {
         applicationId = "com.talosross.summaryyou"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2024050413
-        versionName = "1.2.3"
+        versionCode = 2024092719
+        versionName = "1.2.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -74,13 +74,16 @@ chaquopy {
         pip {
             // A requirement specifier, with or without a version number:
             install("youtube-transcript-api")
-            install("openai")
+            install("openai==1.39.0")
             install("pytube")
-            install("newspaper3k")
+            install("newspaper4k")
             install("pydantic<2")
-            install("google-generativeai")
+            //install("google-generativeai")
             install("groq")
             install("grpcio")
+            install("numpy")
+            install("pandas")
+            install("trafilatura")
             }
     }
 }

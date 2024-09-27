@@ -8,6 +8,7 @@ import socket
 from groq import Groq
 import random
 import requests
+from trafilatura import fetch_url, extract, extract_metadata
 
 def internet_connection():
     try:
@@ -15,60 +16,6 @@ def internet_connection():
         return True
     except requests.ConnectionError:
         return False
-
-def get_title(url):
-    try:
-        yt_video = YouTube(url)
-        video_title = yt_video.title
-
-        return video_title
-    except Exception as e:
-        try:
-            site = Article(url)
-            site.download()
-            site.parse()
-            return site.title
-        except Exception as e:
-            return None
-
-
-def get_author(url):
-    try:
-        # Create YouTube video object
-        yt_video = YouTube(url)
-
-        # Get the author of the video
-        video_author = yt_video.author
-        if video_author == "unknown":
-            try:
-                site = Article(url)
-                site.download()
-                site.parse()
-                authors = site.authors
-                for element in authors:
-                    if element and len(element.split()) > 0:
-                        # If the element is not empty and contains at least one word
-                        # Show the element and end the loop
-                        return element
-                return None
-            except Exception as e:
-                return None
-        else:
-            return video_author
-    except VideoUnavailable:
-        try:
-            site = Article(url)
-            site.download()
-            site.parse()
-            authors = site.authors
-            for element in authors:
-                if element and len(element.split()) > 0:
-                    # If the element is not empty and contains at least one word
-                    # Show the element and end the loop
-                    return element
-            return None
-        except Exception as e:
-            return None
 
 def extract_youtube_video_id(url: str) -> str:
     """
@@ -80,23 +27,6 @@ def extract_youtube_video_id(url: str) -> str:
     if found:
         return found.group(1)
     return None
-
-def get_video_transcript(video_id: str) -> str:
-    """
-    Fetch the transcript of the provided YouTube video
-    """
-    try:
-        # Get the transcript languages
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-        language = [transcript.language_code for transcript in transcript_list]
-        # Get the transcript
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=[language[0]])
-    except TranscriptsDisabled:
-        # The video doesn't have a transcript
-        return None
-    text = " ".join([line["text"] for line in transcript])
-    return text
-
 
 def generate_summary(text: str, length: int, type: str, language: str, title: str, key: str, model: str) -> str:
     """
@@ -248,38 +178,25 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
         print(f"An error occurred with '{MODEL}': {str(e)}")
         raise e
 
-
-
-def get_site_transcript(url: str) -> str:
-    try:
-        site = Article(url)
-        site.download()
-        site.parse()
-
-        # Paywall detection
-        pattern = r'"isAccessibleForFree"\s*:\s*"?false"?'
-        match = re.search(pattern, site.html, re.IGNORECASE)
-        if match:
-            return "paywall detected"
-
-        return site.text
-    except Exception as e:
-        return None
-
 def handle_exception(e: Exception) -> None:
     if "Incorrect API" in str(e) or "Invalid API Key" in str(e):
         raise Exception("incorrect key")
     elif "Rate limit reached" in str(e):
         raise Exception("rate limit")
-    elif "You didn't provide an API key" or "APIConnectionError" in str(e):
+    elif "You didn't provide an API key" in str(e):
         raise Exception("no key")
     elif "Please reduce the length of the messages" in str(e):
         raise Exception("too long")
     else:
         raise e
 
-def summarize(url: str, length: int, language: str, key: str, model: str) -> str:
+def summarize(url: str, length: int, language: str, key: str, model: str) -> dict:
+    result = {}
+    result['title'] = None
+    result['author'] = None
+    result['summary'] = None
     try:
+
         # Content-Detection
         if url == "":
             raise Exception("no content")
@@ -288,19 +205,21 @@ def summarize(url: str, length: int, language: str, key: str, model: str) -> str
         if not internet_connection():
             raise Exception("no internet")
 
-        # Text ?
+        # Text
         if not url.startswith("http"):
             if len(url) > 100:
                 if url.startswith("Document:"):
                     try:
                         summary = generate_summary(url, length, "document", language, None, key, model)
-                        return summary
+                        result['summary'] = summary
+                        return result
                     except Exception as e:
                         handle_exception(e)
                 else:
                     try:
                         summary = generate_summary(url, length, "text", language, None, key, model)
-                        return summary
+                        result['summary'] = summary
+                        return result
                     except Exception as e:
                         handle_exception(e)
             else:
@@ -309,35 +228,108 @@ def summarize(url: str, length: int, language: str, key: str, model: str) -> str
         # Extract the video ID from the URL
         video_id = extract_youtube_video_id(url)
 
-        title = get_title(url)
+        # Video
+        if video_id:
+            try:
+                # Get the transcript languages
+                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                language = [transcript.language_code for transcript in transcript_list]
 
-        # Error message: Invalid link
-        if not video_id:
-            transcript = get_site_transcript(url)
-            if transcript is None or transcript == "":
-                raise Exception("invalid link")
-            elif transcript == "paywall detected":
-                raise Exception("paywall detected")
-            else:
-                try:
+                # Get the transcript
+                text = YouTubeTranscriptApi.get_transcript(video_id, languages=[language[0]])
+                transcript = " ".join([line["text"] for line in text])
+
+                #  Create YouTube video object
+                yt_video = YouTube(url)
+
+                # Get the title of the video
+                title = yt_video.title
+                result['title'] = title
+
+                # Get the author of the video
+                author = yt_video.author
+                if author == "unknown":
+                    author = None
+                result['author'] = author
+
+                # Generate the summary
+                summary = generate_summary(transcript, length, "video", language, title, key, model)
+                result['summary'] = summary
+                return result
+
+            except TranscriptsDisabled:
+                raise Exception("no transcript")
+
+            except Exception as e:
+                handle_exception(e)
+
+        # Article
+        else:
+            try:
+                site = fetch_url(url)
+
+                # Paywall detection
+                pattern = r'"isAccessibleForFree"\s*:\s*"?false"?'
+
+                if site == None:
+                    site = Article(url)
+                    site.download()
+                    site.parse()
+                    match = re.search(pattern, site.html, re.IGNORECASE)
+                    if match:
+                        raise Exception("paywall detected")
+
+                    transcript = site.text
+
+                    if transcript is None or transcript == "":
+                        raise Exception("invalid link")
+
+                    # Get title
+                    title = site.title
+                    result['title'] = title
+
+                    # Get author
+                    authors = site.authors
+                    author = None
+                    if author:
+                        for element in authors:
+                            if element and len(element.split()) > 0:
+                                author = element
+                                break
+
+                    result['author'] = author
+
+                    # Generate the summary
                     summary = generate_summary(transcript, length, "article", language, title, key, model)
-                    return summary
-                except Exception as e:
-                    handle_exception(e)
+                    result['summary'] = summary
+                    return result
 
-        # Fetch the video transcript
-        transcript = get_video_transcript(video_id)
+                else:
+                    match = re.search(pattern, site, re.IGNORECASE)
+                    if match:
+                        raise Exception("paywall detected")
 
-        # If no transcript is found, return an error message
-        if not transcript:
-            raise Exception("no transcript")
+                    transcript = extract(site)
 
-        try:
-            summary = generate_summary(transcript, length, "video", language, title, key, model)
-        except Exception as e:
-            handle_exception(e)
+                    if transcript is None or transcript == "":
+                        raise Exception("invalid link")
 
-        # Return the summary
-        return summary
+                    # Get title
+                    metadata = extract_metadata(site)
+                    title = metadata.title
+                    result['title'] = title
+
+                    # Get author
+                    author = metadata.author
+                    result['author'] = author
+
+                    # Generate the summary
+                    summary = generate_summary(transcript, length, "article", language, title, key, model)
+                    result['summary'] = summary
+                    return result
+
+            except Exception as e:
+                handle_exception(e)
+
     except Exception as e:
         raise e
