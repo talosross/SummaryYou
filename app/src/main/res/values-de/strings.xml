@@ -54,5 +54,8 @@
     <string name="tutorial">Tutorial</string>
     <string name="tutorialDescription">Wiederhole das Tutorial</string>
     <string name="noHistory">Du hast noch nichts zusammengefasst.</string>
+    <string name="copied">Kopiert</string>
     <string name="stillLoading">Das Dokument wird noch verarbeitet...</string>
+    <string name="useLengthOptions">Zeige die Längenoptionen</string>
+    <string name="useLengthOptionsDescription">Zeige die verschiedenen Zusammenfassungslängen</string>
 </resources>

@@ -58,4 +58,6 @@
     <string name="noHistory">You haven\'t summarized anything yet.</string>
     <string name="copied">Copied</string>
     <string name="stillLoading">The document is still being processed...</string>
+    <string name="useLengthOptions">Use Length Options</string>
+    <string name="useLengthOptionsDescription">Use the length options for the summary</string>
 </resources>

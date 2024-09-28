@@ -348,6 +348,25 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                         )
                     }
                 )
+                ListItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    headlineContent = { Text(stringResource(id = R.string.useLengthOptions)) },
+                    supportingContent = { Text(stringResource(id = R.string.useLengthOptionsDescription)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_short_text_24),
+                            contentDescription = "Localized description",
+                        )
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = viewModel.getShowLengthValue(),
+                            onCheckedChange = { newValue ->
+                                viewModel.setShowLengthValue(newValue)
+                            }
+                        )
+                    }
+                )
                 if (key.isEmpty()) {
                     ListItem(
                         modifier = Modifier

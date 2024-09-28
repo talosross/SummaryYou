@@ -273,7 +273,6 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
     val designNumber: LiveData<Int> = _designNumberLiveData
 
     init {
-        // Beim Erstellen des ViewModels, setze den aktuellen Wert aus den SharedPreferences
         _designNumberLiveData.value = sharedPreferences.getInt("designNumber", 0)
     }
 
@@ -320,6 +319,30 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
 
     fun getShowOnboardingScreenValue(): Boolean {
         return showOnboardingScreen
+    }
+
+    // Show length
+    var showLength by mutableStateOf(sharedPreferences.getBoolean("showLength", true))
+
+    fun setShowLengthValue(newValue: Boolean) {
+        showLength = newValue
+        sharedPreferences.edit().putBoolean("showLength", newValue).apply()
+    }
+
+    fun getShowLengthValue(): Boolean {
+        return showLength
+    }
+
+    // Show length number
+    var showLengthNumber by mutableStateOf(sharedPreferences.getInt("showLengthNumber", 0))
+
+    fun setShowLengthNumberValue(newValue: Int) {
+        showLengthNumber = newValue
+        sharedPreferences.edit().putInt("showLengthNumber", newValue).apply()
+    }
+
+    fun getShowLengthNumberValue(): Int {
+        return showLengthNumber
     }
 }
 
@@ -408,6 +431,10 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                 isExtracting = false
             }
         }
+    }
+
+    if(!viewModel.getShowLengthValue()) {
+        selectedIndex = viewModel.getShowLengthNumberValue()
     }
 
     fun summarize() {
@@ -630,24 +657,29 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     }
                                 }
                             }
-                            Box(
-                                modifier = if (isError) {
-                                    Modifier.padding(top = 11.dp)
-                                } else {
-                                    Modifier.padding(top = 15.dp)
-                                }
-                            ) {
-                                SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
-                                    options.forEachIndexed { index, label ->
-                                        SegmentedButton(
-                                            shape = SegmentedButtonDefaults.itemShape(
-                                                index = index,
-                                                count = options.size
-                                            ),
-                                            onClick = { selectedIndex = index },
-                                            selected = index == selectedIndex
-                                        ) {
-                                            Text(label)
+                            if (viewModel.getShowLengthValue()) {
+                                Box(
+                                    modifier = if (isError) {
+                                        Modifier.padding(top = 11.dp)
+                                    } else {
+                                        Modifier.padding(top = 15.dp)
+                                    }
+                                ) {
+                                    SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
+                                        options.forEachIndexed { index, label ->
+                                            SegmentedButton(
+                                                shape = SegmentedButtonDefaults.itemShape(
+                                                    index = index,
+                                                    count = options.size
+                                                ),
+                                                onClick = {
+                                                            selectedIndex = index
+                                                            viewModel.setShowLengthNumberValue(index)
+                                                          },
+                                                selected = index == selectedIndex
+                                            ) {
+                                                Text(label)
+                                            }
                                         }
                                     }
                                 }
