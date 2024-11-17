@@ -1,7 +1,6 @@
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 import re
 from openai import OpenAI
-from pytube import YouTube
 from newspaper import Article
 import socket
 #import google.generativeai as genai
@@ -29,6 +28,40 @@ def extract_youtube_video_id(url: str) -> str:
     if found:
         return found.group(1)
     return None
+
+def get_video_title(url):
+    try:
+        # Get the webpage content
+        response = requests.get(url)
+        if response.status_code != 200:
+            return "Error: Could not fetch video page"
+
+        # Find title using regex
+        title_match = re.search(r'<title>(.+?)</title>', response.text)
+        if title_match:
+            # Clean up the title (remove " - YouTube" suffix)
+            title = title_match.group(1)
+            title = title.replace(' - YouTube', '')
+            return title
+        return "Error: Title not found"
+
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+def get_channel_name(url):
+    try:
+        response = requests.get(url)
+        if response.status_code != 200:
+            return "Error: Could not fetch video page"
+
+        # Look for channel name in meta tags
+        channel_match = re.search(r'<link itemprop="name" content="(.+?)">', response.text)
+        if channel_match:
+            return channel_match.group(1)
+        return "Error: Channel name not found"
+
+    except Exception as e:
+        return f"An error occurred: {e}"
 
 def generate_summary(text: str, length: int, type: str, language: str, title: str, key: str, model: str) -> str:
     """
@@ -248,15 +281,12 @@ def summarize(url: str, length: int, language: str, key: str, model: str) -> dic
                     text = YouTubeTranscriptApi.get_transcript(video_id, languages=[language[0]])
                     transcript = " ".join([line["text"] for line in text])
 
-                    #  Create YouTube video object
-                    yt_video = YouTube(url)
-
                     # Get the title of the video
-                    title = yt_video.title
+                    title = get_video_title(url)
                     result['title'] = title
 
                     # Get the author of the video
-                    author = yt_video.author
+                    author = get_channel_name(url)
                     if author == "unknown":
                         author = None
                     result['author'] = author

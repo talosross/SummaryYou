@@ -75,7 +75,6 @@ chaquopy {
             // A requirement specifier, with or without a version number:
             install("youtube-transcript-api")
             install("openai==1.39.0")
-            install("pytube")
             install("newspaper4k")
             install("pydantic<2")
             //install("google-generativeai==0.1.0rc1")
