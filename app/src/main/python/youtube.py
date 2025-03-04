@@ -112,18 +112,29 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
         MODEL = "llama-3.1-8b-instant"
 
         # Prompts
-        promptVideo0 = f"You will be provided with a transcript of the video{title}, and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points introduced by dashes. Every bullet point should be a maximum of 5 words, start with a hyphen and not be a full sentences. Please answer in {language}!!!!!!!!!!" #Done
-        promptVideo1 = f"You will be provided with a transcript of the video{title}, and your task is to generate a very short, concise and compact summary with a maximum of 40 words of the transcript. If it includes a conclusion or key takeaway, make sure to include that in the end. Your answer should be in {language}!!!!!!!!!!!!1" #Done - just working with "1"
-        promptVideo3 = f"You will be provided with a transcript of the video with{title}, and your task is to generate a summary of the transcript in 130 words. If it includes a conclusion or key takeaway, make sure to include that in the end. Don't use the prefix 'summary' or 'conclusion'. Your answer should be in {language}!!!!!!!!!!!!1" #Done
-        promptArticle0 = f"You will be provided with the article{title}, and your task is to summarize it in 3 very short and concise bullet points. Every bullet point should be a maximum of 5 words, start with a hyphen and not be a full sentences. Summarize it in {language}!" #Done in German
-        promptArticle1 = f"You will be provided with the article{title}, and your task is to generate a very short, concise and compact summary with a maximum of 50 words of the text. If it includes a conclusion or key takeaway, make sure to include that in the end. Summarize it in {language}!" #Done in German
-        promptArticle3 = f"You will be provided with the article{title}, and your task is to generate a summary of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end." #Done in German
-        promptText0 = f"You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 20 word of the text in {language} using only 3 bullet points."
-        promptText1 = f"You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 60 words of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
-        promptText3 = f"You will be provided with a text and your task is to generate a summary of the text in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
-        promptDocument0 = f"You will be provided with a document, and your task is to generate a very short, concise summary with a maximum of 20 word of the document in {language} using only 3 bullet points."
-        promptDocument1 = f"You will be provided with a document, and your task is to generate a very short, concise summary with a maximum of 60 words of the document in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
-        promptDocument3 = f"You will be provided with a document, and your task is to generate a summary of the document in {language}. If it includes a conclusion or key takeaway, make sure to include that in the end."
+        promptVideo0 = f"Act as an expert content summarizer. Extract exactly 3 key points from the video transcript '{title}'. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in {language}."
+
+        promptVideo1 = f"Act as a professional summarizer. Condense the video transcript '{title}' into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in {language}."
+
+        promptVideo3 = f"Act as a content analysis specialist. Create a detailed summary of the video transcript '{title}' using exactly 130 words. Cover the main topic, key points, and any conclusions in a cohesive narrative. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the 130-word summary in {language}."
+
+        promptArticle0 = f"Act as an expert content summarizer. Extract exactly 3 key points from the article '{title}'. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in {language}."
+
+        promptArticle1 = f"Act as a professional summarizer. Condense the article '{title}' into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in {language}."
+
+        promptArticle3 = f"Act as a content analysis specialist. Create a comprehensive summary of the article '{title}' that captures its essential information, arguments, and conclusions. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the summary in {language}."
+
+        promptText0 = f"Act as an expert content summarizer. Extract exactly 3 key points from this text. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in {language}."
+
+        promptText1 = f"Act as a professional summarizer. Condense this text into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in {language}."
+
+        promptText3 = f"Act as a content analysis specialist. Create a comprehensive summary of this text that captures its essential information, arguments, and conclusions. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the summary in {language}."
+
+        promptDocument0 = f"Act as an expert content summarizer. Extract exactly 3 key points from this document. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in {language}."
+
+        promptDocument1 = f"Act as a professional summarizer. Condense this document into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in {language}."
+
+        promptDocument3 = f"Act as a content analysis specialist. Create a comprehensive summary of this document that captures its essential information, arguments, and conclusions. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the summary in {language}."
 
     if title is not None:
         title = " with the title " + title
