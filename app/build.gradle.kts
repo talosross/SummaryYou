@@ -70,19 +70,20 @@ android {
 
 chaquopy {
     defaultConfig {
-        version = "3.8"
+        version = "3.9"
         pip {
             // A requirement specifier, with or without a version number:
             install("youtube-transcript-api")
             install("openai==1.39.0")
             install("newspaper4k")
             install("pydantic<2")
-            //install("google-generativeai==0.1.0rc1")
             install("groq")
             install("grpcio")
             install("numpy")
             install("pandas")
             install("trafilatura")
+            install("lxml_html_clean")
+            install("lxml")
             }
     }
 }
@@ -117,4 +118,5 @@ dependencies {
     implementation("org.apache.poi:poi:5.2.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 }

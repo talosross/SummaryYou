@@ -298,7 +298,7 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
     }
 
     // AI-Model
-    var model by mutableStateOf(sharedPreferences.getString("model", "Groq"))
+    var model by mutableStateOf(sharedPreferences.getString("model", "Gemini"))
 
     fun setModelValue(newValue: String?) {
         model = newValue
