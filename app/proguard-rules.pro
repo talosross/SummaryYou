@@ -56,3 +56,6 @@
 -keep,allowoptimization class org.apache.xmlbeans.** { *; }
 -keep,allowoptimization class org.openxmlformats.schemas.** { *; }
 -keep,allowoptimization class com.microsoft.schemas.** { *; }
+
+-keep class com.google.ai.client.generativeai.** { *; }
+-keep class com.talosross.summaryyou.GeminiHandler { *; }
