@@ -7,14 +7,14 @@ plugins {
 
 android {
     namespace = "com.talosross.summaryyou"
-    compileSdk = 36
+    compileSdk = 35
     androidResources {
         generateLocaleConfig = true
     }
     defaultConfig {
         applicationId = "com.talosross.summaryyou"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 20250707
         versionName = "1.3.0"
 
