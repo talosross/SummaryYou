@@ -58,12 +58,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissState
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.rememberDismissState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -215,271 +210,221 @@ fun historyScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                 }
             }
         ) {
-                if (searchText.isNotEmpty() && searchResults.isNullOrEmpty()) {
-                        Text(
-                            text = stringResource(id = R.string.nothingFound),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .padding(start = 20.dp, end = 20.dp)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(searchResults) { textSummaryId ->
-                            val textSummary =
-                                viewModel.textSummaries.firstOrNull { it.id == textSummaryId.toString() }
-                            if (textSummary != null) {
-                                Textbox(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    id = textSummary.id,
-                                    title = textSummary.title,
-                                    author = textSummary.author,
-                                    text = textSummary.text,
-                                    youtubeLink = textSummary.youtubeLink,
-                                    viewModel = viewModel,
-                                    search = true
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun Textbox(modifier: Modifier = Modifier, id: String, title: String?, author: String?, text: String?, youtubeLink: Boolean, viewModel: TextSummaryViewModel, search: Boolean) {
-    val haptics = LocalHapticFeedback.current // Vibrations
-    val context = LocalContext.current // Clipboard
-    val clipboardManager = ContextCompat.getSystemService(
-        context,
-        ClipboardManager::class.java
-    ) as ClipboardManager
-    val dismissState = rememberDismissState(
-        positionalThreshold = {
-            it / 2 }
-    )
-    val contextForToast = LocalContext.current.applicationContext
-    if (dismissState.isDismissed(direction = DismissDirection.StartToEnd)) {
-        Toast.makeText(contextForToast, stringResource(id = R.string.deleted), Toast.LENGTH_SHORT).show()
-        viewModel.removeTextSummary(id)
-    }
-    SwipeToDismissBox(
-        state = dismissState,
-        modifier = modifier.fillMaxSize(),
-        directions = setOf(DismissDirection.StartToEnd),
-        backgroundContent = {
-            val iconScale by animateFloatAsState(
-                targetValue = if (dismissState.targetValue == DismissValue.DismissedToEnd) 1.2f else 0.9f
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .scale(iconScale)
-                        .padding(end = 170.dp)
-                        .align(Alignment.Center),
-                    imageVector = Icons.Outlined.Delete,
-                    contentDescription = "Delete"
-                )
-            }
-        }
-    ) {
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = if (search) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-            ),
-            modifier = modifier
-                .padding(top = 15.dp, bottom = 15.dp)
-                .fillMaxWidth()
-                .combinedClickable(
-                    onClick = {},
-                    onLongClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        //viewModel.removeTextSummary(title, author, text, youtubeLink)
-                        clipboardManager.setPrimaryClip(
-                            ClipData.newPlainText(null, text)
-                        )
-                    }
-                )
-        ) {
-            if (!title.isNullOrEmpty()) {
+            if (searchText.isNotEmpty() && searchResults.isNullOrEmpty()) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = modifier
-                        .padding(top = 12.dp, start = 12.dp, end = 12.dp)
+                    text = stringResource(id = R.string.nothingFound),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 )
-                if (!author.isNullOrEmpty()) {
-                    Row {
-                        Text(
-                            text = author,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier
-                                .padding(
-                                    top = 4.dp,
-                                    start = 12.dp,
-                                    end = 12.dp
-                                )
-                        )
-                        if (youtubeLink) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.youtube),
-                                contentDescription = null,
-                                modifier = Modifier.padding(top = 1.dp)
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(start = 20.dp, end = 20.dp)
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(searchResults) { textSummaryId ->
+                        val textSummary =
+                            viewModel.textSummaries.firstOrNull { it.id == textSummaryId.toString() }
+                        if (textSummary != null) {
+                            Textbox(
+                                modifier = Modifier.fillMaxWidth(),
+                                id = textSummary.id,
+                                title = textSummary.title,
+                                author = textSummary.author,
+                                text = textSummary.text,
+                                youtubeLink = textSummary.youtubeLink,
+                                viewModel = viewModel,
+                                search = true
                             )
                         }
                     }
-                }
-            }
-            Text(
-                text = text ?: "",
-                style = MaterialTheme.typography.labelLarge,
-                modifier = modifier
-                    .padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        top = 10.dp,
-                        bottom = 12.dp
-                    )
-            )
-            var tts: TextToSpeech? by remember { mutableStateOf(null) }
-            var isSpeaking by remember { mutableStateOf(false) }
-            var isPaused by remember { mutableStateOf(false) }
-            var currentPosition by remember { mutableStateOf(0) }
-            var utteranceId by remember { mutableStateOf("") }
-            val copied = stringResource(id = R.string.copied)
-            val transcript = text
-
-            val utteranceProgressListener = object : UtteranceProgressListener() {
-                override fun onStart(utteranceId: String) {
-                    // Is called when an utterance starts
-                }
-
-                override fun onDone(utteranceId: String) {
-                    // Is called when an utterance is done
-                    currentPosition = 0
-                    isSpeaking = false
-                    isPaused = false
-                }
-
-                override fun onError(utteranceId: String) {
-                    // Is called when an error occurs
-                }
-
-                override fun onRangeStart(utteranceId: String, start: Int, end: Int, frame: Int) {
-                    // Is called when a new range of text is being spoken
-                    currentPosition = end
-                }
-            }
-            tts?.setOnUtteranceProgressListener(utteranceProgressListener)
-            DisposableEffect(Unit) {
-                tts = TextToSpeech(context) { status ->
-                    if (status == TextToSpeech.SUCCESS) {
-                        // TTS-Engine successfully initialized
-                        Log.d("TTS", "Text-to-Speech engine was successfully initialized.")
-                    } else {
-                        // Error initializing the TTS-Engine
-                        Log.d("TTS", "Error initializing the Text-to-Speech engine.")
-                    }
-                }
-                onDispose {
-                    tts?.stop()
-                    tts?.shutdown()
-                }
-            }
-            Row {
-                IconButton(
-                    onClick = {
-                        if (isSpeaking) {
-                            tts?.stop()
-                            isSpeaking = false
-                            isPaused = false
-                            currentPosition = 0
-                        } else {
-                            if (transcript != null) {
-                                utteranceId = UUID.randomUUID().toString()
-                                tts?.speak(transcript, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
-                                isSpeaking = true
-                            }
-                        }
-                    }
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.outline_volume_up_24),
-                        contentDescription = if (isSpeaking) "Beenden" else "Vorlesen"
-                    )
-                }
-
-                AnimatedVisibility(visible = isSpeaking) {
-                    IconButton(
-                        onClick = {
-                            if (isPaused) {
-                                if (transcript != null) {
-                                    val remainingText = transcript.substring(currentPosition)
-                                    utteranceId = UUID.randomUUID().toString()
-                                    tts?.speak(remainingText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
-                                    isPaused = false
-                                }
-                            } else {
-                                tts?.stop()
-                                isPaused = true
-                            }
-                        }
-                    ) {
-                        Icon(
-                            painter = if (isPaused) {
-                                painterResource(id = R.drawable.outline_play_circle_filled_24)
-                            } else {
-                                painterResource(id = R.drawable.outline_pause_circle_filled_24)
-                            },
-                            contentDescription = if (isPaused) "Fortsetzen" else "Pausieren"
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.weight(1f))
-
-                IconButton(
-                    onClick = {
-                        clipboardManager.setPrimaryClip(
-                            ClipData.newPlainText(null, text)
-                        )
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                            Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.outline_content_copy_24),
-                        contentDescription = "Kopieren"
-                    )
-                }
-
-                IconButton(
-                    onClick = {
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, text)
-                        }
-                        val chooserIntent = Intent.createChooser(shareIntent, null)
-                        context.startActivity(chooserIntent)
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = "Teilen"
-                    )
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun Textbox(
+    modifier: Modifier = Modifier,
+    id: String,
+    title: String?,
+    author: String?,
+    text: String?,
+    youtubeLink: Boolean,
+    viewModel: TextSummaryViewModel,
+    search: Boolean
+) {
+    val haptics = LocalHapticFeedback.current
+    val context = LocalContext.current
+    val clipboardManager = ContextCompat.getSystemService(
+        context, ClipboardManager::class.java
+    ) as ClipboardManager
+    val contextForToast = LocalContext.current.applicationContext
+
+    /* ---------------- card ---------------- */
+    Card(
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = if (search)
+                MaterialTheme.colorScheme.tertiaryContainer
+            else
+                MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
+        modifier = modifier
+            .padding(vertical = 15.dp)
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = { /* optional navigation / detail */ },
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    Toast
+                        .makeText(contextForToast, context.getString(R.string.deleted), Toast.LENGTH_SHORT)
+                        .show()
+                    viewModel.removeTextSummary(id)          // <-- Löschen
+                }
+            )
+    ) {
+        /* -------- title & author ---------- */
+        if (!title.isNullOrEmpty()) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 12.dp, start = 12.dp, end = 12.dp)
+            )
+
+            if (!author.isNullOrEmpty()) {
+                Row {
+                    Text(
+                        text = author,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 4.dp, start = 12.dp, end = 12.dp)
+                    )
+                    if (youtubeLink) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.youtube),
+                            contentDescription = null,
+                            modifier = Modifier.padding(top = 1.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        /* ------------- body --------------- */
+        Text(
+            text = text.orEmpty(),
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(
+                start = 12.dp, end = 12.dp, top = 10.dp, bottom = 12.dp
+            )
+        )
+
+        /* ---------- TTS & actions --------- */
+        var tts: TextToSpeech? by remember { mutableStateOf(null) }
+        var isSpeaking by remember { mutableStateOf(false) }
+        var isPaused by remember { mutableStateOf(false) }
+        var currentPosition by remember { mutableStateOf(0) }
+        var utteranceId by remember { mutableStateOf("") }
+        val copied = stringResource(id = R.string.copied)
+        val transcript = text
+
+        val progressListener = object : UtteranceProgressListener() {
+            override fun onStart(utteranceId: String) {}
+            override fun onDone(utteranceId: String) {
+                currentPosition = 0; isSpeaking = false; isPaused = false
+            }
+            override fun onError(utteranceId: String) {}
+            override fun onRangeStart(uId: String, start: Int, end: Int, frame: Int) {
+                currentPosition = end
+            }
+        }
+
+        tts?.setOnUtteranceProgressListener(progressListener)
+
+        DisposableEffect(Unit) {
+            tts = TextToSpeech(context) { status ->
+                Log.d("TTS",
+                    if (status == TextToSpeech.SUCCESS) "Init OK" else "Init ERROR")
+            }
+            onDispose { tts?.stop(); tts?.shutdown() }
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            /* ----- play / stop ----- */
+            IconButton(
+                onClick = {
+                    if (isSpeaking) {
+                        tts?.stop(); isSpeaking = false; isPaused = false; currentPosition = 0
+                    } else if (!transcript.isNullOrEmpty()) {
+                        utteranceId = UUID.randomUUID().toString()
+                        tts?.speak(transcript, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                        isSpeaking = true
+                    }
+                }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.outline_volume_up_24),
+                    contentDescription = if (isSpeaking) "Stop" else "Play"
+                )
+            }
+
+            /* ----- pause / resume ----- */
+            AnimatedVisibility(isSpeaking) {
+                IconButton(
+                    onClick = {
+                        if (isPaused) {
+                            val rest = transcript?.substring(currentPosition).orEmpty()
+                            utteranceId = UUID.randomUUID().toString()
+                            tts?.speak(rest, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                            isPaused = false
+                        } else {
+                            tts?.stop(); isPaused = true
+                        }
+                    }
+                ) {
+                    Icon(
+                        painter = if (isPaused)
+                            painterResource(id = R.drawable.outline_play_circle_filled_24)
+                        else
+                            painterResource(id = R.drawable.outline_pause_circle_filled_24),
+                        contentDescription = if (isPaused) "Resume" else "Pause"
+                    )
+                }
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            /* -------- copy -------- */
+            IconButton(
+                onClick = {
+                    clipboardManager.setPrimaryClip(ClipData.newPlainText(null, text))
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+                        Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
+                }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.outline_content_copy_24),
+                    contentDescription = "Copy"
+                )
+            }
+
+            /* ------- share -------- */
+            IconButton(
+                onClick = {
+                    val share = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, text)
+                    }
+                    context.startActivity(Intent.createChooser(share, null))
+                }
+            ) {
+                Icon(imageVector = Icons.Outlined.Share, contentDescription = "Share")
+            }
+        }
+    }
+}
