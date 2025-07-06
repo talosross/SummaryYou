@@ -15,7 +15,7 @@ android {
         applicationId = "com.talosross.summaryyou"
         minSdk = 26
         targetSdk = 35
-        versionCode = 20250707
+        versionCode = 2025070701
         versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
