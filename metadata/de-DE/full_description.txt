@@ -1,0 +1,30 @@
+Summary You ist Ihr intelligenter Begleiter für die Zusammenfassung von Inhalten. Ganz gleich, ob Sie als Student Ihre Recherche optimieren möchten oder als Profi versuchen, immer einen Schritt voraus zu sein: Summary You bietet eine leistungsstarke und benutzerfreundliche Lösung, mit der Sie Zeit sparen und Ihre Effizienz steigern können.
+
+Hauptmerkmale:
+
+📖 Fassen Sie YouTube-Videos und -Artikel mit KI zusammen
+Nutzen Sie die Leistungsfähigkeit modernster künstlicher Intelligenz, um Videos und Artikel schnell und präzise zusammenzufassen. Extrahieren Sie die wesentlichen Informationen aus umfangreichen Inhalten, sodass Sie die Kernbotschaft in einem Bruchteil der Zeit erfassen können.
+
+✒️ Legen Sie die Länge Ihrer Zusammenfassung fest
+Passen Sie Ihre Zusammenfassungen an Ihre spezifischen Bedürfnisse an. Wählen Sie aus verschiedenen Zusammenfassungslängen, um sicherzustellen, dass Sie den Detaillierungsgrad erhalten, der Ihren Vorlieben entspricht, von kurzen Übersichten bis hin zu umfassenden Einblicken.
+
+📚 Verlauf.
+Greifen Sie im Abschnitt „Verlauf“ ganz einfach auf Ihre zuvor zusammengefassten Inhalte zu. Rufen Sie frühere Zusammenfassungen ab und holen Sie das Beste aus Ihren bisherigen Recherchen heraus, ohne sich die Mühe machen zu müssen, sie noch einmal zusammenzufassen.
+
+🌙 OLED-Dunkelmodus
+Optimieren Sie Ihr Seherlebnis mit dem OLED Dark Mode. Sparen Sie Ihren Akku und reduzieren Sie die Belastung Ihrer Augen, während Sie unsere App in Umgebungen mit wenig Licht genießen.
+
+🌐 Mehrsprachiger Support
+Summary You bietet mehrsprachige Unterstützung, sodass Sie Zusammenfassungen in verschiedenen Sprachen erstellen können. Überwinden Sie Sprachbarrieren und greifen Sie mühelos auf Informationen aus der ganzen Welt zu.
+
+🌐 Open Source
+Zusammenfassung You ist eine Open-Source-Anwendung. Als Open-Source-Projekt entwickelt es sich kontinuierlich mit Beiträgen leidenschaftlicher Entwickler weiter.
+
+✨ Material Design 3 Style-Benutzeroberfläche
+Erleben Sie eine elegante und moderne Benutzeroberfläche im Material Design 3-Stil. Genießen Sie dynamische Farbthemen, die Ihre Interaktion mit der App sowohl optisch ansprechend als auch angenehm machen.
+
+„Summary You“ ist Ihre Anlaufstelle für die effiziente Zusammenfassung von Inhalten und hilft Ihnen, Zeit zu sparen und die Ihnen zur Verfügung stehenden Informationen optimal zu nutzen.
+
+Hinweis: Für die KI-basierte Zusammenfassung verwendet die App KI-Modelle von OpenAI und benötigt eine Internetverbindung.
+
+Die neuesten Updates und Beiträge finden Sie in unserem GitHub-Repository https://github.com/talosross/SummaryYou

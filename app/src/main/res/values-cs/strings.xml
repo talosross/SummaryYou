@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Summary You</string>
+    <string name="short_length">Krátké</string>
+    <string name="middle_length">Střední</string>
+    <string name="long_length">Dlouhé</string>
+    <string name="settings">Nastavení</string>
+    <string name="history">Historie</string>
+    <string name="regenerate">Regenerovat</string>
+    <string name="invalidURL">Neplatný odkaz – Shrnutí není možné</string>
+    <string name="noTranscript">Nenalezen žádný přepis</string>
+    <string name="noContent">Nenalezen žádný obsah/kontext</string>
+    <string name="noInternet">Nejste připojeni k internetu</string>
+    <string name="paywallDetected">Paywall detekován, nelze shrnout</string>
+    <string name="incorrectKey">Chyba s OpenAI, je nutné aktualizovat aplikaci.</string>
+    <string name="incorrectKeyOpenSource">Neplatný API klíč</string>
+    <string name="noKey">Chyba s OpenAI, musíte definovat vlastní API klíč.</string>
+    <string name="tooLong">Poskytnuté médium je příliš dlouhé.</string>
+    <string name="useOriginalLanguage">Výchozí jazyk</string>
+    <string name="useOriginalLanguageDescription">Použít výchozí jazyk místo vašeho jazyka.</string>
+    <string name="chooseLanguage">Jazyk</string>
+    <string name="chooseLanguageDescription">Zvolte jazyk:</string>
+    <string name="repository">Otevřený zdrojový kód</string>
+    <string name="githubDescription">Náš GitHub repositář</string>
+    <string name="madeBy">Vyrobeno s ❤ uživatelem talosross</string>
+    <string name="useUltraDark">Použít Ultra Tmavý režim</string>
+    <string name="useUltraDarkDescription">Použít Ultra Tmavý režim s černým pozadím</string>
+    <string name="useMultiLines">Více řádků pro URL</string>
+    <string name="useMultiLinesDescription">Použít více řádků v URL poli</string>
+    <string name="setApiKey">Definovat API klíč</string>
+    <string name="setApiKeyDescription">Nastavit svůj OpenAI API klíč</string>
+    <string name="design">Design</string>
+    <string name="cancel">Zrušit</string>
+    <string name="ok">OK</string>
+    <string name="restartRequiredDescription">Restartujte aplikaci pro aplikování změn.</string>
+    <string name="restartRequired">Vyžadován restart aplikace</string>
+    <string name="systemDesign">Systém</string>
+    <string name="lightDesign">Světlý</string>
+    <string name="darkDesign">Tmavý</string>
+    <string name="deleted">Shrnutí smazáno</string>
+    <string name="search">Hledat</string>
+    <string name="nothingFound">Nic nenalezeno</string>
+    <string name="welcome">Vítejte v Summary You!</string>
+    <string name="welcomeDescription">Shrňte stránky, články a YouTube videa</string>
+    <string name="instruction">Jednoduše vložte odkaz na webovou stránku, článek nebo YouTube video pro vygenerování shrnutí.</string>
+    <string name="instructionsShare">Nebo jednoduše sdilejte odkaz s aplikaci pro vygenerování shrnutí.</string>
+    <string name="instructionsHistory">Zobrazte  vaše staré shrnutí v sekci Historie.</string>
+    <string name="finishButton">Dokončit</string>
+    <string name="continueButton">Pokračovat</string>
+    <string name="googlePlay">Obchod Google Play</string>
+    <string name="googlePlayDescription">Ohodnoťte nás</string>
+    <string name="tutorial">Tutoriál</string>
+    <string name="tutorialDescription">Znovu spustit tutoriál</string>
+</resources>
+

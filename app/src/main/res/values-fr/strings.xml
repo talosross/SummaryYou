@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><resources>
+
+    <string name="app_name" translatable="false">Summary You</string>
+
+    <string name="short_length">Court</string>
+
+    <string name="middle_length">Milieu</string>
+
+    <string name="long_length">Long</string>
+
+    <string name="settings">Paramètres</string>
+
+    <string name="history">Histoire</string>
+
+    <string name="regenerate">Régénérer</string>
+
+    <string name="invalidURL">Lien invalide: Résumé impossible</string>
+
+    <string name="noTranscript">Aucune transcription trouvée</string>
+
+    <string name="noContent">Pas de contenu</string>
+
+    <string name="noInternet">Pas de connexion Internet</string>
+    <string name="paywallDetected">Paywall détecté, résumé impossible.</string>
+    <string name="incorrectKey">Erreur avec le serveur, vous devez mettre à jour l\'application.</string>
+    <string name="incorrectKeyOpenSource">Clé API incorrecte</string>
+    <string name="noKey">Erreur avec le serveur, vous devez fournir une clé API.</string>
+    <string name="tooLong">Le support fourni est trop long.</string>
+    <string name="rateLimit">Serveur surchargé, réessayez plus tard.</string>
+
+    <string name="useOriginalLanguage">Langue originale</string>
+
+    <string name="useOriginalLanguageDescription">Utilisez la langue originale au lieu de votre langue.</string>
+
+    <string name="chooseLanguage">Langue</string>
+
+    <string name="chooseLanguageDescription">Choisissez une langue</string>
+
+    <string name="repository">Code source ouvert</string>
+
+    <string name="githubDescription">Notre dépôt Github</string>
+
+    <string name="madeBy">Réalisé avec ❤ par talosross</string>
+
+    <string name="useUltraDark">Utiliser Ultra Sombre</string>
+
+    <string name="useUltraDarkDescription">Utilisez le mode Ultra Dark avec du vrai noir</string>
+
+    <string name="useMultiLines">Plus de lignes pour l\'URL</string>
+
+    <string name="useMultiLinesDescription">Utilisez plus de lignes dans le champ URL</string>
+
+    <string name="setApiKey">Définir la clé API</string>
+
+    <string name="setApiKeyDescription">Définissez votre clé API OpenAI</string>
+
+    <string name="design">Conception</string>
+
+    <string name="cancel">Annuler</string>
+
+    <string name="ok">D\'ACCORD</string>
+
+    <string name="restartRequiredDescription">Redémarrez l\'application pour utiliser les nouvelles modifications.</string>
+
+    <string name="restartRequired">Redémarrage de l\'application requis</string>
+
+    <string name="systemDesign">Système</string>
+
+    <string name="lightDesign">Lumière</string>
+
+    <string name="darkDesign">Sombre</string>
+    <string name="deleted">Résumé supprimé</string>
+    <string name="search">Recherche</string>
+    <string name="nothingFound">Rien trouvé</string>
+    <string name="welcome">Bienvenue sur Summary You !</string>
+    <string name="welcomeDescription">Résumez des sites web, des articles et des vidéos YouTube</string>
+    <string name="instruction">Collez simplement le lien d\'un site web, d\'un article ou d\'une vidéo YouTube pour générer un résumé.</string>
+    <string name="instructionsShare">Ou partagez facilement un lien avec l\'application pour générer un résumé.</string>
+    <string name="instructionsHistory">Accédez à vos résumés passés dans la section Historique.</string>
+    <string name="finishButton">Terminer</string>
+    <string name="continueButton">Continuer</string>
+
+
+</resources>

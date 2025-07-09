@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><resources>
+
+    <string name="app_name" translatable="false">Summary You</string>
+
+    <string name="short_length">Corto</string>
+
+    <string name="middle_length">Medio</string>
+
+    <string name="long_length">Largo</string>
+
+    <string name="settings">Ajustes</string>
+
+    <string name="history">Historia</string>
+
+    <string name="regenerate">Regenerado</string>
+
+    <string name="invalidURL">Enlace no válido: Resumen no posible</string>
+
+    <string name="noTranscript">No se encontró ninguna transcripción</string>
+
+    <string name="noContent">Sin contenido</string>
+
+    <string name="noInternet">Sin conexión a Internet</string>
+
+    <string name="paywallDetected">Se detectó un muro de pago, no es posible resumir.</string>
+
+    <string name="incorrectKey">Error con OpenAI, hay que actualizar la App.</string>
+
+    <string name="incorrectKeyOpenSource">Clave API incorrecta</string>
+
+    <string name="noKey">Error con OpenAI, debes proporcionar una clave API.</string>
+
+    <string name="useOriginalLanguage">Idioma original</string>
+
+    <string name="useOriginalLanguageDescription">Utilice el idioma original en lugar de su idioma.</string>
+
+    <string name="chooseLanguage">Idioma</string>
+
+    <string name="chooseLanguageDescription">Elige un idioma</string>
+
+    <string name="repository">Código fuente abierto</string>
+
+    <string name="githubDescription">Nuestro repositorio Github</string>
+
+    <string name="madeBy">Hecho con ❤ de talosross</string>
+
+    <string name="useUltraDark">Usar ultra oscuro</string>
+
+    <string name="useUltraDarkDescription">Usa el modo ultra oscuro con negro real</string>
+
+    <string name="useMultiLines">Más líneas para URL</string>
+
+    <string name="useMultiLinesDescription">Utilice más líneas en el campo URL</string>
+
+    <string name="setApiKey">Establecer clave API</string>
+
+    <string name="setApiKeyDescription">Configure su clave API de OpenAI</string>
+
+    <string name="design">Diseño</string>
+
+    <string name="cancel">Cancelar</string>
+
+    <string name="ok">DE ACUERDO</string>
+
+    <string name="restartRequiredDescription">Reinicie la aplicación para utilizar los nuevos cambios.</string>
+
+    <string name="restartRequired">Es necesario reiniciar la aplicación</string>
+
+    <string name="systemDesign">Sistema</string>
+
+    <string name="lightDesign">Luz</string>
+
+    <string name="darkDesign">Oscuro</string>
+    <string name="deleted">Resumen eliminado</string>
+    <string name="search">Buscar</string>
+    <string name="nothingFound">Nada encontrado</string>
+    <string name="welcome">¡Bienvenido a Summary You!</string>
+    <string name="welcomeDescription">Resumir sitios web, artículos y videos de YouTube</string>
+    <string name="instruction">Simplemente pega el enlace de un sitio web, artículo o video de YouTube para generar un resumen.</string>
+    <string name="instructionsShare">O comparte fácilmente un enlace con la aplicación para generar un resumen.</string>
+    <string name="instructionsHistory">Accede a tus resúmenes anteriores en la sección Historial.</string>
+    <string name="finishButton">Finalizar</string>
+    <string name="continueButton">Continuar</string>
+</resources>

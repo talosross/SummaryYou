@@ -1,0 +1,18 @@
+*.iml
+.gradle
+/local.properties
+.idea/
+.idea/libraries
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+app/jni/
+app/jni/api-keys.c
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
