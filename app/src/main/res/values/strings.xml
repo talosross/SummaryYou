@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Summary You</string>
+    <string name="app_name" translatable="false">Summary Expressive</string>
     <string name="short_length">Short</string>
     <string name="middle_length">Middle</string>
     <string name="long_length">Long</string>
@@ -43,7 +43,7 @@
     <string name="deleted">Summary deleted</string>
     <string name="search">Search</string>
     <string name="nothingFound">Nothing found</string>
-    <string name="welcome">Welcome to Summary You!</string>
+    <string name="welcome">Welcome to Summary Expressive!</string>
     <string name="welcomeDescription">Summarize websites, articles and YouTube-Videos</string>
     <string name="instruction">Simply paste the link to a website, article or YouTube video to generate a summary.</string>
     <string name="instructionsShare">Or easily share a link with the app to generate a summary.</string>

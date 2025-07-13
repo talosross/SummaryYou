@@ -1,4 +1,4 @@
-package com.talosross.summaryyou
+package com.talosross.summaryexpressive
 
 import android.os.Build
 import androidx.compose.foundation.Image

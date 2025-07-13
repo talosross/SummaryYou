@@ -1,4 +1,4 @@
-Summary You est votre compagnon intelligent pour la synthèse de contenu. Que vous soyez un étudiant cherchant à optimiser vos recherches ou un professionnel cherchant à garder une longueur d'avance, Summary You fournit une solution puissante et conviviale pour gagner du temps et améliorer votre efficacité.
+Summary Expressive est votre compagnon intelligent pour la synthèse de contenu. Que vous soyez un étudiant cherchant à optimiser vos recherches ou un professionnel cherchant à garder une longueur d'avance, Summary Expressive fournit une solution puissante et conviviale pour gagner du temps et améliorer votre efficacité.
 
 Principales caractéristiques:
 
@@ -15,7 +15,7 @@ Accédez facilement à votre contenu précédemment résumé dans l'onglet « H
 Optimisez votre expérience visuelle avec le mode sombre OLED. Économisez votre batterie et réduisez la fatigue oculaire tout en profitant de notre application dans des environnements faiblement éclairés.
 
 🌐 Prise en charge multilingue
-Summary You offre un support multilingue, vous permettant de créer des résumés dans différentes langues. Surmontez les barrières linguistiques et accédez sans effort aux informations du monde entier.
+Summary Expressive offre un support multilingue, vous permettant de créer des résumés dans différentes langues. Surmontez les barrières linguistiques et accédez sans effort aux informations du monde entier.
 
 🌐Open Source
 Résumé You est une application open source. En tant que projet open source, il continue d'évoluer avec les contributions de développeurs passionnés.
@@ -27,4 +27,4 @@ Découvrez une interface utilisateur élégante et moderne dans le style Materia
 
 Remarque: Pour la synthèse basée sur l'IA, l'application utilise des modèles d'IA d'OpenAI et nécessite une connexion Internet.
 
-Retrouvez les dernières mises à jour et contributions dans notre référentiel GitHub https://github.com/talosross/SummaryYou
+Retrouvez les dernières mises à jour et contributions dans notre référentiel GitHub https://github.com/talosross/SummaryExpressive

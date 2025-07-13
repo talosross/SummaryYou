@@ -1,4 +1,4 @@
-Summary You 是您内容摘要的智能伴侣。无论您是希望优化研究的学生，还是努力保持领先一步的专业人士，Summary You 都能提供强大且用户友好的解决方案，以节省时间并提高效率。
+Summary Expressive 是您内容摘要的智能伴侣。无论您是希望优化研究的学生，还是努力保持领先一步的专业人士，Summary Expressive 都能提供强大且用户友好的解决方案，以节省时间并提高效率。
 
 主要特征：
 
@@ -27,4 +27,4 @@ Summary You 是您内容摘要的智能伴侣。无论您是希望优化研究�
 
 注意：对于基于 AI 的摘要，该应用程序使用 OpenAI 的 AI 模型，并且需要互联网连接。
 
-在我们的 GitHub 存储库 https://github.com/talosross/SummaryYou 中查找最新更新和贡献。
+在我们的 GitHub 存储库 https://github.com/talosross/SummaryExpressive 中查找最新更新和贡献。

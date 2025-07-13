@@ -1,16 +1,14 @@
-package com.talosross.summaryyou
+package com.talosross.summaryexpressive
 
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,15 +18,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,31 +39,21 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import coil.ImageLoader
-import coil.compose.rememberAsyncImagePainter
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.request.ImageRequest
-import coil.size.Size
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -115,13 +100,14 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     var showDialogRestart by remember { mutableStateOf(false) }
     var showDialogKey by remember { mutableStateOf(false) }
     var showDialogModel by remember { mutableStateOf(false) }
-    var design = viewModel.getDesignNumber()
-    val currentLocale = Resources.getSystem().configuration.locales[0]
-    val currentLanguage = currentLocale.language
-    val key: String = APIKeyLibrary.getAPIKey()
+    val design by viewModel.designNumber.collectAsState()
+    val apiKey by viewModel.apiKey.collectAsState()
+    val model by viewModel.model.collectAsState()
+    val useOriginalLanguage by viewModel.useOriginalLanguage.collectAsState()
+    val ultraDark by viewModel.ultraDark.collectAsState()
+    val multiLine by viewModel.multiLine.collectAsState()
+    val showLength by viewModel.showLength.collectAsState()
     var showTutorial by remember { mutableStateOf(false) }
-
-    // Existing code...
 
     if (showTutorial) {
         OnboardingScreen(
@@ -136,15 +122,15 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
             title = { Text(stringResource(id = R.string.design)) },
             text = {
                 Column {
-                    RadioButtonItem(stringResource(id = R.string.systemDesign), selected = !(viewModel.getDesignNumber() == 1 || viewModel.getDesignNumber() == 2)) {
+                    RadioButtonItem(stringResource(id = R.string.systemDesign), selected = design == 0) {
                         viewModel.setDesignNumber(0)
                         context2.recreate()
                     }
-                    RadioButtonItem(stringResource(id = R.string.lightDesign), selected = (viewModel.getDesignNumber() == 2)) {
+                    RadioButtonItem(stringResource(id = R.string.lightDesign), selected = design == 2) {
                         viewModel.setDesignNumber(2)
                         context2.recreate()
                     }
-                    RadioButtonItem(stringResource(id = R.string.darkDesign), selected = (viewModel.getDesignNumber() == 1)) {
+                    RadioButtonItem(stringResource(id = R.string.darkDesign), selected = design == 1) {
                         viewModel.setDesignNumber(1)
                         context2.recreate()
                     }
@@ -180,7 +166,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     }
 
     if(showDialogKey) {
-        var apiTextFieldValue by remember { mutableStateOf(viewModel.getApiKeyValue()?.toString() ?: "") }
+        var apiTextFieldValue by remember { mutableStateOf(apiKey) }
         AlertDialog(
             onDismissRequest = { showDialogKey = false },
             title = { Text(stringResource(id = R.string.setApiKey)) },
@@ -211,7 +197,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     }
 
     if(showDialogModel) {
-        var selectedModel by remember { mutableStateOf(viewModel.getModelValue()) }
+        var selectedModel by remember { mutableStateOf(model) }
         AlertDialog(
             onDismissRequest = { showDialogModel = false },
             title = { Text(stringResource(id = R.string.setModel)) },
@@ -264,9 +250,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                         },
                         trailingContent = {
                             Switch(
-                                checked = viewModel.getUseOriginalLanguageValue(), // Hier wird der Zustand aus der ViewModel-Variable abgerufen
+                                checked = useOriginalLanguage,
                                 onCheckedChange = { newValue ->
-                                    viewModel.setUseOriginalLanguageValue(newValue) // Hier wird der Wert der ViewModel-Variable gesetzt
+                                    viewModel.setUseOriginalLanguageValue(newValue)
                                 }
                             )
                         }
@@ -276,11 +262,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     modifier = Modifier
                         .clickable {
                             val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
-                            val uri = Uri.fromParts("package", context?.packageName, null)
+                            val uri = Uri.fromParts("package", context.packageName, null)
                             intent.data = uri
-
                             context.startActivity(intent)
-
                         }
                         .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
                     headlineContent = { Text(stringResource(id = R.string.chooseLanguage)) },
@@ -303,7 +287,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                             contentDescription = "Localized description",
                         )
                     },
-                    supportingContent = { Text(when (viewModel.getDesignNumber()) {
+                    supportingContent = { Text(when (design) {
                         1 -> stringResource(id = R.string.darkDesign)
                         2 -> stringResource(id = R.string.lightDesign)
                         else -> stringResource(id = R.string.systemDesign)
@@ -321,7 +305,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     trailingContent = {
                         Switch(
-                            checked = viewModel.getUltraDarkValue(),
+                            checked = ultraDark,
                             onCheckedChange = { newValue ->
                                 viewModel.setUltraDarkValue(newValue)
                                 context2.recreate()
@@ -341,7 +325,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     trailingContent = {
                         Switch(
-                            checked = viewModel.getMultiLineValue(),
+                            checked = multiLine,
                             onCheckedChange = { newValue ->
                                 viewModel.setMultiLineValue(newValue)
                             }
@@ -360,14 +344,14 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     trailingContent = {
                         Switch(
-                            checked = viewModel.getShowLengthValue(),
+                            checked = showLength,
                             onCheckedChange = { newValue ->
                                 viewModel.setShowLengthValue(newValue)
                             }
                         )
                     }
                 )
-                if (key.isEmpty()) {
+                if (apiKey.isEmpty()) {
                     ListItem(
                         modifier = Modifier
                             .clickable(onClick = { showDialogKey = showDialogKey.not() })
@@ -382,7 +366,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                         }
                     )
                 }
-                if (key.isEmpty()) {
+                if (apiKey.isEmpty()) {
                     ListItem(
                         modifier = Modifier
                             .clickable(onClick = { showDialogModel = showDialogModel.not() })
@@ -418,7 +402,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                 ListItem(
                     modifier = Modifier
                         .clickable {
-                            val url = "https://github.com/talosross/SummaryYou"
+                            val url = "https://github.com/talosross/SummaryExpressive"
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                             context.startActivity(intent)
                         }
@@ -436,7 +420,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     modifier = Modifier
                         .clickable {
                             val url =
-                                "https://play.google.com/store/apps/details?id=com.talosross.summaryyou"
+                                "https://play.google.com/store/apps/details?id=com.talosross.SummaryExpressive"
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                             context.startActivity(intent)
                         }
@@ -450,7 +434,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     supportingContent = { Text(stringResource(id = R.string.googlePlayDescription)) },
                 )
-                Text(text = "Version ${getVersionName(context)} - ${viewModel.getModelValue()}",
+                Text(text = "Version ${getVersionName(context)} - $model",
                     modifier = Modifier
                         .align(alignment = CenterHorizontally)
                         .padding(top = 10.dp))
@@ -485,6 +469,7 @@ fun getVersionCode(context: Context): Int {
     } catch (e: PackageManager.NameNotFoundException) {
         throw RuntimeException(e)
     }
+    @Suppress("DEPRECATION")
     return packageInfo.versionCode
 }
 
@@ -497,7 +482,8 @@ fun RadioButtonItem(
 ) {
     Row(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable { onSelectionChange() },
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
@@ -508,4 +494,3 @@ fun RadioButtonItem(
         Text(text = text, style = MaterialTheme.typography.bodyLarge)
     }
 }
-

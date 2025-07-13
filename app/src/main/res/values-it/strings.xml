@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><resources>
 
-    <string name="app_name" translatable="false">Summary You</string>
+    <string name="app_name" translatable="false">Summary Expressive</string>
 
     <string name="short_length">Corto</string>
 
@@ -71,7 +71,7 @@
     <string name="deleted">Riassunto eliminato</string>
     <string name="search">Ricerca</string>
     <string name="nothingFound">Niente trovato</string>
-    <string name="welcome">Benvenuto su Summary You!</string>
+    <string name="welcome">Benvenuto su Summary Expressive!</string>
     <string name="welcomeDescription">Sintetizza siti web, articoli e video YouTube</string>
     <string name="instruction">Incolla semplicemente il link di un sito web, un articolo o un video YouTube per generare un riassunto.</string>
     <string name="instructionsShare">O condividi facilmente un link con l\'app per generare un riassunto.</string>

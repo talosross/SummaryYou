@@ -1,4 +1,4 @@
-package com.talosross.summaryyou.ui.theme
+package com.talosross.summaryexpressive.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><resources>
 
-    <string name="app_name" translatable="false">Summary You</string>
+    <string name="app_name" translatable="false">Summary Expressive</string>
 
     <string name="short_length">Court</string>
 
@@ -72,7 +72,7 @@
     <string name="deleted">Résumé supprimé</string>
     <string name="search">Recherche</string>
     <string name="nothingFound">Rien trouvé</string>
-    <string name="welcome">Bienvenue sur Summary You !</string>
+    <string name="welcome">Bienvenue sur Summary Expressive !</string>
     <string name="welcomeDescription">Résumez des sites web, des articles et des vidéos YouTube</string>
     <string name="instruction">Collez simplement le lien d\'un site web, d\'un article ou d\'une vidéo YouTube pour générer un résumé.</string>
     <string name="instructionsShare">Ou partagez facilement un lien avec l\'application pour générer un résumé.</string>

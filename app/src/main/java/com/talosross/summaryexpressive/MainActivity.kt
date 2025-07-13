@@ -1,12 +1,9 @@
-package com.talosross.summaryyou
+package com.talosross.summaryexpressive
 
-import android.R.attr.direction
-import android.R.attr.orientation
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
@@ -72,6 +69,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -95,26 +93,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import android.app.Application
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.recyclerview.widget.RecyclerView.EdgeEffectFactory.DIRECTION_LEFT
-import com.chaquo.python.PyException
-import com.chaquo.python.PyObject
-import com.chaquo.python.Python
-import com.chaquo.python.android.AndroidPlatform
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.talosross.summaryyou.ui.theme.SummaryYouTheme
+import com.talosross.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -129,12 +126,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!Python.isStarted()) { //If not started, python will start here
-            Python.start(AndroidPlatform(this))
-        }
-        // Access the applicationContext and pass it to ViewModel class
-        val viewModel = TextSummaryViewModel(applicationContext)
-
         // Lay app behind the system bars
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -145,9 +136,14 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            SummaryYouTheme(design = viewModel.getDesignNumber(), OledModeEnabled = viewModel.getUltraDarkValue()) {
+            val viewModel: TextSummaryViewModel = viewModel()
+            val design by viewModel.designNumber.collectAsState()
+            val oledMode by viewModel.ultraDark.collectAsState()
+            val showOnboarding by viewModel.showOnboardingScreen.collectAsState()
+
+            SummaryExpressiveTheme(design = design, OledModeEnabled = oledMode) {
                 val navController = rememberNavController()
-                var shouldShowOnboarding by rememberSaveable { mutableStateOf(viewModel.getShowOnboardingScreenValue()) }
+                var shouldShowOnboarding by rememberSaveable { mutableStateOf(showOnboarding) }
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -159,7 +155,7 @@ class MainActivity : ComponentActivity() {
                             viewModel.setShowOnboardingScreenValue(false)
                         })
                     } else {
-                        AppNavigation(navController, applicationContext, sharedUrl)
+                        AppNavigation(navController, viewModel, sharedUrl)
                     }
                 }
             }
@@ -167,19 +163,77 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-class TextSummaryViewModel(private val context: Context) : ViewModel() {
-    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("TextSummaries", Context.MODE_PRIVATE)
+class TextSummaryViewModel(application: Application) : AndroidViewModel(application) {
+    private val context: Context = application.applicationContext
 
     val textSummaries = mutableStateListOf<TextSummary>()
 
+    // Original Language in summary
+    private val _useOriginalLanguage = MutableStateFlow(false)
+    val useOriginalLanguage: StateFlow<Boolean> = _useOriginalLanguage.asStateFlow()
+    fun setUseOriginalLanguageValue(newValue: Boolean) = viewModelScope.launch { UserPreferencesRepository.setUseOriginalLanguage(context, newValue) }
+
+    // Multiline URL-Field
+    private val _multiLine = MutableStateFlow(true)
+    val multiLine: StateFlow<Boolean> = _multiLine.asStateFlow()
+    fun setMultiLineValue(newValue: Boolean) = viewModelScope.launch { UserPreferencesRepository.setMultiLine(context, newValue) }
+
+    // UltraDark - Mode
+    private val _ultraDark = MutableStateFlow(false)
+    val ultraDark: StateFlow<Boolean> = _ultraDark.asStateFlow()
+    fun setUltraDarkValue(newValue: Boolean) = viewModelScope.launch { UserPreferencesRepository.setUltraDark(context, newValue) }
+
+    // DesignNumber for Dark, Light or System
+    private val _designNumber = MutableStateFlow(0)
+    val designNumber: StateFlow<Int> = _designNumber.asStateFlow()
+    fun setDesignNumber(newValue: Int) = viewModelScope.launch { UserPreferencesRepository.setDesignNumber(context, newValue) }
+
+    // API Key
+    private val _apiKey = MutableStateFlow("")
+    val apiKey: StateFlow<String> = _apiKey.asStateFlow()
+    fun setApiKeyValue(newValue: String) = viewModelScope.launch { UserPreferencesRepository.setApiKey(context, newValue) }
+
+    // AI-Model
+    private val _model = MutableStateFlow("Gemini")
+    val model: StateFlow<String> = _model.asStateFlow()
+    fun setModelValue(newValue: String) = viewModelScope.launch { UserPreferencesRepository.setModel(context, newValue) }
+
+    // OnboardingScreen
+    private val _showOnboardingScreen = MutableStateFlow(true)
+    val showOnboardingScreen: StateFlow<Boolean> = _showOnboardingScreen.asStateFlow()
+    fun setShowOnboardingScreenValue(newValue: Boolean) = viewModelScope.launch { UserPreferencesRepository.setShowOnboarding(context, newValue) }
+
+    // Show length
+    private val _showLength = MutableStateFlow(true)
+    val showLength: StateFlow<Boolean> = _showLength.asStateFlow()
+    fun setShowLengthValue(newValue: Boolean) = viewModelScope.launch { UserPreferencesRepository.setShowLength(context, newValue) }
+
+    // Show length number
+    private val _showLengthNumber = MutableStateFlow(0)
+    val showLengthNumber: StateFlow<Int> = _showLengthNumber.asStateFlow()
+    fun setShowLengthNumberValue(newValue: Int) = viewModelScope.launch { UserPreferencesRepository.setShowLengthNumber(context, newValue) }
+
     init {
-        // When creating the ViewModel, retrieve the saved data (if any)
-        val savedTextSummaries = sharedPreferences.getString("textSummaries", null)
-        savedTextSummaries?.let {
-            val type = object : TypeToken<List<TextSummary>>() {}.type
-            val textSummariesFromJson = Gson().fromJson<List<TextSummary>>(it, type)
-            textSummaries.addAll(textSummariesFromJson)
+        // Load summaries from DataStore
+        viewModelScope.launch {
+            UserPreferencesRepository.getTextSummaries(context).collect { summariesJson ->
+                val type = object : TypeToken<List<TextSummary>>() {}.type
+                val summaries = Gson().fromJson<List<TextSummary>>(summariesJson, type)
+                textSummaries.clear()
+                textSummaries.addAll(summaries)
+            }
         }
+
+        // Collect preferences from DataStore
+        viewModelScope.launch { UserPreferencesRepository.getUseOriginalLanguage(context).collect { _useOriginalLanguage.value = it } }
+        viewModelScope.launch { UserPreferencesRepository.getMultiLine(context).collect { _multiLine.value = it } }
+        viewModelScope.launch { UserPreferencesRepository.getUltraDark(context).collect { _ultraDark.value = it } }
+        viewModelScope.launch { UserPreferencesRepository.getDesignNumber(context).collect { _designNumber.value = it } }
+        viewModelScope.launch { UserPreferencesRepository.getApiKey(context).collect { _apiKey.value = it } }
+        viewModelScope.launch { UserPreferencesRepository.getModel(context).collect { _model.value = it } }
+        viewModelScope.launch { UserPreferencesRepository.getShowOnboarding(context).collect { _showOnboardingScreen.value = it } }
+        viewModelScope.launch { UserPreferencesRepository.getShowLength(context).collect { _showLength.value = it } }
+        viewModelScope.launch { UserPreferencesRepository.getShowLengthNumber(context).collect { _showLengthNumber.value = it } }
     }
 
     fun addTextSummary(title: String?, author: String?, text: String?, youtubeLink: Boolean) {
@@ -196,8 +250,10 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
     }
 
     private fun saveTextSummaries() {
-        val textSummariesJson = Gson().toJson(textSummaries)
-        sharedPreferences.edit().putString("textSummaries", textSummariesJson).apply()
+        viewModelScope.launch {
+            val textSummariesJson = Gson().toJson(textSummaries)
+            UserPreferencesRepository.setTextSummaries(context, textSummariesJson)
+        }
     }
 
     fun removeTextSummary(id: String) {
@@ -229,129 +285,13 @@ class TextSummaryViewModel(private val context: Context) : ViewModel() {
             ?.toList()
             ?: emptyList()
     }
-
-
-    // Original Language in summary
-    var useOriginalLanguage by mutableStateOf(sharedPreferences.getBoolean("useOriginalLanguage", false))
-
-    fun setUseOriginalLanguageValue(newValue: Boolean) {
-        useOriginalLanguage = newValue
-        sharedPreferences.edit().putBoolean("useOriginalLanguage", newValue).apply()
-    }
-
-    fun getUseOriginalLanguageValue(): Boolean {
-        return useOriginalLanguage
-    }
-
-    // Multiline URL-Field
-    var multiLine by mutableStateOf(sharedPreferences.getBoolean("multiLine", true))
-
-    fun setMultiLineValue(newValue: Boolean) {
-        multiLine = newValue
-        sharedPreferences.edit().putBoolean("multiLine", newValue).apply()
-    }
-
-    fun getMultiLineValue(): Boolean {
-        return multiLine
-    }
-
-    // UltraDark - Mode
-    var ultraDark by mutableStateOf(sharedPreferences.getBoolean("ultraDark", false))
-
-    fun setUltraDarkValue(newValue: Boolean) {
-        ultraDark = newValue
-        sharedPreferences.edit().putBoolean("ultraDark", newValue).apply()
-    }
-
-    fun getUltraDarkValue(): Boolean {
-        return ultraDark
-    }
-
-    // DesignNumber for Dark, Light or System
-    private val _designNumberLiveData = MutableLiveData<Int>()
-
-    val designNumber: LiveData<Int> = _designNumberLiveData
-
-    init {
-        _designNumberLiveData.value = sharedPreferences.getInt("designNumber", 0)
-    }
-
-    fun setDesignNumber(newValue: Int) {
-        _designNumberLiveData.value = newValue
-        sharedPreferences.edit().putInt("designNumber", newValue).apply()
-    }
-
-    fun getDesignNumber(): Int {
-        return _designNumberLiveData.value ?: 1 // Standardwert 1, wenn der Wert null ist
-    }
-
-    // API Key
-    var apiKey by mutableStateOf(sharedPreferences.getString("apiKey", null))
-
-    fun setApiKeyValue(newValue: String?) {
-        apiKey = newValue
-        sharedPreferences.edit().putString("apiKey", newValue).apply()
-    }
-
-    fun getApiKeyValue(): String? {
-        return apiKey
-    }
-
-    // AI-Model
-    var model by mutableStateOf(sharedPreferences.getString("model", "Gemini"))
-
-    fun setModelValue(newValue: String?) {
-        model = newValue
-        sharedPreferences.edit().putString("model", newValue).apply()
-    }
-
-    fun getModelValue(): String? {
-        return model
-    }
-
-    // OnboardingScreen
-    var showOnboardingScreen by mutableStateOf(sharedPreferences.getBoolean("showOnboardingScreen", true))
-
-    fun setShowOnboardingScreenValue(newValue: Boolean) {
-        showOnboardingScreen = newValue
-        sharedPreferences.edit().putBoolean("showOnboardingScreen", newValue).apply()
-    }
-
-    fun getShowOnboardingScreenValue(): Boolean {
-        return showOnboardingScreen
-    }
-
-    // Show length
-    var showLength by mutableStateOf(sharedPreferences.getBoolean("showLength", true))
-
-    fun setShowLengthValue(newValue: Boolean) {
-        showLength = newValue
-        sharedPreferences.edit().putBoolean("showLength", newValue).apply()
-    }
-
-    fun getShowLengthValue(): Boolean {
-        return showLength
-    }
-
-    // Show length number
-    var showLengthNumber by mutableStateOf(sharedPreferences.getInt("showLengthNumber", 0))
-
-    fun setShowLengthNumberValue(newValue: Int) {
-        showLengthNumber = newValue
-        sharedPreferences.edit().putInt("showLengthNumber", newValue).apply()
-    }
-
-    fun getShowLengthNumberValue(): Int {
-        return showLengthNumber
-    }
 }
 
 
 data class TextSummary(val id: String, val title: String, val author: String, val text: String, val youtubeLink: Boolean)
 
 @Composable
-fun AppNavigation(navController: NavHostController, applicationContext: Context, initialUrl: String? = null) {
-    val viewModel = TextSummaryViewModel(applicationContext) //For History
+fun AppNavigation(navController: NavHostController, viewModel: TextSummaryViewModel, initialUrl: String? = null) {
     NavHost(navController, startDestination = "home") {
         composable("home") {
             homeScreen(
@@ -390,7 +330,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     var isLoading by remember { mutableStateOf(false) } // For Loading-Animation
     var isExtracting by remember { mutableStateOf(false) } // For Loading-Animation
     var url by remember { mutableStateOf(initialUrl ?: "") }
-    val scope = rememberCoroutineScope() // Python needs asynchronous call
+    val scope = rememberCoroutineScope() // Coroutine scope for async calls
     val context = LocalContext.current // Clipboard
     val haptics = LocalHapticFeedback.current // Vibrations
     val focusManager = LocalFocusManager.current // Hide cursor
@@ -400,11 +340,14 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     val showCancelIcon by remember { derivedStateOf { url.isNotBlank() } }
     var isError by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val key: String = APIKeyLibrary.getAPIKey()
+    val apiKey by viewModel.apiKey.collectAsState()
     var isDocument by remember { mutableStateOf(false) }
     var textDocument by remember { mutableStateOf<String?>(null) }
     var singleLine by remember { mutableStateOf(false) }
     val stillLoading = stringResource(id = R.string.stillLoading)
+    val showLength by viewModel.showLength.collectAsState()
+    val showLengthNumber by viewModel.showLengthNumber.collectAsState()
+    val multiLine by viewModel.multiLine.collectAsState()
 
     val clipboardManager = ContextCompat.getSystemService(
         context,
@@ -433,8 +376,8 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
         }
     }
 
-    if(!viewModel.getShowLengthValue()) {
-        selectedIndex = viewModel.getShowLengthNumberValue()
+    if(!showLength) {
+        selectedIndex = showLengthNumber
     }
 
     fun summarize() {
@@ -443,21 +386,21 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
         if(isError){transcriptResult = ""}
         isError = false // No error
         scope.launch {
-            val result: SummaryResult
+            val resultSummary: SummaryResult
 
             if (!isDocument) {
-                result = summarize(url, selectedIndex, viewModel)
-                title = result.title ?: ""
-                author = result.author ?: ""
+                resultSummary = summarize(url, selectedIndex, viewModel)
+                title = resultSummary.title ?: ""
+                author = resultSummary.author ?: ""
             } else {
                 title = url
                 author = ""
                 val text = "Document: $textDocument"
-                result = summarize(text, selectedIndex, viewModel)
+                resultSummary = summarize(text, selectedIndex, viewModel)
             }
 
-            transcriptResult = result.summary ?: "No summary available"
-            isError = result.isError
+            transcriptResult = resultSummary.summary ?: "No summary available"
+            isError = resultSummary.isError
             isLoading = false // Stop Loading-Animation
             if(!isError){
                 if (isYouTubeLink(url)) {
@@ -525,7 +468,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                 .padding(top = 50.dp, start = 20.dp, end = 20.dp)
                         ) {
                             Text(
-                                text = "Summary You",
+                                text = "Summary Expressive",
                                 style = MaterialTheme.typography.headlineLarge
                             )
                             // Loading-Animation
@@ -561,7 +504,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                     "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
                                                     "Exception: too long" -> stringResource(id = R.string.tooLong)
                                                     "Exception: incorrect key" -> {
-                                                        if (key.isEmpty()) {
+                                                        if (apiKey.isEmpty()) {
                                                             stringResource(id = R.string.incorrectKeyOpenSource)
                                                         } else {
                                                             stringResource(id = R.string.incorrectKey)
@@ -594,7 +537,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                             }
                                         }
                                     },
-                                    singleLine = if(viewModel.getMultiLineValue()) { singleLine } else { true },
+                                    singleLine = if(multiLine) { singleLine } else { true },
                                     modifier = modifier
                                         .weight(1f)
                                         .padding(top = 20.dp)
@@ -637,7 +580,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                             )
                                         }
                                     }
-                                    if (viewModel.getMultiLineValue() && !singleLine) {
+                                    if (multiLine && !singleLine) {
                                         val textLength = url.length
                                         val lineBreaks = url.count { it == '\n' }
                                         val maxLength = 100 // Maximum length of the URL field
@@ -657,7 +600,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     }
                                 }
                             }
-                            if (viewModel.getShowLengthValue()) {
+                            if (showLength) {
                                 Box(
                                     modifier = if (isError) {
                                         Modifier.padding(top = 11.dp)
@@ -684,7 +627,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     }
                                 }
                             }
-                            if (!transcriptResult.isNullOrEmpty() && isError == false) {
+                            if (!transcriptResult.isNullOrEmpty() && !isError) {
                                 Card(
                                     modifier = modifier
                                         .padding(top = 15.dp, bottom = 15.dp)
@@ -880,7 +823,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Row() {
+                                    Row {
                                         Button(
                                             onClick = {
                                                 summarize()
@@ -895,23 +838,6 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                                             Text(stringResource(id = R.string.regenerate))
                                         }
-                                        /*
-                                        Spacer(modifier = Modifier.width(10.dp))
-                                        Button(
-                                            onClick = {
-                                                summarize()
-                                            },
-                                            contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-                                        ) {
-                                            Icon(
-                                                Icons.Filled.Create,
-                                                contentDescription = "Refresh",
-                                                modifier = Modifier.size(ButtonDefaults.IconSize)
-                                            )
-                                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                            Text("Fragen")
-                                        }
-                                         */
                                     }
                                 }
                             }
@@ -968,80 +894,75 @@ data class SummaryResult(
 )
 
 suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel): SummaryResult {
-    val py = Python.getInstance()
-    val module = py.getModule("youtube")
-    var key: String = APIKeyLibrary.getAPIKey()
-    var model: String = viewModel.getModelValue().toString()
+    // Python implementation has been removed.
+    // This function needs to be re-implemented in Kotlin.
+    // It should handle text extraction from URLs (if needed) and then call an LLM.
+    // For now, it will only handle plain text and documents.
+    val text = url
 
-    if (key.isEmpty()) {
-        key = viewModel.getApiKeyValue().toString()
+    if (text.startsWith("http")) {
+        return SummaryResult(null, null, "Exception: invalid link", isError = true) // Re-using invalid link error as URL processing is removed
     }
 
-    // Get the currently set language
-    val currentLocale: Locale = Resources.getSystem().configuration.locale
+    if (text.isEmpty()) {
+        return SummaryResult(null, null, "Exception: no content", isError = true)
+    }
 
-    val language: String = if (viewModel.getUseOriginalLanguageValue()) {
-        "the same language as the "
+    if (text.length < 100 && !text.startsWith("Document:")) {
+        return SummaryResult(null, null, "Exception: too short", isError = true)
+    }
+
+    val key = viewModel.apiKey.value
+    if (key.isEmpty()) {
+        return SummaryResult(null, null, "Exception: no key", isError = true)
+    }
+
+    val model = viewModel.model.value
+    val useOriginalLanguage = viewModel.useOriginalLanguage.value
+
+    val currentLocale: Locale = Resources.getSystem().configuration.locale
+    val language: String = if (useOriginalLanguage) {
+        "the same language as the text"
     } else {
         currentLocale.getDisplayLanguage(Locale.ENGLISH)
     }
 
-    return try {
-        val result: Map<String, PyObject> = withContext(Dispatchers.IO) {
-            module.callAttr("summarize", url, length, language, key, model)
-                .asMap() as Map<String, PyObject>
+    // TODO: Implement prompt selection logic from youtube.py using Prompts.kt
+    val instructions = "Summarize the following text in $language: "
+
+    try {
+        val summary = when (model) {
+            "Gemini" -> GeminiHandler.generateContentSync(key, instructions, text)
+            "OpenAI" -> OpenAIHandler.generateContentSync(key, instructions, text)
+            "Groq" -> return SummaryResult(null, null, "Groq not implemented yet.", isError = true)
+            else -> return SummaryResult(null, null, "Unsupported model", isError = true)
         }
 
-        SummaryResult(
-            title = result["title"]?.toString(),
-            author = result["author"]?.toString(),
-            summary = result["summary"]?.toString(),
+        if (summary.startsWith("Error:")) {
+            throw Exception(summary)
+        }
+
+        return SummaryResult(
+            title = null,
+            author = null,
+            summary = summary,
             isError = false
         )
-    } catch (e: PyException) {
-        SummaryResult(
+    } catch (e: Exception) {
+        var errorMessage = e.message ?: "Unknown error"
+        if ("API key not valid" in errorMessage || "API key is invalid" in errorMessage) {
+            errorMessage = "Exception: incorrect key"
+        } else if ("rate limit" in errorMessage.lowercase()) {
+            errorMessage = "Exception: rate limit"
+        } else if (errorMessage.startsWith("Error: ")) {
+            errorMessage = errorMessage.substringAfter("Error: ")
+        }
+        return SummaryResult(
             title = null,
             author = null,
-            summary = e.message ?: "unknown error 2",
+            summary = errorMessage,
             isError = true
         )
-    } catch (e: Exception) {
-        SummaryResult(
-            title = null,
-            author = null,
-            summary = e.message ?: "unknown error 3",
-            isError = true
-        )
-    }
-}
-
-suspend fun getAuthor(url: String): String? {
-    val py = Python.getInstance()
-    val module = py.getModule("youtube")
-
-    try {
-        val result = withContext(Dispatchers.IO) {
-            module.callAttr("get_author", url).toString()
-        }
-        return result
-    } catch (e: Exception) {
-        //return "Error getting author"
-        return null
-    }
-}
-
-suspend fun getTitel(url: String): String? {
-    val py = Python.getInstance()
-    val module = py.getModule("youtube")
-
-    try {
-        val result = withContext(Dispatchers.IO) {
-            module.callAttr("get_title", url).toString()
-        }
-        return result
-    } catch (e: Exception) {
-        //return "Error getting title"
-        return null
     }
 }
 
@@ -1117,7 +1038,10 @@ fun getFileName(context: Context, uri: Uri): String {
     val cursor = context.contentResolver.query(uri, null, null, null, null)
     cursor?.let {
         it.moveToFirst()
-        name = cursor.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+        val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (index != -1) {
+            name = cursor.getString(index)
+        }
         it.close()
     }
     return name

@@ -1,4 +1,4 @@
-package com.talosross.summaryyou
+package com.talosross.summaryexpressive
 
 import org.junit.Test
 

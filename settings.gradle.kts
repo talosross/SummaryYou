@@ -2,7 +2,6 @@ pluginManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://chaquo.com/maven-test") }
         gradlePluginPortal()
     }
 }
@@ -14,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Summary You"
+rootProject.name = "Summary Expressive"
 include(":app")
  

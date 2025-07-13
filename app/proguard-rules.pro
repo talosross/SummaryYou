@@ -58,4 +58,7 @@
 -keep,allowoptimization class com.microsoft.schemas.** { *; }
 
 -keep class com.google.ai.client.generativeai.** { *; }
--keep class com.talosross.summaryyou.GeminiHandler { *; }
+-keep class com.talosross.summaryexpressive.GeminiHandler { *; }
+-keep class io.ktor.client.plugins.** { *; }
+-keep class io.ktor.** { *; }
+-dontwarn io.ktor.**

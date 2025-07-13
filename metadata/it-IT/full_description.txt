@@ -1,4 +1,4 @@
-Summary You è il tuo compagno intelligente per la sintesi dei contenuti. Che tu sia uno studente che cerca di ottimizzare le tue ricerche o un professionista che cerca di stare sempre un passo avanti, Summary You offre una soluzione potente e facile da usare che ti permette di risparmiare tempo e aumentare la tua efficienza.
+Summary Expressive è il tuo compagno intelligente per la sintesi dei contenuti. Che tu sia uno studente che cerca di ottimizzare le tue ricerche o un professionista che cerca di stare sempre un passo avanti, Summary Expressive offre una soluzione potente e facile da usare che ti permette di risparmiare tempo e aumentare la tua efficienza.
 
 Caratteristiche principali:
 
@@ -15,16 +15,16 @@ Accedi facilmente ai contenuti che hai sintetizzato in precedenza nella sezione 
 Ottimizza la tua esperienza visiva con la Modalità scura OLED. Risparmia batteria e riduci l'affaticamento degli occhi mentre utilizzi la nostra app in ambienti a bassa luminosità.
 
 🌐 Supporto multilingue
-Summary You offre supporto multilingue, consentendoti di creare sintesi in diverse lingue. Superando le barriere linguistiche, puoi accedere facilmente alle informazioni da tutto il mondo.
+Summary Expressive offre supporto multilingue, consentendoti di creare sintesi in diverse lingue. Superando le barriere linguistiche, puoi accedere facilmente alle informazioni da tutto il mondo.
 
 🌐 Open Source
-Summary You è un'applicazione open source. Come progetto open source, si sviluppa costantemente grazie ai contributi di sviluppatori appassionati.
+Summary Expressive è un'applicazione open source. Come progetto open source, si sviluppa costantemente grazie ai contributi di sviluppatori appassionati.
 
 ✨ Interfaccia utente Material Design 3 Style
 Vivi un'esperienza elegante e moderna con l'interfaccia utente in stile Material Design 3. Goditi temi dinamici che rendono l'interazione con l'app sia esteticamente piacevole che piacevole.
 
-"Summary You" è il tuo punto di riferimento per la sintesi efficiente dei contenuti, aiutandoti a risparmiare tempo e sfruttare al meglio le informazioni a tua disposizione.
+"Summary Expressive" è il tuo punto di riferimento per la sintesi efficiente dei contenuti, aiutandoti a risparmiare tempo e sfruttare al meglio le informazioni a tua disposizione.
 
 Nota: Per la sintesi basata sull'IA, l'app utilizza modelli di intelligenza artificiale di OpenAI e richiede una connessione Internet.
 
-Troverai gli ultimi aggiornamenti e contributi nel nostro repository GitHub https://github.com/talosross/SummaryYou
+Troverai gli ultimi aggiornamenti e contributi nel nostro repository GitHub https://github.com/talosross/SummaryExpressive

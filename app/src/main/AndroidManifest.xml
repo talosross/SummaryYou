@@ -11,15 +11,14 @@
         android:icon="@mipmap/launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SummaryYou"
+        android:theme="@style/Theme.SummaryExpressive"
         tools:targetApi="tiramisu">
         <activity
             android:name=".MainActivity"
             android:enableOnBackInvokedCallback="true"
             android:exported="true"
-            android:label="@string/app_name"
             android:windowSoftInputMode="adjustPan"
-            android:theme="@style/Theme.SummaryYou">
+            android:theme="@style/Theme.SummaryExpressive">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

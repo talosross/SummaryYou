@@ -1,4 +1,4 @@
-package com.talosross.summaryyou.ui.theme
+package com.talosross.summaryexpressive.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

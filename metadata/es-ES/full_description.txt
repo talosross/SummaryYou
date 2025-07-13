@@ -1,4 +1,4 @@
-Summary You es su compañero inteligente para el resumen de contenidos. Ya sea que sea un estudiante que busca optimizar su investigación o un profesional que se esfuerza por estar un paso por delante, Summary You proporciona una solución poderosa y fácil de usar para ahorrar tiempo y mejorar su eficiencia.
+Summary Expressive es su compañero inteligente para el resumen de contenidos. Ya sea que sea un estudiante que busca optimizar su investigación o un profesional que se esfuerza por estar un paso por delante, Summary Expressive proporciona una solución poderosa y fácil de usar para ahorrar tiempo y mejorar su eficiencia.
 
 Características clave:
 
@@ -15,7 +15,7 @@ Acceda fácilmente a su contenido previamente resumido en la sección "Historial
 Optimice su experiencia visual con el modo oscuro OLED. Ahorre batería y reduzca la fatiga visual mientras disfruta de nuestra aplicación en entornos con poca luz.
 
 🌐 Soporte multilingüe
-Summary You ofrece soporte multilingüe, lo que le permite crear resúmenes en diferentes idiomas. Supere las barreras del idioma y acceda sin esfuerzo a información de todo el mundo.
+Summary Expressive ofrece soporte multilingüe, lo que le permite crear resúmenes en diferentes idiomas. Supere las barreras del idioma y acceda sin esfuerzo a información de todo el mundo.
 
 🌐 Código abierto
 Resumen You es una aplicación de código abierto. Como proyecto de código abierto, continúa evolucionando con contribuciones de desarrolladores apasionados.
@@ -27,4 +27,4 @@ Experimente una interfaz de usuario elegante y moderna al estilo Material Design
 
 Nota: Para el resumen basado en IA, la aplicación utiliza modelos de IA de OpenAI y requiere una conexión a Internet.
 
-Encuentre las últimas actualizaciones y contribuciones en nuestro repositorio de GitHub https://github.com/talosross/SummaryYou
+Encuentre las últimas actualizaciones y contribuciones en nuestro repositorio de GitHub https://github.com/talosross/SummaryExpressive

@@ -1,21 +1,20 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.chaquo.python")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
-    namespace = "com.talosross.summaryyou"
+    namespace = "com.talosross.summaryexpressive"
     compileSdk = 35
     androidResources {
         generateLocaleConfig = true
     }
     defaultConfig {
-        applicationId = "com.talosross.summaryyou"
+        applicationId = "com.talosross.summaryexpressive"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2025070701
+        versionCode = 1
         versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -23,11 +22,6 @@ android {
             useSupportLibrary = true
         }
 
-        //For Python
-        ndk {
-            // On Apple silicon, you can omit x86_64.
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
-        }
     }
     buildTypes {
         release {
@@ -43,52 +37,29 @@ android {
         }
     }
 
-    externalNativeBuild {
-        ndkBuild {
-            path = file("jni/Android.mk")
-        }
-    }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "21"
     }
     buildFeatures {
         compose = true
         buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/io.netty.versions.properties"
+            excludes += "/META-INF/INDEX.LIST"
         }
     }
 }
 
-chaquopy {
-    defaultConfig {
-        version = "3.9"
-        pip {
-            // A requirement specifier, with or without a version number:
-            install("youtube-transcript-api")
-            install("openai==1.39.0")
-            install("newspaper4k")
-            install("pydantic<2")
-            install("groq")
-            install("grpcio")
-            install("numpy")
-            install("pandas")
-            install("trafilatura")
-            install("lxml_html_clean")
-            install("lxml")
-            install("dateparser==1.2.1")
-            }
-    }
-}
 
 dependencies {
     implementation("androidx.core:core-ktx:1.16.0")
@@ -106,7 +77,7 @@ dependencies {
     androidTestImplementation(platform("androidx.compose:compose-bom:2025.06.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+//    debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
     implementation("androidx.navigation:navigation-compose:2.9.1")
     implementation("com.google.code.gson:gson:2.13.1")
@@ -116,10 +87,24 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("androidx.fragment:fragment-ktx:1.8.8")
+
     implementation("org.apache.poi:poi-ooxml:5.4.1")
     implementation("org.apache.poi:poi:5.4.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
+
+    implementation("io.ktor:ktor-client-android:3.2.1")
+    // Explicitly add Ktor dependencies to resolve runtime crash
+    // koog-agents uses Ktor for networking, and this ensures all necessary components are included.
+//    val ktorVersion = "3.2.1" // Version used by koog-agents
+//    implementation("io.ktor:ktor-client-core:$ktorVersion")
+//    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+//    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+//    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+
+    implementation("ai.koog:koog-agents:0.2.1")
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
     implementation("androidx.compose.material:material-icons-core:1.7.8")
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
 }

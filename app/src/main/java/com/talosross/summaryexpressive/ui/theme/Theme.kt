@@ -1,4 +1,4 @@
-package com.talosross.summaryyou.ui.theme
+package com.talosross.summaryexpressive.ui.theme
 
 import android.app.Activity
 import android.os.Build
@@ -82,7 +82,7 @@ private val DarkColors = darkColorScheme(
 )
 
 @Composable
-fun SummaryYouTheme(
+fun SummaryExpressiveTheme(
     design: Int,
     darkTheme: Boolean = when(design) {
         1 -> true

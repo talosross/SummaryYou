@@ -1,4 +1,4 @@
-Summary You is your intelligent companion for content summarization. Whether you're a student looking to optimize your research or a professional striving to stay one step ahead, Summary You provides a powerful and user-friendly solution to save time and enhance your efficiency.
+Summary Expressive is your intelligent companion for content summarization. Whether you're a student looking to optimize your research or a professional striving to stay one step ahead, Summary Expressive provides a powerful and user-friendly solution to save time and enhance your efficiency.
 
 Key Features:
 
@@ -15,16 +15,16 @@ Easily access your previously summarized content in the "History" section. Retri
 Optimize your viewing experience with the OLED Dark Mode. Save your battery and reduce eye strain while enjoying our app in low-light environments.
 
 🌐 Multilingual Support
-Summary You offers multilingual support, allowing you to create summaries in different languages. Overcome language barriers and effortlessly access information from around the world.
+Summary Expressive offers multilingual support, allowing you to create summaries in different languages. Overcome language barriers and effortlessly access information from around the world.
 
 🌐 Open Source
-Summary You is an open-source application. As an open-source project, it continues to evolve with contributions from passionate developers.
+Summary Expressive is an open-source application. As an open-source project, it continues to evolve with contributions from passionate developers.
 
 ✨ Material Design 3 Style User Interface
 Experience an elegant and modern user interface in Material Design 3 style. Enjoy dynamic color themes that make your interaction with the app visually appealing and pleasant.
 
-"Summary You" is your go-to for efficient content summarization, helping you save time and make the most of the information available to you.
+"Summary Expressive" is your go-to for efficient content summarization, helping you save time and make the most of the information available to you.
 
 Note: For AI-based summarization, the app uses AI models from OpenAI and requires an internet connection.
 
-Find the latest updates and contributions in our GitHub repository https://github.com/talosross/SummaryYou
+Find the latest updates and contributions in our GitHub repository https://github.com/talosross/SummaryExpressive

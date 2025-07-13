@@ -2,7 +2,7 @@
 
 <img width="" src=".github/logo.png"  width=160 height=160  align="center">
 
-# Summary You
+# Summary Expressive
 
 ### Summarize YouTube-Videos, Articles, Images and Documents with AI
 
@@ -28,7 +28,7 @@
 
 ## Download Version without key necessary (paid)
 
-<a href='https://play.google.com/store/apps/details?id=com.talosross.summaryyou'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='300'/></a>
+<a href='https://play.google.com/store/apps/details?id=com.talosross.SummaryExpressive'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='300'/></a>
 
 ## 📖 Features
 
@@ -52,7 +52,7 @@ It uses GPT-3.5 OpenAI/Mixtral 8x7B Groq to summarize.
   
 ## ⭐️ Star History
 
-![Star History Chart](https://api.star-history.com/svg?repos=talosross/SummaryYou&type=Timeline)
+![Star History Chart](https://api.star-history.com/svg?repos=talosross/SummaryExpressive&type=Timeline)
 
 
 ## 🧱 Credits
@@ -66,7 +66,7 @@ Some of the UI designs and codes are borrowed from [Seal](https://github.com/Jun
 
 ## 📃 License
 
-[<img src="SummaryYouLicense.svg" />](https://github.com/talosross/SummaryYou/blob/master/LICENSE.txt)
+[<img src="SummaryExpressiveLicense.svg" />](https://github.com/talosross/SummaryExpressive/blob/master/LICENSE.txt)
 
 <div align="right">
 <table><td>
