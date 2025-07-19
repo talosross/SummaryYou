@@ -1,6 +1,5 @@
 package com.talosross.summaryexpressive
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
@@ -9,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -101,7 +101,7 @@ fun SettingsScreen(
 @Composable
 fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) {
     val context = LocalContext.current
-    val context2 = LocalContext.current as Activity
+    val activity = LocalActivity.current
     var showDialogDesign by remember { mutableStateOf(false) }
     var showDialogRestart by remember { mutableStateOf(false) }
     var showDialogKey by remember { mutableStateOf(false) }
@@ -134,21 +134,21 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                         selected = design == 0
                     ) {
                         viewModel.setDesignNumber(0)
-                        context2.recreate()
+                        activity?.recreate()
                     }
                     RadioButtonItem(
                         stringResource(id = R.string.lightDesign),
                         selected = design == 2
                     ) {
                         viewModel.setDesignNumber(2)
-                        context2.recreate()
+                        activity?.recreate()
                     }
                     RadioButtonItem(
                         stringResource(id = R.string.darkDesign),
                         selected = design == 1
                     ) {
                         viewModel.setDesignNumber(1)
-                        context2.recreate()
+                        activity?.recreate()
                     }
                 }
             },
@@ -168,7 +168,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
             text = { Text(stringResource(id = R.string.restartRequiredDescription)) },
             confirmButton = {
                 TextButton(onClick = {
-                    context2.recreate()
+                    activity?.recreate()
                 }) {
                     Text(stringResource(id = R.string.ok))
                 }
@@ -340,7 +340,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                             checked = ultraDark,
                             onCheckedChange = { newValue ->
                                 viewModel.setUltraDarkValue(newValue)
-                                context2.recreate()
+                                activity?.recreate()
                             }
                         )
                     }

@@ -62,3 +62,6 @@
 -keep class io.ktor.client.plugins.** { *; }
 -keep class io.ktor.** { *; }
 -dontwarn io.ktor.**
+-dontwarn io.micrometer.context.ContextAccessor
+-dontwarn javax.enterprise.inject.spi.Extension
+-dontwarn reactor.blockhound.integration.BlockHoundIntegration

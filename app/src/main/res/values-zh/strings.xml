@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?><resources>
 
-    <string name="app_name" translatable="false">Summary Expressive</string>
-
     <string name="short_length">短的</string>
 
     <string name="middle_length">中间</string>
@@ -12,7 +10,7 @@
 
     <string name="history">历史</string>
 
-    <string name="regenerate">再生</string>
+    <string name="regenerate">重新生成</string>
 
     <string name="invalidURL">无效链接：无法进行摘要</string>
 
@@ -20,7 +18,7 @@
 
     <string name="noContent">无内容</string>
 
-    <string name="noInternet">没有网络连接</string>
+    <string name="noInternet">无网络连接</string>
 
     <string name="paywallDetected">检测到付费墙，无法进行总结。</string>
 
@@ -48,7 +46,7 @@
 
     <string name="useUltraDarkDescription">使用超暗模式和纯黑色</string>
 
-    <string name="useMultiLines">网址 的更多行</string>
+    <string name="useMultiLines">使用多行 URL</string>
 
     <string name="useMultiLinesDescription">在 网址 字段中使用更多行</string>
 
@@ -68,10 +66,10 @@
 
     <string name="systemDesign">系统</string>
 
-    <string name="lightDesign">光</string>
+    <string name="lightDesign">亮色</string>
 
-    <string name="darkDesign">黑暗的</string>
-    <string name="deleted">摘要已删除</string>
+    <string name="darkDesign">暗色</string>
+    <string name="deleted">总结已删除</string>
     <string name="search">搜索</string>
     <string name="nothingFound">未找到任何内容</string>
     <string name="welcome">欢迎使用Summary Expressive！</string>
@@ -81,4 +79,9 @@
     <string name="instructionsHistory">在“历史”部分查看以前的摘要。</string>
     <string name="finishButton">完成</string>
     <string name="continueButton">继续</string>
+    <string name="skip">跳过</string>
+    <string name="googlePlayDescription">评分</string>
+    <string name="tutorial">教程</string>
+    <string name="tutorialDescription">重看教程</string>
+    <string name="copied">已粘贴</string>
 </resources>

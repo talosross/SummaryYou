@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Summary Expressive</string>
     <string name="short_length">Krátké</string>
     <string name="middle_length">Střední</string>
     <string name="long_length">Dlouhé</string>

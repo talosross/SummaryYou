@@ -57,6 +57,9 @@ android {
             excludes += "/META-INF/INDEX.LIST"
         }
     }
+    lint {
+        disable.add("MissingTranslation")
+    }
 }
 
 

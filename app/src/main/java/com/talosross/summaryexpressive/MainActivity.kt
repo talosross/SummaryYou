@@ -1,5 +1,6 @@
 package com.talosross.summaryexpressive
 
+import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -92,7 +93,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import android.app.Application
+import androidx.core.graphics.createBitmap
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -116,10 +117,9 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.apache.poi.xwpf.usermodel.XWPFDocument
 import java.io.FileNotFoundException
+import java.net.URL
 import java.util.Locale
 import java.util.UUID
-import androidx.core.graphics.createBitmap
-import java.net.URL
 
 
 class MainActivity : ComponentActivity() {
@@ -172,52 +172,66 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
     // Original Language in summary
     private val _useOriginalLanguage = MutableStateFlow(false)
     val useOriginalLanguage: StateFlow<Boolean> = _useOriginalLanguage.asStateFlow()
-    fun setUseOriginalLanguageValue(newValue: Boolean) = viewModelScope.launch { UserPreferencesRepository.setUseOriginalLanguage(context, newValue) }
+    fun setUseOriginalLanguageValue(newValue: Boolean) = viewModelScope.launch {
+        UserPreferencesRepository.setUseOriginalLanguage(
+            context,
+            newValue
+        )
+    }
 
     // Multiline URL-Field
     private val _multiLine = MutableStateFlow(true)
     val multiLine: StateFlow<Boolean> = _multiLine.asStateFlow()
-    fun setMultiLineValue(newValue: Boolean) = viewModelScope.launch { UserPreferencesRepository.setMultiLine(context, newValue) }
+    fun setMultiLineValue(newValue: Boolean) =
+        viewModelScope.launch { UserPreferencesRepository.setMultiLine(context, newValue) }
 
     // UltraDark - Mode
     private val _ultraDark = MutableStateFlow(false)
     val ultraDark: StateFlow<Boolean> = _ultraDark.asStateFlow()
-    fun setUltraDarkValue(newValue: Boolean) = viewModelScope.launch { UserPreferencesRepository.setUltraDark(context, newValue) }
+    fun setUltraDarkValue(newValue: Boolean) =
+        viewModelScope.launch { UserPreferencesRepository.setUltraDark(context, newValue) }
 
     // DesignNumber for Dark, Light or System
     private val _designNumber = MutableStateFlow(0)
     val designNumber: StateFlow<Int> = _designNumber.asStateFlow()
-    fun setDesignNumber(newValue: Int) = viewModelScope.launch { UserPreferencesRepository.setDesignNumber(context, newValue) }
+    fun setDesignNumber(newValue: Int) =
+        viewModelScope.launch { UserPreferencesRepository.setDesignNumber(context, newValue) }
 
     // API Key
     private val _apiKey = MutableStateFlow("")
     val apiKey: StateFlow<String> = _apiKey.asStateFlow()
-    fun setApiKeyValue(newValue: String) = viewModelScope.launch { UserPreferencesRepository.setApiKey(context, newValue) }
+    fun setApiKeyValue(newValue: String) =
+        viewModelScope.launch { UserPreferencesRepository.setApiKey(context, newValue) }
 
     // API base url
     private val _baseUrl = MutableStateFlow("")
     val baseUrl: StateFlow<String> = _baseUrl.asStateFlow()
-    fun setBaseUrlValue(newValue: String) = viewModelScope.launch { UserPreferencesRepository.setBaseUrl(context, newValue) }
+    fun setBaseUrlValue(newValue: String) =
+        viewModelScope.launch { UserPreferencesRepository.setBaseUrl(context, newValue) }
 
     // AI-Model
     private val _model = MutableStateFlow("Gemini")
     val model: StateFlow<String> = _model.asStateFlow()
-    fun setModelValue(newValue: String) = viewModelScope.launch { UserPreferencesRepository.setModel(context, newValue) }
+    fun setModelValue(newValue: String) =
+        viewModelScope.launch { UserPreferencesRepository.setModel(context, newValue) }
 
     // OnboardingScreen
     private val _showOnboardingScreen = MutableStateFlow(true)
     val showOnboardingScreen: StateFlow<Boolean> = _showOnboardingScreen.asStateFlow()
-    fun setShowOnboardingScreenValue(newValue: Boolean) = viewModelScope.launch { UserPreferencesRepository.setShowOnboarding(context, newValue) }
+    fun setShowOnboardingScreenValue(newValue: Boolean) =
+        viewModelScope.launch { UserPreferencesRepository.setShowOnboarding(context, newValue) }
 
     // Show length
     private val _showLength = MutableStateFlow(true)
     val showLength: StateFlow<Boolean> = _showLength.asStateFlow()
-    fun setShowLengthValue(newValue: Boolean) = viewModelScope.launch { UserPreferencesRepository.setShowLength(context, newValue) }
+    fun setShowLengthValue(newValue: Boolean) =
+        viewModelScope.launch { UserPreferencesRepository.setShowLength(context, newValue) }
 
     // Show length number
     private val _showLengthNumber = MutableStateFlow(0)
     val showLengthNumber: StateFlow<Int> = _showLengthNumber.asStateFlow()
-    fun setShowLengthNumberValue(newValue: Int) = viewModelScope.launch { UserPreferencesRepository.setShowLengthNumber(context, newValue) }
+    fun setShowLengthNumberValue(newValue: Int) =
+        viewModelScope.launch { UserPreferencesRepository.setShowLengthNumber(context, newValue) }
 
     init {
         // Load summaries from DataStore
@@ -231,16 +245,39 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
         }
 
         // Collect preferences from DataStore
-        viewModelScope.launch { UserPreferencesRepository.getUseOriginalLanguage(context).collect { _useOriginalLanguage.value = it } }
-        viewModelScope.launch { UserPreferencesRepository.getMultiLine(context).collect { _multiLine.value = it } }
-        viewModelScope.launch { UserPreferencesRepository.getUltraDark(context).collect { _ultraDark.value = it } }
-        viewModelScope.launch { UserPreferencesRepository.getDesignNumber(context).collect { _designNumber.value = it } }
-        viewModelScope.launch { UserPreferencesRepository.getApiKey(context).collect { _apiKey.value = it } }
-        viewModelScope.launch { UserPreferencesRepository.getBaseUrl(context).collect { _baseUrl.value = it } }
-        viewModelScope.launch { UserPreferencesRepository.getModel(context).collect { _model.value = it } }
-        viewModelScope.launch { UserPreferencesRepository.getShowOnboarding(context).collect { _showOnboardingScreen.value = it } }
-        viewModelScope.launch { UserPreferencesRepository.getShowLength(context).collect { _showLength.value = it } }
-        viewModelScope.launch { UserPreferencesRepository.getShowLengthNumber(context).collect { _showLengthNumber.value = it } }
+        viewModelScope.launch {
+            UserPreferencesRepository.getUseOriginalLanguage(context)
+                .collect { _useOriginalLanguage.value = it }
+        }
+        viewModelScope.launch {
+            UserPreferencesRepository.getMultiLine(context).collect { _multiLine.value = it }
+        }
+        viewModelScope.launch {
+            UserPreferencesRepository.getUltraDark(context).collect { _ultraDark.value = it }
+        }
+        viewModelScope.launch {
+            UserPreferencesRepository.getDesignNumber(context).collect { _designNumber.value = it }
+        }
+        viewModelScope.launch {
+            UserPreferencesRepository.getApiKey(context).collect { _apiKey.value = it }
+        }
+        viewModelScope.launch {
+            UserPreferencesRepository.getBaseUrl(context).collect { _baseUrl.value = it }
+        }
+        viewModelScope.launch {
+            UserPreferencesRepository.getModel(context).collect { _model.value = it }
+        }
+        viewModelScope.launch {
+            UserPreferencesRepository.getShowOnboarding(context)
+                .collect { _showOnboardingScreen.value = it }
+        }
+        viewModelScope.launch {
+            UserPreferencesRepository.getShowLength(context).collect { _showLength.value = it }
+        }
+        viewModelScope.launch {
+            UserPreferencesRepository.getShowLengthNumber(context)
+                .collect { _showLengthNumber.value = it }
+        }
     }
 
     fun addTextSummary(title: String?, author: String?, text: String?, youtubeLink: Boolean) {
@@ -249,7 +286,8 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
 
         if (!text.isNullOrBlank() && text != "invalid link") {
             val uniqueId = UUID.randomUUID().toString()
-            val newTextSummary = TextSummary(uniqueId, nonNullTitle, nonNullAuthor, text, youtubeLink)
+            val newTextSummary =
+                TextSummary(uniqueId, nonNullTitle, nonNullAuthor, text, youtubeLink)
             textSummaries.add(newTextSummary)
             // Save text data in SharedPreferences
             saveTextSummaries()
@@ -278,7 +316,12 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
 
     fun searchTextSummary(searchText: String): List<String> {
         return textSummaries
-            .filter { it.title.contains(searchText, ignoreCase = true) or it.author.contains(searchText, ignoreCase = true) or it.text.contains(searchText, ignoreCase = true)  }
+            .filter {
+                it.title.contains(searchText, ignoreCase = true) or it.author.contains(
+                    searchText,
+                    ignoreCase = true
+                ) or it.text.contains(searchText, ignoreCase = true)
+            }
             .map { it.id }
             .takeIf { it.isNotEmpty() }
             ?.toList()
@@ -295,10 +338,20 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
 }
 
 
-data class TextSummary(val id: String, val title: String, val author: String, val text: String, val youtubeLink: Boolean)
+data class TextSummary(
+    val id: String,
+    val title: String,
+    val author: String,
+    val text: String,
+    val youtubeLink: Boolean
+)
 
 @Composable
-fun AppNavigation(navController: NavHostController, viewModel: TextSummaryViewModel, initialUrl: String? = null) {
+fun AppNavigation(
+    navController: NavHostController,
+    viewModel: TextSummaryViewModel,
+    initialUrl: String? = null
+) {
     NavHost(navController, startDestination = "home") {
         composable("home") {
             HomeScreen(
@@ -326,11 +379,17 @@ fun AppNavigation(navController: NavHostController, viewModel: TextSummaryViewMo
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
     ExperimentalLayoutApi::class
 )
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel, initialUrl: String? = null) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: TextSummaryViewModel,
+    initialUrl: String? = null
+) {
     var transcriptResult by remember { mutableStateOf<String?>(null) } // State for the transcript retrieval result
     var title by remember { mutableStateOf<String?>(null) }
     var author by remember { mutableStateOf<String?>(null) }
@@ -343,7 +402,11 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     val focusManager = LocalFocusManager.current // Hide cursor
     val focusRequester = remember { FocusRequester() } // Show cursor after removing
     var selectedIndex by remember { mutableStateOf(0) } // Summary length index
-    val options = listOf(stringResource(id = R.string.short_length), stringResource(id = R.string.middle_length), stringResource(id = R.string.long_length)) // Lengths
+    val options = listOf(
+        stringResource(id = R.string.short_length),
+        stringResource(id = R.string.middle_length),
+        stringResource(id = R.string.long_length)
+    ) // Lengths
     val showCancelIcon by remember { derivedStateOf { url.isNotBlank() } }
     var isError by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -362,35 +425,38 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
     ) as ClipboardManager
 
     val result = remember { mutableStateOf<Uri?>(null) }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        result.value = uri
-        if (uri != null) {
-            val mimeType = context.contentResolver.getType(uri)
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            result.value = uri
+            if (uri != null) {
+                val mimeType = context.contentResolver.getType(uri)
 
-            scope.launch {
-                isExtracting = true
-                isDocument = true
-                url = getFileName(context, uri)
-                textDocument = if (mimeType == "application/pdf") {
-                    extractTextFromPdf(context, uri)
-                } else if (mimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-                    extractTextFromDocx(context, uri)
-                } else {
-                    extractTextFromImage(context, uri)
+                scope.launch {
+                    isExtracting = true
+                    isDocument = true
+                    url = getFileName(context, uri)
+                    textDocument = if (mimeType == "application/pdf") {
+                        extractTextFromPdf(context, uri)
+                    } else if (mimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                        extractTextFromDocx(context, uri)
+                    } else {
+                        extractTextFromImage(context, uri)
+                    }
+                    isExtracting = false
                 }
-                isExtracting = false
             }
         }
-    }
 
-    if(!showLength) {
+    if (!showLength) {
         selectedIndex = showLengthNumber
     }
 
     fun summarize() {
         focusManager.clearFocus()
         isLoading = true // Start Loading-Animation
-        if(isError){transcriptResult = ""}
+        if (isError) {
+            transcriptResult = ""
+        }
         isError = false // No error
         scope.launch {
             val resultSummary: SummaryResult
@@ -409,11 +475,21 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
             transcriptResult = resultSummary.summary ?: "No summary available"
             isError = resultSummary.isError
             isLoading = false // Stop Loading-Animation
-            if(!isError){
+            if (!isError) {
                 if (isYouTubeLink(url)) {
-                    viewModel.addTextSummary(title, author, transcriptResult, true) // Add to history
-                }else{
-                    viewModel.addTextSummary(title, author, transcriptResult, false) // Add to history
+                    viewModel.addTextSummary(
+                        title,
+                        author,
+                        transcriptResult,
+                        true
+                    ) // Add to history
+                } else {
+                    viewModel.addTextSummary(
+                        title,
+                        author,
+                        transcriptResult,
+                        false
+                    ) // Add to history
                 }
             }
         }
@@ -508,7 +584,10 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                     "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
                                                     "Exception: no content" -> stringResource(id = R.string.noContent)
                                                     "Exception: too short" -> stringResource(id = R.string.tooShort)
-                                                    "Exception: paywall detected" -> stringResource(id = R.string.paywallDetected)
+                                                    "Exception: paywall detected" -> stringResource(
+                                                        id = R.string.paywallDetected
+                                                    )
+
                                                     "Exception: too long" -> stringResource(id = R.string.tooLong)
                                                     "Exception: incorrect key" -> {
                                                         if (apiKey.isEmpty()) {
@@ -517,6 +596,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                             stringResource(id = R.string.incorrectKey)
                                                         }
                                                     }
+
                                                     "Exception: rate limit" -> stringResource(id = R.string.rateLimit)
                                                     "Exception: no key" -> stringResource(id = R.string.noKey)
                                                     else -> transcriptResult ?: "unknown error 3"
@@ -544,7 +624,11 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                             }
                                         }
                                     },
-                                    singleLine = if(multiLine) { singleLine } else { true },
+                                    singleLine = if (multiLine) {
+                                        singleLine
+                                    } else {
+                                        true
+                                    },
                                     modifier = modifier
                                         .weight(1f)
                                         .padding(top = 20.dp)
@@ -623,9 +707,9 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                     count = options.size
                                                 ),
                                                 onClick = {
-                                                            selectedIndex = index
-                                                            viewModel.setShowLengthNumberValue(index)
-                                                          },
+                                                    selectedIndex = index
+                                                    viewModel.setShowLengthNumberValue(index)
+                                                },
                                                 selected = index == selectedIndex
                                             ) {
                                                 Text(label)
@@ -699,36 +783,48 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                     var utteranceId by remember { mutableStateOf("") }
                                     val copied = stringResource(id = R.string.copied)
 
-                                    val utteranceProgressListener = object : UtteranceProgressListener() {
-                                        override fun onStart(utteranceId: String) {
-                                            // Is called when an utterance starts
-                                        }
+                                    val utteranceProgressListener =
+                                        object : UtteranceProgressListener() {
+                                            override fun onStart(utteranceId: String) {
+                                                // Is called when an utterance starts
+                                            }
 
-                                        override fun onDone(utteranceId: String) {
-                                            // Is called when an utterance is done
-                                            currentPosition = 0
-                                            isSpeaking = false
-                                            isPaused = false
-                                        }
+                                            override fun onDone(utteranceId: String) {
+                                                // Is called when an utterance is done
+                                                currentPosition = 0
+                                                isSpeaking = false
+                                                isPaused = false
+                                            }
 
-                                        override fun onError(utteranceId: String) {
-                                            // Is called when an error occurs
-                                        }
+                                            override fun onError(utteranceId: String) {
+                                                // Is called when an error occurs
+                                            }
 
-                                        override fun onRangeStart(utteranceId: String, start: Int, end: Int, frame: Int) {
-                                            // Is called when a new range of text is being spoken
-                                            currentPosition = end
+                                            override fun onRangeStart(
+                                                utteranceId: String,
+                                                start: Int,
+                                                end: Int,
+                                                frame: Int
+                                            ) {
+                                                // Is called when a new range of text is being spoken
+                                                currentPosition = end
+                                            }
                                         }
-                                    }
                                     tts?.setOnUtteranceProgressListener(utteranceProgressListener)
                                     DisposableEffect(Unit) {
                                         tts = TextToSpeech(context) { status ->
                                             if (status == TextToSpeech.SUCCESS) {
                                                 // TTS-Engine successfully initialized
-                                                Log.d("TTS", "Text-to-Speech engine was successfully initialized.")
+                                                Log.d(
+                                                    "TTS",
+                                                    "Text-to-Speech engine was successfully initialized."
+                                                )
                                             } else {
                                                 // Error initializing the TTS-Engine
-                                                Log.d("TTS", "Error initializing the Text-to-Speech engine.")
+                                                Log.d(
+                                                    "TTS",
+                                                    "Error initializing the Text-to-Speech engine."
+                                                )
                                             }
                                         }
                                         onDispose {
@@ -749,7 +845,12 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                     val transcript = transcriptResult
                                                     if (transcript != null) {
                                                         utteranceId = UUID.randomUUID().toString()
-                                                        tts?.speak(transcript, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                                                        tts?.speak(
+                                                            transcript,
+                                                            TextToSpeech.QUEUE_FLUSH,
+                                                            null,
+                                                            utteranceId
+                                                        )
                                                         isSpeaking = true
                                                     }
                                                 }
@@ -767,9 +868,16 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                     if (isPaused) {
                                                         val transcript = transcriptResult
                                                         if (transcript != null) {
-                                                            val remainingText = transcript.substring(currentPosition)
-                                                            utteranceId = UUID.randomUUID().toString()
-                                                            tts?.speak(remainingText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                                                            val remainingText =
+                                                                transcript.substring(currentPosition)
+                                                            utteranceId =
+                                                                UUID.randomUUID().toString()
+                                                            tts?.speak(
+                                                                remainingText,
+                                                                TextToSpeech.QUEUE_FLUSH,
+                                                                null,
+                                                                utteranceId
+                                                            )
                                                             isPaused = false
                                                         }
                                                     } else {
@@ -796,7 +904,11 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                     ClipData.newPlainText(null, transcriptResult)
                                                 )
                                                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                                                    Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(
+                                                        context,
+                                                        copied,
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                 }
                                             }
                                         ) {
@@ -812,7 +924,8 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                     type = "text/plain"
                                                     putExtra(Intent.EXTRA_TEXT, transcriptResult)
                                                 }
-                                                val chooserIntent = Intent.createChooser(shareIntent, null)
+                                                val chooserIntent =
+                                                    Intent.createChooser(shareIntent, null)
                                                 context.startActivity(chooserIntent)
                                             }
                                         ) {
@@ -881,7 +994,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                 onClick = {
                     if (isExtracting) {
                         Toast.makeText(context, stillLoading, Toast.LENGTH_SHORT).show()
-                    }else {
+                    } else {
                         summarize()
                     }
                 },
@@ -910,10 +1023,15 @@ suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel)
     }
 
     if ((text.startsWith("http") || text.startsWith("https")) && URL(text).host.isNullOrEmpty()) {
-        return SummaryResult(null, null, "Exception: invalid link", isError = true) // Re-using invalid link error as URL processing is removed
+        return SummaryResult(
+            null,
+            null,
+            "Exception: invalid link",
+            isError = true
+        ) // Re-using invalid link error as URL processing is removed
     }
 
-    if (text.startsWith(DOCUMENT_PREFIX) && text.length < 100 ) {
+    if (text.startsWith(DOCUMENT_PREFIX) && text.length < 100) {
         return SummaryResult(null, null, "Exception: too short", isError = true)
     }
 
@@ -926,7 +1044,7 @@ suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel)
     val model = viewModel.model.value
     val useOriginalLanguage = viewModel.useOriginalLanguage.value
 
-    val currentLocale: Locale = Resources.getSystem().configuration.locale
+    val currentLocale: Locale = Resources.getSystem().configuration.locales[0]
     val language: String = if (useOriginalLanguage) {
         "the same language as the text"
     } else {
@@ -1013,31 +1131,34 @@ suspend fun extractTextFromPdf(context: Context, selectedPdfUri: Uri): String {
 }
 
 
-suspend fun extractTextFromDocx(context: Context, selectedDocxUri: Uri): String = withContext(Dispatchers.IO) {
-    context.contentResolver.openInputStream(selectedDocxUri)?.use { inputStream ->
-        XWPFDocument(inputStream).use { doc ->
-            val extractedText = StringBuilder()
-            doc.paragraphs.forEach { paragraph ->
-                extractedText.append(paragraph.text).append("\n")
+suspend fun extractTextFromDocx(context: Context, selectedDocxUri: Uri): String =
+    withContext(Dispatchers.IO) {
+        context.contentResolver.openInputStream(selectedDocxUri)?.use { inputStream ->
+            XWPFDocument(inputStream).use { doc ->
+                val extractedText = StringBuilder()
+                doc.paragraphs.forEach { paragraph ->
+                    extractedText.append(paragraph.text).append("\n")
+                }
+                return@withContext extractedText.toString()
             }
-            return@withContext extractedText.toString()
         }
-    } ?: throw FileNotFoundException("Kann InputStream für die URI nicht öffnen: $selectedDocxUri")
-}
+            ?: throw FileNotFoundException("Kann InputStream für die URI nicht öffnen: $selectedDocxUri")
+    }
 
-suspend fun extractTextFromImage(context: Context, selectedImageUri: Uri): String = withContext(Dispatchers.IO) {
-    // Initialize the text recognizer
-    val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+suspend fun extractTextFromImage(context: Context, selectedImageUri: Uri): String =
+    withContext(Dispatchers.IO) {
+        // Initialize the text recognizer
+        val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
-    // Load the image from the URI
-    val inputImage = InputImage.fromFilePath(context, selectedImageUri)
+        // Load the image from the URI
+        val inputImage = InputImage.fromFilePath(context, selectedImageUri)
 
-    // Recognize text from the image
-    val result = textRecognizer.process(inputImage).await()
+        // Recognize text from the image
+        val result = textRecognizer.process(inputImage).await()
 
-    // Return the extracted text
-    result.text
-}
+        // Return the extracted text
+        result.text
+    }
 
 fun getFileName(context: Context, uri: Uri): String {
     var name = ""
