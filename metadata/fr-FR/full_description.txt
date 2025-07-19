@@ -27,4 +27,4 @@ Découvrez une interface utilisateur élégante et moderne dans le style Materia
 
 Remarque: Pour la synthèse basée sur l'IA, l'application utilise des modèles d'IA d'OpenAI et nécessite une connexion Internet.
 
-Retrouvez les dernières mises à jour et contributions dans notre référentiel GitHub https://github.com/talosross/SummaryExpressive
+Retrouvez les dernières mises à jour et contributions dans notre référentiel GitHub https://github.com/kid1412621/SummaryExpressive

@@ -27,4 +27,4 @@ Experimente uma interface de usuário elegante e moderna no estilo Material Desi
 
 Nota: Para resumo baseado em IA, o aplicativo usa modelos de IA da OpenAI e requer uma conexão com a Internet.
 
-Encontre as atualizações e contribuições mais recentes em nosso repositório GitHub https://github.com/talosross/SummaryExpressive
+Encontre as atualizações e contribuições mais recentes em nosso repositório GitHub https://github.com/kid1412621/SummaryExpressive

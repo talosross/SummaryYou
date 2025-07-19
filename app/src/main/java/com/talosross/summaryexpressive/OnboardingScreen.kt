@@ -16,7 +16,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,7 +41,7 @@ fun OnboardingScreen(
     onContinueClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var screen by remember { mutableStateOf(1) }
+    var screen by remember { mutableIntStateOf(1) }
     val context = LocalContext.current
     val imageLoader = ImageLoader.Builder(context)
         .components {
@@ -81,7 +81,7 @@ fun OnboardingScreen(
                             .fillMaxWidth()
                             .padding(start = 12.dp, end = 12.dp, top = 15.dp)
                     )
-                    Row() {
+                    Row {
                         FilledTonalButton(
                             modifier = Modifier
                                 .padding(vertical = 18.dp),

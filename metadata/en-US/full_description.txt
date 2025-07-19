@@ -27,4 +27,4 @@ Experience an elegant and modern user interface in Material Design 3 style. Enjo
 
 Note: For AI-based summarization, the app uses AI models from OpenAI and requires an internet connection.
 
-Find the latest updates and contributions in our GitHub repository https://github.com/talosross/SummaryExpressive
+Find the latest updates and contributions in our GitHub repository https://github.com/kid1412621/SummaryExpressive

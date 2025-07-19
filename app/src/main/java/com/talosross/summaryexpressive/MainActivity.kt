@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
-import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Build
@@ -119,6 +118,8 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument
 import java.io.FileNotFoundException
 import java.util.Locale
 import java.util.UUID
+import androidx.core.graphics.createBitmap
+import java.net.URL
 
 
 class MainActivity : ComponentActivity() {
@@ -193,6 +194,11 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
     val apiKey: StateFlow<String> = _apiKey.asStateFlow()
     fun setApiKeyValue(newValue: String) = viewModelScope.launch { UserPreferencesRepository.setApiKey(context, newValue) }
 
+    // API base url
+    private val _baseUrl = MutableStateFlow("")
+    val baseUrl: StateFlow<String> = _baseUrl.asStateFlow()
+    fun setBaseUrlValue(newValue: String) = viewModelScope.launch { UserPreferencesRepository.setBaseUrl(context, newValue) }
+
     // AI-Model
     private val _model = MutableStateFlow("Gemini")
     val model: StateFlow<String> = _model.asStateFlow()
@@ -230,6 +236,7 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch { UserPreferencesRepository.getUltraDark(context).collect { _ultraDark.value = it } }
         viewModelScope.launch { UserPreferencesRepository.getDesignNumber(context).collect { _designNumber.value = it } }
         viewModelScope.launch { UserPreferencesRepository.getApiKey(context).collect { _apiKey.value = it } }
+        viewModelScope.launch { UserPreferencesRepository.getBaseUrl(context).collect { _baseUrl.value = it } }
         viewModelScope.launch { UserPreferencesRepository.getModel(context).collect { _model.value = it } }
         viewModelScope.launch { UserPreferencesRepository.getShowOnboarding(context).collect { _showOnboardingScreen.value = it } }
         viewModelScope.launch { UserPreferencesRepository.getShowLength(context).collect { _showLength.value = it } }
@@ -240,7 +247,7 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
         val nonNullTitle = title ?: ""
         val nonNullAuthor = author ?: ""
 
-        if (text != null && text.isNotBlank() && text != "invalid link") {
+        if (!text.isNullOrBlank() && text != "invalid link") {
             val uniqueId = UUID.randomUUID().toString()
             val newTextSummary = TextSummary(uniqueId, nonNullTitle, nonNullAuthor, text, youtubeLink)
             textSummaries.add(newTextSummary)
@@ -294,7 +301,7 @@ data class TextSummary(val id: String, val title: String, val author: String, va
 fun AppNavigation(navController: NavHostController, viewModel: TextSummaryViewModel, initialUrl: String? = null) {
     NavHost(navController, startDestination = "home") {
         composable("home") {
-            homeScreen(
+            HomeScreen(
                 modifier = Modifier,
                 navController = navController,
                 viewModel = viewModel,
@@ -302,14 +309,14 @@ fun AppNavigation(navController: NavHostController, viewModel: TextSummaryViewMo
             )
         }
         composable("settings") {
-            settingsScreen(
+            SettingsScreen(
                 modifier = Modifier,
                 navController = navController,
                 viewModel = viewModel
             )
         }
         composable("history") {
-            historyScreen(
+            HistoryScreen(
                 modifier = Modifier,
                 navController = navController,
                 viewModel = viewModel
@@ -323,7 +330,7 @@ fun AppNavigation(navController: NavHostController, viewModel: TextSummaryViewMo
     ExperimentalLayoutApi::class
 )
 @Composable
-fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel, initialUrl: String? = null) {
+fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel, initialUrl: String? = null) {
     var transcriptResult by remember { mutableStateOf<String?>(null) } // State for the transcript retrieval result
     var title by remember { mutableStateOf<String?>(null) }
     var author by remember { mutableStateOf<String?>(null) }
@@ -893,26 +900,25 @@ data class SummaryResult(
     val isError: Boolean = false
 )
 
+private const val DOCUMENT_PREFIX = "Document:"
+
 suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel): SummaryResult {
-    // Python implementation has been removed.
-    // This function needs to be re-implemented in Kotlin.
-    // It should handle text extraction from URLs (if needed) and then call an LLM.
-    // For now, it will only handle plain text and documents.
     val text = url
 
-    if (text.startsWith("http")) {
-        return SummaryResult(null, null, "Exception: invalid link", isError = true) // Re-using invalid link error as URL processing is removed
-    }
-
-    if (text.isEmpty()) {
+    if (text.isBlank()) {
         return SummaryResult(null, null, "Exception: no content", isError = true)
     }
 
-    if (text.length < 100 && !text.startsWith("Document:")) {
+    if ((text.startsWith("http") || text.startsWith("https")) && URL(text).host.isNullOrEmpty()) {
+        return SummaryResult(null, null, "Exception: invalid link", isError = true) // Re-using invalid link error as URL processing is removed
+    }
+
+    if (text.startsWith(DOCUMENT_PREFIX) && text.length < 100 ) {
         return SummaryResult(null, null, "Exception: too short", isError = true)
     }
 
     val key = viewModel.apiKey.value
+    val baseUrl = viewModel.baseUrl.value
     if (key.isEmpty()) {
         return SummaryResult(null, null, "Exception: no key", isError = true)
     }
@@ -933,7 +939,7 @@ suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel)
     try {
         val summary = when (model) {
             "Gemini" -> GeminiHandler.generateContentSync(key, instructions, text)
-            "OpenAI" -> OpenAIHandler.generateContentSync(key, instructions, text)
+            "OpenAI" -> OpenAIHandler.generateContentSync(key, instructions, text, baseUrl)
             "Groq" -> return SummaryResult(null, null, "Groq not implemented yet.", isError = true)
             else -> return SummaryResult(null, null, "Unsupported model", isError = true)
         }
@@ -985,7 +991,7 @@ suspend fun extractTextFromPdf(context: Context, selectedPdfUri: Uri): String {
     for (pageNumber in 0 until pdfRenderer.pageCount) {
         // Get the page as an image
         val page = pdfRenderer.openPage(pageNumber)
-        val pageImage = Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888)
+        val pageImage = createBitmap(page.width, page.height)
         page.render(pageImage, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
 
         // Create an input image from the page image

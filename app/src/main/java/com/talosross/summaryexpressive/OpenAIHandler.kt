@@ -1,15 +1,12 @@
 package com.talosross.summaryexpressive
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.generationConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 
 class OpenAIHandler {
     companion object {
@@ -17,18 +14,31 @@ class OpenAIHandler {
         fun generateContentSync(
             apiKey: String,
             instructions: String,
-            text: String
+            text: String,
+            baseUrl: String?
         ): String {
             return runBlocking {
                 try {
-                    val agent = AIAgent(
-                        executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
-                        systemPrompt = instructions,
-                        llmModel = OpenAIModels.Chat.GPT4o
-                    )
-
+                    val agent = if (baseUrl.isNullOrBlank()) {
+                        AIAgent(
+                            executor = simpleOpenAIExecutor(apiKey),
+                            systemPrompt = instructions,
+                            llmModel = OpenAIModels.Chat.GPT4o,
+                        )
+                    } else {
+                        val client = OpenAILLMClient(
+                            apiKey,
+                            settings = OpenAIClientSettings(baseUrl = baseUrl)
+                        )
+                        val executor = SingleLLMPromptExecutor(client)
+                        AIAgent(
+                            executor = executor,
+                            systemPrompt = instructions,
+                            llmModel = OpenAIModels.Chat.GPT4o,
+                        )
+                    }
                     val result = agent.run(text)
-                    result.toString() ?: throw Exception("Empty response from OpenAI")
+                    result.toString()
                 } catch (e: Exception) {
                     "Error: ${e.localizedMessage}"
                 }

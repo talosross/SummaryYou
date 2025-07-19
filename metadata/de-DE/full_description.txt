@@ -27,4 +27,4 @@ Erleben Sie eine elegante und moderne Benutzeroberfläche im Material Design 3-S
 
 Hinweis: Für die KI-basierte Zusammenfassung verwendet die App KI-Modelle von OpenAI und benötigt eine Internetverbindung.
 
-Die neuesten Updates und Beiträge finden Sie in unserem GitHub-Repository https://github.com/talosross/SummaryExpressive
+Die neuesten Updates und Beiträge finden Sie in unserem GitHub-Repository https://github.com/kid1412621/SummaryExpressive

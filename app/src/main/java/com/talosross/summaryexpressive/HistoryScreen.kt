@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Card
@@ -65,7 +64,7 @@ import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun historyScreen(
+fun HistoryScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     viewModel: TextSummaryViewModel
@@ -115,7 +114,7 @@ fun historyScreen(
                 )
             },
         ) { innerPadding ->
-            var reversedList = remember { mutableStateListOf<String>() }
+            val reversedList = remember { mutableStateListOf<String>() }
 
             LaunchedEffect(viewModel.textSummaries) {
                 reversedList.clear()
@@ -132,7 +131,7 @@ fun historyScreen(
                 if (viewModel.textSummaries.isNotEmpty()) {
                     items(reversedList) { textSummaryId ->
                         val textSummary =
-                            viewModel.textSummaries.firstOrNull { it.id == textSummaryId.toString() }
+                            viewModel.textSummaries.firstOrNull { it.id == textSummaryId }
                         if (textSummary != null) {
                             Textbox(
                                 modifier = Modifier.fillMaxWidth(),
@@ -161,7 +160,7 @@ fun historyScreen(
             }
         }
     } else {
-        var searchResults = remember { mutableStateListOf<String>() }
+        val searchResults = remember { mutableStateListOf<String>() }
         SearchBar(
             modifier = Modifier
                 .focusRequester(focusRequester)
@@ -184,13 +183,16 @@ fun historyScreen(
             },
             leadingIcon = {
                 IconButton(onClick = { navController.navigate("history") }) {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
                 }
             },
             trailingIcon = {
                 IconButton(
                     onClick = {
-                        if (searchText == "" || searchText.isNullOrEmpty()) {
+                        if (searchText == "" || searchText.isEmpty()) {
                             navController.navigate("history")
                         } else {
                             searchText = ""
@@ -202,7 +204,7 @@ fun historyScreen(
                 }
             }
         ) {
-            if (searchText.isNotEmpty() && searchResults.isNullOrEmpty()) {
+            if (searchText.isNotEmpty() && searchResults.isEmpty()) {
                 Text(
                     text = stringResource(id = R.string.nothingFound),
                     modifier = Modifier
@@ -218,7 +220,7 @@ fun historyScreen(
                 ) {
                     items(searchResults) { textSummaryId ->
                         val textSummary =
-                            viewModel.textSummaries.firstOrNull { it.id == textSummaryId.toString() }
+                            viewModel.textSummaries.firstOrNull { it.id == textSummaryId }
                         if (textSummary != null) {
                             Textbox(
                                 modifier = Modifier.fillMaxWidth(),

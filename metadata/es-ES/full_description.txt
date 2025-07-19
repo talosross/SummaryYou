@@ -27,4 +27,4 @@ Experimente una interfaz de usuario elegante y moderna al estilo Material Design
 
 Nota: Para el resumen basado en IA, la aplicación utiliza modelos de IA de OpenAI y requiere una conexión a Internet.
 
-Encuentre las últimas actualizaciones y contribuciones en nuestro repositorio de GitHub https://github.com/talosross/SummaryExpressive
+Encuentre las últimas actualizaciones y contribuciones en nuestro repositorio de GitHub https://github.com/kid1412621/SummaryExpressive

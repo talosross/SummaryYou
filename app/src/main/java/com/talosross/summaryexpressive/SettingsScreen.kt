@@ -53,13 +53,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun settingsScreen(modifier: Modifier = Modifier, navController: NavHostController, viewModel: TextSummaryViewModel) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+fun SettingsScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: TextSummaryViewModel
+) {
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
         modifier = Modifier
@@ -102,6 +108,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     var showDialogModel by remember { mutableStateOf(false) }
     val design by viewModel.designNumber.collectAsState()
     val apiKey by viewModel.apiKey.collectAsState()
+    val apiBaseUrl by viewModel.baseUrl.collectAsState()
     val model by viewModel.model.collectAsState()
     val useOriginalLanguage by viewModel.useOriginalLanguage.collectAsState()
     val ultraDark by viewModel.ultraDark.collectAsState()
@@ -122,15 +129,24 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
             title = { Text(stringResource(id = R.string.design)) },
             text = {
                 Column {
-                    RadioButtonItem(stringResource(id = R.string.systemDesign), selected = design == 0) {
+                    RadioButtonItem(
+                        stringResource(id = R.string.systemDesign),
+                        selected = design == 0
+                    ) {
                         viewModel.setDesignNumber(0)
                         context2.recreate()
                     }
-                    RadioButtonItem(stringResource(id = R.string.lightDesign), selected = design == 2) {
+                    RadioButtonItem(
+                        stringResource(id = R.string.lightDesign),
+                        selected = design == 2
+                    ) {
                         viewModel.setDesignNumber(2)
                         context2.recreate()
                     }
-                    RadioButtonItem(stringResource(id = R.string.darkDesign), selected = design == 1) {
+                    RadioButtonItem(
+                        stringResource(id = R.string.darkDesign),
+                        selected = design == 1
+                    ) {
                         viewModel.setDesignNumber(1)
                         context2.recreate()
                     }
@@ -145,12 +161,12 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
         )
     }
 
-    if(showDialogRestart) {
+    if (showDialogRestart) {
         AlertDialog(
             onDismissRequest = { showDialogRestart = false },
-            title = { Text(stringResource(id = R.string.restartRequired))},
-            text = { Text(stringResource(id = R.string.restartRequiredDescription))},
-            confirmButton =  {
+            title = { Text(stringResource(id = R.string.restartRequired)) },
+            text = { Text(stringResource(id = R.string.restartRequiredDescription)) },
+            confirmButton = {
                 TextButton(onClick = {
                     context2.recreate()
                 }) {
@@ -165,7 +181,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
         )
     }
 
-    if(showDialogKey) {
+    if (showDialogKey) {
         var apiTextFieldValue by remember { mutableStateOf(apiKey) }
         AlertDialog(
             onDismissRequest = { showDialogKey = false },
@@ -196,8 +212,11 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
         )
     }
 
-    if(showDialogModel) {
+    if (showDialogModel) {
         var selectedModel by remember { mutableStateOf(model) }
+        var apiBaseUrlTextFieldValue by remember { mutableStateOf(apiBaseUrl) }
+        val isModelCustomisable = selectedModel == "OpenAI"
+
         AlertDialog(
             onDismissRequest = { showDialogModel = false },
             title = { Text(stringResource(id = R.string.setModel)) },
@@ -209,12 +228,20 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     RadioButtonItem("OpenAI", selected = (selectedModel == "OpenAI")) {
                         selectedModel = "OpenAI"
                     }
+                    if (isModelCustomisable) {
+                        OutlinedTextField(
+                            value = apiBaseUrlTextFieldValue,
+                            onValueChange = { apiBaseUrlTextFieldValue = it },
+                            placeholder = { Text("Custom API Base URL for ${selectedModel}-Compatible Endpoints (Optional)") }
+                        )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         viewModel.setModelValue(selectedModel)
+                        viewModel.setBaseUrlValue(apiBaseUrlTextFieldValue)
                         showDialogModel = false
                     }
                 ) {
@@ -239,43 +266,44 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
         item {
             Column {
                 ListItem(
-                        modifier = Modifier.fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
-                        headlineContent = { Text(stringResource(id = R.string.useOriginalLanguage)) },
-                        supportingContent = { Text(stringResource(id = R.string.useOriginalLanguageDescription)) },
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.outline_translate_24),
-                                contentDescription = "Localized description",
-                            )
-                        },
-                        trailingContent = {
-                            Switch(
-                                checked = useOriginalLanguage,
-                                onCheckedChange = { newValue ->
-                                    viewModel.setUseOriginalLanguageValue(newValue)
-                                }
-                            )
-                        }
-                )
-                if (Build.VERSION.SDK_INT >= 33) {
-                ListItem(
-                    modifier = Modifier
-                        .clickable {
-                            val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
-                            val uri = Uri.fromParts("package", context.packageName, null)
-                            intent.data = uri
-                            context.startActivity(intent)
-                        }
-                        .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
-                    headlineContent = { Text(stringResource(id = R.string.chooseLanguage)) },
+                    modifier = Modifier.fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                    headlineContent = { Text(stringResource(id = R.string.useOriginalLanguage)) },
+                    supportingContent = { Text(stringResource(id = R.string.useOriginalLanguageDescription)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.outline_language_24),
+                            painter = painterResource(id = R.drawable.outline_translate_24),
                             contentDescription = "Localized description",
                         )
                     },
-                    supportingContent = { Text(stringResource(id = R.string.chooseLanguageDescription))},
-                ) }
+                    trailingContent = {
+                        Switch(
+                            checked = useOriginalLanguage,
+                            onCheckedChange = { newValue ->
+                                viewModel.setUseOriginalLanguageValue(newValue)
+                            }
+                        )
+                    }
+                )
+                if (Build.VERSION.SDK_INT >= 33) {
+                    ListItem(
+                        modifier = Modifier
+                            .clickable {
+                                val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
+                                val uri = Uri.fromParts("package", context.packageName, null)
+                                intent.data = uri
+                                context.startActivity(intent)
+                            }
+                            .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                        headlineContent = { Text(stringResource(id = R.string.chooseLanguage)) },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_language_24),
+                                contentDescription = "Localized description",
+                            )
+                        },
+                        supportingContent = { Text(stringResource(id = R.string.chooseLanguageDescription)) },
+                    )
+                }
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = { showDialogDesign = showDialogDesign.not() })
@@ -287,11 +315,15 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                             contentDescription = "Localized description",
                         )
                     },
-                    supportingContent = { Text(when (design) {
-                        1 -> stringResource(id = R.string.darkDesign)
-                        2 -> stringResource(id = R.string.lightDesign)
-                        else -> stringResource(id = R.string.systemDesign)
-                    }) }
+                    supportingContent = {
+                        Text(
+                            when (design) {
+                                1 -> stringResource(id = R.string.darkDesign)
+                                2 -> stringResource(id = R.string.lightDesign)
+                                else -> stringResource(id = R.string.systemDesign)
+                            }
+                        )
+                    }
                 )
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
@@ -351,36 +383,32 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                         )
                     }
                 )
-                if (apiKey.isEmpty()) {
-                    ListItem(
-                        modifier = Modifier
-                            .clickable(onClick = { showDialogKey = showDialogKey.not() })
-                            .fillMaxWidth(),
-                        headlineContent = { Text(stringResource(id = R.string.setApiKey)) },
-                        supportingContent = { Text(stringResource(id = R.string.setApiKeyDescription)) },
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_vpn_key_24),
-                                contentDescription = "Localized description",
-                            )
-                        }
-                    )
-                }
-                if (apiKey.isEmpty()) {
-                    ListItem(
-                        modifier = Modifier
-                            .clickable(onClick = { showDialogModel = showDialogModel.not() })
-                            .fillMaxWidth(),
-                        headlineContent = { Text(stringResource(id = R.string.setModel)) },
-                        supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.outline_person_edit_24),
-                                contentDescription = "Localized description",
-                            )
-                        }
-                    )
-                }
+                ListItem(
+                    modifier = Modifier
+                        .clickable(onClick = { showDialogKey = showDialogKey.not() })
+                        .fillMaxWidth(),
+                    headlineContent = { Text(stringResource(id = R.string.setApiKey)) },
+                    supportingContent = { Text(stringResource(id = R.string.setApiKeyDescription)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_vpn_key_24),
+                            contentDescription = "Localized description",
+                        )
+                    }
+                )
+                ListItem(
+                    modifier = Modifier
+                        .clickable(onClick = { showDialogModel = showDialogModel.not() })
+                        .fillMaxWidth(),
+                    headlineContent = { Text(stringResource(id = R.string.setModel)) },
+                    supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_person_edit_24),
+                            contentDescription = "Localized description",
+                        )
+                    }
+                )
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = {
@@ -402,8 +430,8 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                 ListItem(
                     modifier = Modifier
                         .clickable {
-                            val url = "https://github.com/talosross/SummaryExpressive"
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            val url = "https://github.com/kid1412621/SummaryExpressive"
+                            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             context.startActivity(intent)
                         }
                         .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
@@ -421,7 +449,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                         .clickable {
                             val url =
                                 "https://play.google.com/store/apps/details?id=com.talosross.SummaryExpressive"
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             context.startActivity(intent)
                         }
                         .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
@@ -434,18 +462,21 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     },
                     supportingContent = { Text(stringResource(id = R.string.googlePlayDescription)) },
                 )
-                Text(text = "Version ${getVersionName(context)} - $model",
+                Text(
+                    text = "Version ${getVersionName(context)} - $model",
                     modifier = Modifier
                         .align(alignment = CenterHorizontally)
-                        .padding(top = 10.dp))
-                Text(text = stringResource(id = R.string.madeBy),
-                        modifier = Modifier
-                            .align(alignment = CenterHorizontally)
-                            .clickable {
-                                val url = "https://github.com/talosross"
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                context.startActivity(intent)
-                            }
+                        .padding(top = 10.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.madeBy),
+                    modifier = Modifier
+                        .align(alignment = CenterHorizontally)
+                        .clickable {
+                            val url = "https://github.com/talosross"
+                            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                            context.startActivity(intent)
+                        }
                 )
             }
         }
@@ -453,8 +484,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
 }
 
 fun getVersionName(context: Context): String? {
-    val packageInfo: PackageInfo
-    packageInfo = try {
+    val packageInfo: PackageInfo = try {
         context.packageManager.getPackageInfo(context.packageName, 0)
     } catch (e: PackageManager.NameNotFoundException) {
         throw RuntimeException(e)
@@ -463,8 +493,7 @@ fun getVersionName(context: Context): String? {
 }
 
 fun getVersionCode(context: Context): Int {
-    val packageInfo: PackageInfo
-    packageInfo = try {
+    val packageInfo: PackageInfo = try {
         context.packageManager.getPackageInfo(context.packageName, 0)
     } catch (e: PackageManager.NameNotFoundException) {
         throw RuntimeException(e)

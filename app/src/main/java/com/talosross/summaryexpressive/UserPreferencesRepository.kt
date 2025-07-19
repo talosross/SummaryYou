@@ -18,6 +18,7 @@ object UserPreferencesRepository {
     private val MULTI_LINE = booleanPreferencesKey("multi_line")
     private val ULTRA_DARK = booleanPreferencesKey("ultra_dark")
     private val DESIGN_NUMBER = intPreferencesKey("design_number")
+    private val BASE_URL = stringPreferencesKey("base_url")
     private val API_KEY = stringPreferencesKey("api_key")
     private val MODEL = stringPreferencesKey("model")
     private val SHOW_ONBOARDING = booleanPreferencesKey("show_onboarding")
@@ -36,6 +37,9 @@ object UserPreferencesRepository {
 
     fun getDesignNumber(context: Context): Flow<Int> = context.dataStore.data.map { it[DESIGN_NUMBER] ?: 0 }
     suspend fun setDesignNumber(context: Context, value: Int) = context.dataStore.edit { it[DESIGN_NUMBER] = value }
+
+    fun getBaseUrl(context: Context): Flow<String> = context.dataStore.data.map { it[BASE_URL] ?: "" }
+    suspend fun setBaseUrl(context: Context, value: String) = context.dataStore.edit { it[BASE_URL] = value }
 
     fun getApiKey(context: Context): Flow<String> = context.dataStore.data.map { it[API_KEY] ?: "" }
     suspend fun setApiKey(context: Context, value: String) = context.dataStore.edit { it[API_KEY] = value }

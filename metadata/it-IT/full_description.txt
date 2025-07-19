@@ -27,4 +27,4 @@ Vivi un'esperienza elegante e moderna con l'interfaccia utente in stile Material
 
 Nota: Per la sintesi basata sull'IA, l'app utilizza modelli di intelligenza artificiale di OpenAI e richiede una connessione Internet.
 
-Troverai gli ultimi aggiornamenti e contributi nel nostro repository GitHub https://github.com/talosross/SummaryExpressive
+Troverai gli ultimi aggiornamenti e contributi nel nostro repository GitHub https://github.com/kid1412621/SummaryExpressive

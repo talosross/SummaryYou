@@ -27,4 +27,4 @@ OLED ダークモードで視聴体験を最適化します。暗い環境でも
 
 注: AI ベースの要約の場合、アプリは OpenAI の AI モデルを使用し、インターネット接続が必要です。
 
-GitHub リポジトリ https://github.com/talosross/SummaryExpressive で最新の更新と貢献を見つけてください。
+GitHub リポジトリ https://github.com/kid1412621/SummaryExpressive で最新の更新と貢献を見つけてください。

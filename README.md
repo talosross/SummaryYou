@@ -52,7 +52,7 @@ It uses GPT-3.5 OpenAI/Mixtral 8x7B Groq to summarize.
   
 ## ⭐️ Star History
 
-![Star History Chart](https://api.star-history.com/svg?repos=talosross/SummaryExpressive&type=Timeline)
+![Star History Chart](https://api.star-history.com/svg?repos=kid1412621/SummaryExpressive&type=Timeline)
 
 
 ## 🧱 Credits
@@ -66,7 +66,7 @@ Some of the UI designs and codes are borrowed from [Seal](https://github.com/Jun
 
 ## 📃 License
 
-[<img src="SummaryExpressiveLicense.svg" />](https://github.com/talosross/SummaryExpressive/blob/master/LICENSE.txt)
+[<img src="SummaryExpressiveLicense.svg" />](https://github.com/kid1412621/SummaryExpressive/blob/master/LICENSE.txt)
 
 <div align="right">
 <table><td>
