@@ -1,4 +1,4 @@
-package com.talosross.summaryexpressive.ui.theme
+package me.nanova.summaryexpressive.ui.theme
 
 import android.app.Activity
 import android.os.Build

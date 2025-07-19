@@ -1,4 +1,4 @@
-package com.talosross.summaryexpressive
+package me.nanova.summaryexpressive
 
 object Prompts {
     // Prompts from youtube.py for later migration

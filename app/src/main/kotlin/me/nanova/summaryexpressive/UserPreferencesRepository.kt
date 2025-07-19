@@ -1,4 +1,4 @@
-package com.talosross.summaryexpressive
+package me.nanova.summaryexpressive
 
 import android.content.Context
 import androidx.datastore.core.DataStore

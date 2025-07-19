@@ -1,4 +1,4 @@
-package com.talosross.summaryexpressive
+package me.nanova.summaryexpressive
 
 import android.content.ClipData
 import android.content.ClipboardManager

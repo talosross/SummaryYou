@@ -32,6 +32,6 @@ The "Summary Expressive" app does not address anyone under the age of 13. We do 
 We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page. These changes are effective immediately after they are posted.
 
 ## Contact Us
-If you have any questions or suggestions about our Privacy Policy, please do not hesitate to contact us at talosross@gmail.com.
+If you have any questions or suggestions about our Privacy Policy, please do not hesitate to contact us at kid1412621@gmail.com.
 
 This privacy policy page was created and modified by Talos Ross.

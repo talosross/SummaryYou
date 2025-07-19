@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace = "com.talosross.summaryexpressive"
+    namespace = "me.nanova.summaryexpressive"
     compileSdk = 35
     androidResources {
         generateLocaleConfig = true
     }
     defaultConfig {
-        applicationId = "com.talosross.summaryexpressive"
+        applicationId = "me.nanova.summaryexpressive"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
