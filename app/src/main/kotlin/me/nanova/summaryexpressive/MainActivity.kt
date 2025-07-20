@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
             val oledMode by viewModel.ultraDark.collectAsState()
             val showOnboarding by viewModel.showOnboardingScreen.collectAsState()
 
-            SummaryExpressiveTheme(design = design, OledModeEnabled = oledMode) {
+            SummaryExpressiveTheme(design = design, oLedModeEnabled = oledMode) {
                 val navController = rememberNavController()
                 var shouldShowOnboarding by rememberSaveable { mutableStateOf(showOnboarding) }
                 // A surface container using the 'background' color from the theme

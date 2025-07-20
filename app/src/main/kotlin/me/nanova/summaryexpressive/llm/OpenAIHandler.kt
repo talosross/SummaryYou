@@ -37,8 +37,7 @@ class OpenAIHandler {
                             llmModel = OpenAIModels.Chat.GPT4o,
                         )
                     }
-                    val result = agent.run(text)
-                    result.toString()
+                    agent.run(text)
                 } catch (e: Exception) {
                     "Error: ${e.localizedMessage}"
                 }

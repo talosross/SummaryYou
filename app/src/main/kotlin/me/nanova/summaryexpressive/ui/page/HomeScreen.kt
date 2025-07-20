@@ -165,12 +165,13 @@ fun HomeScreen(
                     isExtracting = true
                     isDocument = true
                     url = getFileName(context, uri)
-                    textDocument = if (mimeType == "application/pdf") {
-                        extractTextFromPdf(context, uri)
-                    } else if (mimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-                        extractTextFromDocx(context, uri)
-                    } else {
-                        extractTextFromImage(context, uri)
+                    textDocument = when (mimeType) {
+                        "application/pdf" -> extractTextFromPdf(context, uri)
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> extractTextFromDocx(
+                            context,
+                            uri
+                        )
+                        else -> extractTextFromImage(context, uri)
                     }
                     isExtracting = false
                 }

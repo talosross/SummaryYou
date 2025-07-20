@@ -92,13 +92,13 @@ fun SummaryExpressiveTheme(
     },
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
-    OledModeEnabled: Boolean,
+    oLedModeEnabled: Boolean,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme && OledModeEnabled)
+            if (darkTheme && oLedModeEnabled)
                 dynamicDarkColorScheme(context).copy(
                     surface = Color.Black,
                     background = Color.Black,
@@ -107,7 +107,7 @@ fun SummaryExpressiveTheme(
             else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> if (OledModeEnabled) DarkColors.copy(
+        darkTheme -> if (oLedModeEnabled) DarkColors.copy(
             surface = Color.Black,
             background = Color.Black,
         )
