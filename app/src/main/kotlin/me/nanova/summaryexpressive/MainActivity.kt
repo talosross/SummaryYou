@@ -51,11 +51,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -107,7 +108,6 @@ import com.google.gson.reflect.TypeToken
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -115,6 +115,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import org.apache.poi.xwpf.usermodel.XWPFDocument
 import java.io.FileNotFoundException
 import java.net.URL
@@ -381,7 +382,7 @@ fun AppNavigation(
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
-    ExperimentalLayoutApi::class
+    ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class
 )
 @Composable
 fun HomeScreen(
@@ -476,21 +477,13 @@ fun HomeScreen(
             isError = resultSummary.isError
             isLoading = false // Stop Loading-Animation
             if (!isError) {
-                if (isYouTubeLink(url)) {
-                    viewModel.addTextSummary(
-                        title,
-                        author,
-                        transcriptResult,
-                        true
-                    ) // Add to history
-                } else {
-                    viewModel.addTextSummary(
-                        title,
-                        author,
-                        transcriptResult,
-                        false
-                    ) // Add to history
-                }
+                // Add to history
+                viewModel.addTextSummary(
+                    title,
+                    author,
+                    transcriptResult,
+                    isYouTubeLink(url)
+                )
             }
         }
     }
@@ -556,7 +549,7 @@ fun HomeScreen(
                             )
                             // Loading-Animation
                             if (isLoading) {
-                                LinearProgressIndicator(
+                                LinearWavyProgressIndicator(
                                     modifier = modifier
                                         .fillMaxWidth()
                                         .padding(top = 5.dp)

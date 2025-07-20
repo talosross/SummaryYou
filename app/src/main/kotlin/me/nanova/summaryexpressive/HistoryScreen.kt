@@ -12,6 +12,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +34,7 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -71,13 +73,13 @@ fun HistoryScreen(
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    var searchMode by remember { mutableStateOf(false) } // Active state for SearchBar
     var searchText by remember { mutableStateOf("") } // Query for SearchBar
-    var active by remember { mutableStateOf(false) } // Active state for SearchBar
     val focusManager = LocalFocusManager.current // Hide cursor
     val focusRequester = remember { FocusRequester() } // Show cursor after removing
 
 
-    if (active == false) {
+    if (!searchMode) {
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
@@ -102,7 +104,7 @@ fun HistoryScreen(
                     },
                     actions = {
                         IconButton(
-                            onClick = { active = true }
+                            onClick = { searchMode = true }
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.outline_search_24),
@@ -161,81 +163,93 @@ fun HistoryScreen(
         }
     } else {
         val searchResults = remember { mutableStateListOf<String>() }
-        SearchBar(
-            modifier = Modifier
-                .focusRequester(focusRequester)
-                .fillMaxWidth(),
-            query = searchText,
-            onQueryChange = {
-                searchText = it
-                searchResults.clear()
-                searchResults.addAll(viewModel.searchTextSummary(searchText).reversed())
-            },
-            onSearch = {
-                focusManager.clearFocus()
-            },
-            active = active,
-            onActiveChange = {
-                active = it
-            },
-            placeholder = {
-                Text(text = stringResource(id = R.string.search))
-            },
-            leadingIcon = {
-                IconButton(onClick = { navController.navigate("history") }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
+        val onActiveChange: (Boolean) -> Unit = { searchMode = it }
+        Box(modifier = Modifier.fillMaxSize()) {
+            SearchBar(
+                inputField = {
+                    SearchBarDefaults.InputField(
+                        query = searchText,
+                        onQueryChange = {
+                            searchText = it
+                            searchResults.clear()
+                            searchResults.addAll(viewModel.searchTextSummary(searchText).reversed())
+                        },
+                        onSearch = { focusManager.clearFocus() },
+                        expanded = searchMode,
+                        onExpandedChange = onActiveChange,
+                        placeholder = {
+                            Text(text = stringResource(id = R.string.search))
+                        },
+                        leadingIcon = {
+                            IconButton(onClick = { searchMode = false }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
+                        },
+                        trailingIcon = {
+                            IconButton(
+                                onClick = {
+                                    if (searchText.isBlank()) {
+                                        searchMode = false
+                                    } else {
+                                        searchText = ""
+                                        focusRequester.requestFocus()
+                                    }
+                                }
+                            ) {
+                                Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+                            }
+                        },
                     )
-                }
-            },
-            trailingIcon = {
-                IconButton(
-                    onClick = {
-                        if (searchText == "" || searchText.isEmpty()) {
-                            navController.navigate("history")
-                        } else {
-                            searchText = ""
-                            focusRequester.requestFocus()
+                },
+                expanded = searchMode,
+                onExpandedChange = onActiveChange,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .focusRequester(focusRequester)
+                    .fillMaxWidth(),
+                shape = SearchBarDefaults.inputFieldShape,
+                colors = SearchBarDefaults.colors(),
+                tonalElevation = SearchBarDefaults.TonalElevation,
+                shadowElevation = SearchBarDefaults.ShadowElevation,
+                windowInsets = SearchBarDefaults.windowInsets,
+                content = {
+                    if (searchText.isNotEmpty() && searchResults.isEmpty()) {
+                        Text(
+                            text = stringResource(id = R.string.nothingFound),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(start = 20.dp, end = 20.dp)
+                                .fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(searchResults) { textSummaryId ->
+                                val textSummary =
+                                    viewModel.textSummaries.firstOrNull { it.id == textSummaryId }
+                                if (textSummary != null) {
+                                    Textbox(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        id = textSummary.id,
+                                        title = textSummary.title,
+                                        author = textSummary.author,
+                                        text = textSummary.text,
+                                        youtubeLink = textSummary.youtubeLink,
+                                        viewModel = viewModel,
+                                        search = true
+                                    )
+                                }
+                            }
                         }
                     }
-                ) {
-                    Icon(imageVector = Icons.Default.Clear, contentDescription = null)
-                }
-            }
-        ) {
-            if (searchText.isNotEmpty() && searchResults.isEmpty()) {
-                Text(
-                    text = stringResource(id = R.string.nothingFound),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(start = 20.dp, end = 20.dp)
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(searchResults) { textSummaryId ->
-                        val textSummary =
-                            viewModel.textSummaries.firstOrNull { it.id == textSummaryId }
-                        if (textSummary != null) {
-                            Textbox(
-                                modifier = Modifier.fillMaxWidth(),
-                                id = textSummary.id,
-                                title = textSummary.title,
-                                author = textSummary.author,
-                                text = textSummary.text,
-                                youtubeLink = textSummary.youtubeLink,
-                                viewModel = viewModel,
-                                search = true
-                            )
-                        }
-                    }
-                }
-            }
+                },
+            )
         }
     }
 }
