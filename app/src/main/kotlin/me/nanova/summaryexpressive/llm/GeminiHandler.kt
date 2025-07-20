@@ -1,4 +1,4 @@
-package me.nanova.summaryexpressive
+package me.nanova.summaryexpressive.llm
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.prompt.executor.clients.google.GoogleModels

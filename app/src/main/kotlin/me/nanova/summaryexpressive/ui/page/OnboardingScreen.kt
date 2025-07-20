@@ -1,4 +1,4 @@
-package me.nanova.summaryexpressive
+package me.nanova.summaryexpressive.ui.page
 
 import android.os.Build
 import androidx.compose.foundation.Image
@@ -35,6 +35,7 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import coil.size.Size
+import me.nanova.summaryexpressive.R
 
 @Composable
 fun OnboardingScreen(

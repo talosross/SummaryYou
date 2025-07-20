@@ -58,10 +58,71 @@
 -keep,allowoptimization class com.microsoft.schemas.** { *; }
 
 -keep class ai.koog.** { *; }
--keep class me.nanova.summaryexpressive.GeminiHandler { *; }
+-keep class me.nanova.summaryexpressive.llm.GeminiHandler { *; }
 -keep class io.ktor.client.plugins.** { *; }
 -keep class io.ktor.** { *; }
 -dontwarn io.ktor.**
+# FIXME: no idea why need those
 -dontwarn io.micrometer.context.ContextAccessor
 -dontwarn javax.enterprise.inject.spi.Extension
 -dontwarn reactor.blockhound.integration.BlockHoundIntegration
+-dontwarn io.micrometer.context.ContextRegistry
+-dontwarn io.micrometer.context.ContextSnapshot$Scope
+-dontwarn io.micrometer.context.ContextSnapshot
+-dontwarn io.micrometer.context.ContextSnapshotFactory$Builder
+-dontwarn io.micrometer.context.ContextSnapshotFactory
+-dontwarn io.micrometer.context.ThreadLocalAccessor
+-dontwarn io.netty.channel.epoll.Epoll
+-dontwarn io.netty.channel.epoll.EpollChannelOption
+-dontwarn io.netty.channel.epoll.EpollDatagramChannel
+-dontwarn io.netty.channel.epoll.EpollDomainSocketChannel
+-dontwarn io.netty.channel.epoll.EpollEventLoopGroup
+-dontwarn io.netty.channel.epoll.EpollSocketChannel
+-dontwarn io.netty.channel.kqueue.KQueue
+-dontwarn io.netty.channel.kqueue.KQueueDatagramChannel
+-dontwarn io.netty.channel.kqueue.KQueueDomainSocketChannel
+-dontwarn io.netty.channel.kqueue.KQueueEventLoopGroup
+-dontwarn io.netty.channel.kqueue.KQueueSocketChannel
+-dontwarn io.netty.incubator.channel.uring.IOUring
+-dontwarn io.netty.incubator.channel.uring.IOUringChannelOption
+-dontwarn io.netty.incubator.channel.uring.IOUringDatagramChannel
+-dontwarn io.netty.incubator.channel.uring.IOUringEventLoopGroup
+-dontwarn io.netty.incubator.channel.uring.IOUringSocketChannel
+-dontwarn io.netty.internal.tcnative.AsyncSSLPrivateKeyMethod
+-dontwarn io.netty.internal.tcnative.AsyncTask
+-dontwarn io.netty.internal.tcnative.Buffer
+-dontwarn io.netty.internal.tcnative.CertificateCallback
+-dontwarn io.netty.internal.tcnative.CertificateCompressionAlgo
+-dontwarn io.netty.internal.tcnative.CertificateVerifier
+-dontwarn io.netty.internal.tcnative.Library
+-dontwarn io.netty.internal.tcnative.SSL
+-dontwarn io.netty.internal.tcnative.SSLContext
+-dontwarn io.netty.internal.tcnative.SSLPrivateKeyMethod
+-dontwarn io.netty.internal.tcnative.SSLSessionCache
+-dontwarn io.netty.internal.tcnative.SessionTicketKey
+-dontwarn io.netty.internal.tcnative.SniHostNameMatcher
+-dontwarn io.netty.resolver.dns.DefaultDnsCache
+-dontwarn io.netty.resolver.dns.DefaultDnsCnameCache
+-dontwarn io.netty.resolver.dns.DnsAddressResolverGroup
+-dontwarn io.netty.resolver.dns.DnsCache
+-dontwarn io.netty.resolver.dns.DnsCnameCache
+-dontwarn io.netty.resolver.dns.DnsNameResolverBuilder
+-dontwarn io.opentelemetry.api.incubator.logs.ExtendedLogger
+-dontwarn io.opentelemetry.api.incubator.trace.ExtendedSpanBuilder
+-dontwarn io.opentelemetry.api.incubator.trace.ExtendedTracer
+-dontwarn jdk.jfr.Event
+-dontwarn jdk.net.ExtendedSocketOptions
+-dontwarn org.HdrHistogram.AbstractHistogram
+-dontwarn org.HdrHistogram.Histogram
+-dontwarn org.LatencyUtils.LatencyStats$Builder
+-dontwarn org.LatencyUtils.LatencyStats
+-dontwarn org.LatencyUtils.PauseDetector
+-dontwarn org.LatencyUtils.SimplePauseDetector
+-dontwarn org.eclipse.jetty.alpn.ALPN$ClientProvider
+-dontwarn org.eclipse.jetty.alpn.ALPN$Provider
+-dontwarn org.eclipse.jetty.alpn.ALPN$ServerProvider
+-dontwarn org.eclipse.jetty.alpn.ALPN
+-dontwarn org.eclipse.jetty.npn.NextProtoNego$ClientProvider
+-dontwarn org.eclipse.jetty.npn.NextProtoNego$Provider
+-dontwarn org.eclipse.jetty.npn.NextProtoNego$ServerProvider
+-dontwarn org.eclipse.jetty.npn.NextProtoNego

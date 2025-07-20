@@ -3,7 +3,8 @@ package me.nanova.summaryexpressive.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -11,7 +12,6 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -81,10 +81,11 @@ private val DarkColors = darkColorScheme(
     scrim = md_theme_dark_scrim,
 )
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SummaryExpressiveTheme(
     design: Int,
-    darkTheme: Boolean = when(design) {
+    darkTheme: Boolean = when (design) {
         1 -> true
         2 -> false
         else -> isSystemInDarkTheme()
@@ -94,7 +95,7 @@ fun SummaryExpressiveTheme(
     OledModeEnabled: Boolean,
     content: @Composable () -> Unit
 ) {
-    var colorScheme = when {
+    val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme && OledModeEnabled)
@@ -106,11 +107,12 @@ fun SummaryExpressiveTheme(
             else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> if(OledModeEnabled) DarkColors.copy(
-                        surface = Color.Black,
-                        background = Color.Black,
-                        )
-                     else DarkColors
+        darkTheme -> if (OledModeEnabled) DarkColors.copy(
+            surface = Color.Black,
+            background = Color.Black,
+        )
+        else DarkColors
+
         else -> LightColors
     }
 
@@ -130,7 +132,7 @@ fun SummaryExpressiveTheme(
         }
     }
 
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
         typography = Typography,
         content = content

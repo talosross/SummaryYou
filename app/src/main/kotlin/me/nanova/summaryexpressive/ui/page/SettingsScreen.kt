@@ -1,4 +1,4 @@
-package me.nanova.summaryexpressive
+package me.nanova.summaryexpressive.ui.page
 
 import android.content.Context
 import android.content.Intent
@@ -55,6 +55,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation.NavHostController
+import me.nanova.summaryexpressive.R
+import me.nanova.summaryexpressive.TextSummaryViewModel
+import me.nanova.summaryexpressive.llm.AIProvider
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -264,7 +267,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
         item {
             Column {
                 ListItem(
-                    modifier = Modifier.fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                    modifier = Modifier.fillMaxWidth(),
                     headlineContent = { Text(stringResource(id = R.string.useOriginalLanguage)) },
                     supportingContent = { Text(stringResource(id = R.string.useOriginalLanguageDescription)) },
                     leadingContent = {
@@ -291,7 +294,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                                 intent.data = uri
                                 context.startActivity(intent)
                             }
-                            .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                            .fillMaxWidth(),
                         headlineContent = { Text(stringResource(id = R.string.chooseLanguage)) },
                         leadingContent = {
                             Icon(
@@ -432,7 +435,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             context.startActivity(intent)
                         }
-                        .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                        .fillMaxWidth(),
                     headlineContent = { Text(stringResource(id = R.string.repository)) },
                     leadingContent = {
                         Icon(
@@ -446,11 +449,11 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     modifier = Modifier
                         .clickable {
                             val url =
-                                "https://play.google.com/store/apps/details?id=com.talosross.SummaryExpressive"
+                                "https://play.google.com/store/apps/details?id=me.nanova.SummaryExpressive"
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             context.startActivity(intent)
                         }
-                        .fillMaxWidth(), // Optional, um die ListItem auf die volle Breite zu strecken
+                        .fillMaxWidth(),
                     headlineContent = { Text(stringResource(id = R.string.googlePlay)) },
                     leadingContent = {
                         Icon(

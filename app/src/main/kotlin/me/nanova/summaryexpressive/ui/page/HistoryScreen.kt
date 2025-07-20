@@ -1,4 +1,4 @@
-package me.nanova.summaryexpressive
+package me.nanova.summaryexpressive.ui.page
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -42,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +63,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
+import me.nanova.summaryexpressive.R
+import me.nanova.summaryexpressive.TextSummaryViewModel
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -296,7 +299,7 @@ fun Textbox(
                             Toast.LENGTH_SHORT
                         )
                         .show()
-                    viewModel.removeTextSummary(id)          // <-- Löschen
+                    viewModel.removeTextSummary(id)
                 }
             )
     ) {
@@ -340,7 +343,7 @@ fun Textbox(
         var tts: TextToSpeech? by remember { mutableStateOf(null) }
         var isSpeaking by remember { mutableStateOf(false) }
         var isPaused by remember { mutableStateOf(false) }
-        var currentPosition by remember { mutableStateOf(0) }
+        var currentPosition by remember { mutableIntStateOf(0) }
         var utteranceId by remember { mutableStateOf("") }
         val copied = stringResource(id = R.string.copied)
         val transcript = text

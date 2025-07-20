@@ -29,7 +29,7 @@ jobs:
       - name: Run unit tests
         run: ./gradlew test
 
-      - name: Build debug APK (optional, for testing build process)
+      - name: Build debug APK (for testing build process)
         run: ./gradlew build
 
   build-release-apk:

@@ -1,4 +1,4 @@
-package me.nanova.summaryexpressive
+package me.nanova.summaryexpressive.llm
 
 object Prompts {
     // Prompts from youtube.py for later migration

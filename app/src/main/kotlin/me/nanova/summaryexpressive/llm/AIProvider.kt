@@ -1,4 +1,4 @@
-package me.nanova.summaryexpressive
+package me.nanova.summaryexpressive.llm
 
 enum class AIProvider(val displayName: String, val isBaseUrlCustomisable: Boolean) {
     GEMINI("Gemini", false),
