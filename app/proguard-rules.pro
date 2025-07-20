@@ -57,7 +57,7 @@
 -keep,allowoptimization class org.openxmlformats.schemas.** { *; }
 -keep,allowoptimization class com.microsoft.schemas.** { *; }
 
--keep class com.google.ai.client.generativeai.** { *; }
+-keep class ai.koog.** { *; }
 -keep class me.nanova.summaryexpressive.GeminiHandler { *; }
 -keep class io.ktor.client.plugins.** { *; }
 -keep class io.ktor.** { *; }

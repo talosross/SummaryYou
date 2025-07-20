@@ -211,8 +211,8 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch { UserPreferencesRepository.setBaseUrl(context, newValue) }
 
     // AI-Model
-    private val _model = MutableStateFlow("Gemini")
-    val model: StateFlow<String> = _model.asStateFlow()
+    private val _model = MutableStateFlow(AIProvider.OPENAI)
+    val model: StateFlow<AIProvider> = _model.asStateFlow()
     fun setModelValue(newValue: String) =
         viewModelScope.launch { UserPreferencesRepository.setModel(context, newValue) }
 
@@ -266,7 +266,8 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
             UserPreferencesRepository.getBaseUrl(context).collect { _baseUrl.value = it }
         }
         viewModelScope.launch {
-            UserPreferencesRepository.getModel(context).collect { _model.value = it }
+            UserPreferencesRepository.getModel(context)
+                .collect { _model.value = AIProvider.valueOf(it) }
         }
         viewModelScope.launch {
             UserPreferencesRepository.getShowOnboarding(context)
@@ -1047,39 +1048,51 @@ suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel)
     // TODO: Implement prompt selection logic from youtube.py using Prompts.kt
     val instructions = "Summarize the following text in $language: "
 
-    try {
-        val summary = when (model) {
-            "Gemini" -> GeminiHandler.generateContentSync(key, instructions, text)
-            "OpenAI" -> OpenAIHandler.generateContentSync(key, instructions, text, baseUrl)
-            "Groq" -> return SummaryResult(null, null, "Groq not implemented yet.", isError = true)
-            else -> return SummaryResult(null, null, "Unsupported model", isError = true)
-        }
+    return withContext(Dispatchers.IO) {
+        try {
+            val summary = when (model) {
+                AIProvider.GEMINI -> GeminiHandler.generateContentSync(key, instructions, text)
+                AIProvider.OPENAI -> OpenAIHandler.generateContentSync(
+                    key,
+                    instructions,
+                    text,
+                    baseUrl
+                )
 
-        if (summary.startsWith("Error:")) {
-            throw Exception(summary)
-        }
+                else -> return@withContext SummaryResult(
+                    null,
+                    null,
+                    "Unsupported model",
+                    isError = true
+                )
+            }
 
-        return SummaryResult(
-            title = null,
-            author = null,
-            summary = summary,
-            isError = false
-        )
-    } catch (e: Exception) {
-        var errorMessage = e.message ?: "Unknown error"
-        if ("API key not valid" in errorMessage || "API key is invalid" in errorMessage) {
-            errorMessage = "Exception: incorrect key"
-        } else if ("rate limit" in errorMessage.lowercase()) {
-            errorMessage = "Exception: rate limit"
-        } else if (errorMessage.startsWith("Error: ")) {
-            errorMessage = errorMessage.substringAfter("Error: ")
+            if (summary.startsWith("Error:")) {
+                throw Exception(summary)
+            }
+
+            SummaryResult(
+                title = null,
+                author = null,
+                summary = summary,
+                isError = false
+            )
+        } catch (e: Exception) {
+            var errorMessage = e.message ?: "Unknown error"
+            if ("API key not valid" in errorMessage || "API key is invalid" in errorMessage) {
+                errorMessage = "Exception: incorrect key"
+            } else if ("rate limit" in errorMessage.lowercase()) {
+                errorMessage = "Exception: rate limit"
+            } else if (errorMessage.startsWith("Error: ")) {
+                errorMessage = errorMessage.substringAfter("Error: ")
+            }
+            SummaryResult(
+                title = null,
+                author = null,
+                summary = errorMessage,
+                isError = true
+            )
         }
-        return SummaryResult(
-            title = null,
-            author = null,
-            summary = errorMessage,
-            isError = true
-        )
     }
 }
 

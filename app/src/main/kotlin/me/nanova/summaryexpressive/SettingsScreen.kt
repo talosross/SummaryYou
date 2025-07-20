@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -216,20 +215,18 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
     if (showDialogModel) {
         var selectedModel by remember { mutableStateOf(model) }
         var apiBaseUrlTextFieldValue by remember { mutableStateOf(apiBaseUrl) }
-        val isModelCustomisable = selectedModel == "OpenAI"
 
         AlertDialog(
             onDismissRequest = { showDialogModel = false },
             title = { Text(stringResource(id = R.string.setModel)) },
             text = {
                 Column {
-                    RadioButtonItem("Groq", selected = (selectedModel == "Groq")) {
-                        selectedModel = "Groq"
+                    AIProvider.entries.map {
+                        RadioButtonItem(it.displayName, selected = (selectedModel == it)) {
+                            selectedModel = it
+                        }
                     }
-                    RadioButtonItem("OpenAI", selected = (selectedModel == "OpenAI")) {
-                        selectedModel = "OpenAI"
-                    }
-                    if (isModelCustomisable) {
+                    if (selectedModel.isBaseUrlCustomisable) {
                         OutlinedTextField(
                             value = apiBaseUrlTextFieldValue,
                             onValueChange = { apiBaseUrlTextFieldValue = it },
@@ -241,7 +238,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.setModelValue(selectedModel)
+                        viewModel.setModelValue(selectedModel.name)
                         viewModel.setBaseUrlValue(apiBaseUrlTextFieldValue)
                         showDialogModel = false
                     }

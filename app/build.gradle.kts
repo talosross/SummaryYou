@@ -95,7 +95,6 @@ dependencies {
     implementation("io.ktor:ktor-client-android:3.2.2")
     implementation("ai.koog:koog-agents:0.3.0")
 
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
     implementation("androidx.compose.material:material-icons-core:1.7.8")
     implementation("androidx.datastore:datastore-preferences:1.1.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")

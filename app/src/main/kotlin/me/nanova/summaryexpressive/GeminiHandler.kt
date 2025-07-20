@@ -1,7 +1,8 @@
 package me.nanova.summaryexpressive
 
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.generationConfig
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
 import kotlinx.coroutines.runBlocking
 
 class GeminiHandler {
@@ -14,16 +15,14 @@ class GeminiHandler {
         ): String {
             return runBlocking {
                 try {
-                    val config = generationConfig {
-                        temperature = 0.9f
-                    }
-                    val model = GenerativeModel(
-                        modelName = "gemini-2.0-flash",
-                        apiKey = apiKey,
-                        generationConfig = config
+                    val agent = AIAgent(
+                        executor = simpleGoogleAIExecutor(apiKey),
+                        systemPrompt = instructions,
+                        llmModel = GoogleModels.Gemini2_5Flash,
+                        temperature = 0.9
                     )
-                    val response = model.generateContent("$instructions\n$text")
-                    response.text ?: throw Exception("Empty response from Gemini")
+
+                    agent.run(text)
                 } catch (e: Exception) {
                     "Error: ${e.localizedMessage}"
                 }

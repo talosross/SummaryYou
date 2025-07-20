@@ -61,7 +61,8 @@ object UserPreferencesRepository {
         context.dataStore.edit { it[API_KEY] = value }
 
     fun getModel(context: Context): Flow<String> =
-        context.dataStore.data.map { it[MODEL] ?: "Gemini" }
+        // fixme handle default value
+        context.dataStore.data.map { it[MODEL] ?: AIProvider.OPENAI.name }
 
     suspend fun setModel(context: Context, value: String) =
         context.dataStore.edit { it[MODEL] = value }
