@@ -224,7 +224,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
             title = { Text(stringResource(id = R.string.setModel)) },
             text = {
                 Column {
-                    AIProvider.entries.map {
+                    AIProvider.entries.filter { it != AIProvider.GROQ }.map {
                         RadioButtonItem(it.displayName, selected = (selectedModel == it)) {
                             selectedModel = it
                         }

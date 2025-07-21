@@ -27,16 +27,24 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.nanova.summaryexpressive.llm.AIProvider
+import me.nanova.summaryexpressive.llm.GeminiHandler
+import me.nanova.summaryexpressive.llm.OpenAIHandler
+import me.nanova.summaryexpressive.llm.Prompts
+import me.nanova.summaryexpressive.llm.YouTube
 import me.nanova.summaryexpressive.ui.page.HistoryScreen
 import me.nanova.summaryexpressive.ui.page.HomeScreen
 import me.nanova.summaryexpressive.ui.page.OnboardingScreen
 import me.nanova.summaryexpressive.ui.page.SettingsScreen
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
+import java.net.URL
+import java.util.Locale
 import java.util.UUID
 
 
@@ -254,8 +262,234 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
             ?.toList()
             ?: emptyList()
     }
+
+    // --- Summarization State ---
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _currentSummaryResult = MutableStateFlow<SummaryResult?>(null)
+    val currentSummaryResult: StateFlow<SummaryResult?> = _currentSummaryResult.asStateFlow()
+
+    fun clearCurrentSummary() {
+        _currentSummaryResult.value = null
+    }
+
+    fun summarize(urlOrText: String, length: Int, isDocument: Boolean, documentText: String?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _currentSummaryResult.value = null // Clear previous result
+
+            val result = summarizeInternal(urlOrText, length, isDocument, documentText)
+
+            _currentSummaryResult.value = result
+            _isLoading.value = false
+        }
+    }
+
+    private suspend fun summarizeInternal(
+        urlOrText: String,
+        length: Int,
+        isDocument: Boolean,
+        documentText: String?
+    ): SummaryResult {
+        val isYouTube = YouTube.isYouTubeLink(urlOrText)
+
+        if (urlOrText.isBlank() || (isDocument && documentText.isNullOrBlank())) {
+            return SummaryResult(null, null, "Exception: no content", isError = true)
+        }
+
+        // API key is required for all LLM calls, regardless of input type
+        if (apiKey.value.isEmpty()) {
+            return SummaryResult(null, null, "Exception: no key", isError = true)
+        }
+
+        return if (isYouTube) {
+            summarizeYouTubeVideo(urlOrText, length)
+        } else {
+            summarizeTextOrDocument(urlOrText, length, isDocument, documentText)
+        }
+    }
+
+    private suspend fun summarizeYouTubeVideo(url: String, length: Int): SummaryResult {
+        try {
+            val videoId = YouTube.extractVideoId(url)
+                ?: return SummaryResult(url, "YouTube", "Error: Invalid YouTube URL.", true)
+
+            val detailsResult = YouTube.getVideoDetails(videoId)
+                ?: return SummaryResult(
+                    url,
+                    "YouTube",
+                    "Error: Could not retrieve video details.",
+                    true
+                )
+
+            val (details, playerResponse) = detailsResult
+
+            val contentToSummarize: String
+            val systemPrompt: String
+
+            if (model.value == AIProvider.GEMINI) {
+                contentToSummarize = url // Gemini uses URL
+                val currentLocale: Locale = context.resources.configuration.locales[0]
+                val languageName =
+                    if (useOriginalLanguage.value) currentLocale.displayLanguage else "English"
+                val promptFn = when (length) {
+                    0 -> Prompts::geminiPromptVideo0
+                    1 -> Prompts::geminiPromptVideo1
+                    else -> Prompts::geminiPromptVideo3
+                }
+                systemPrompt = promptFn(details.title, languageName)
+            } else { // OpenAI, etc.
+                val transcriptData = YouTube.getTranscript(videoId, playerResponse)
+                    ?: return SummaryResult(
+                        details.title,
+                        details.author,
+                        "Error: Could not retrieve video transcript.",
+                        true
+                    )
+
+                contentToSummarize = transcriptData.first // The transcript text
+                val langCode = transcriptData.second
+                val languageName = if (useOriginalLanguage.value)
+                    Locale.forLanguageTag(langCode.split("-").first()).displayLanguage
+                else "English"
+
+                val promptFn = when (model.value) {
+                    AIProvider.OPENAI -> when (length) {
+                        0 -> Prompts::openAIPromptVideo0
+                        1 -> Prompts::openAIPromptVideo1
+                        else -> Prompts::openAIPromptVideo3
+                    }
+
+                    else -> return SummaryResult(
+                        details.title,
+                        details.author,
+                        "Error: Unsupported model for YouTube summary.",
+                        true
+                    )
+                }
+                systemPrompt = promptFn(details.title, languageName)
+            }
+
+            val summary = llmSummarize(contentToSummarize, systemPrompt)
+            val isError = summary.startsWith("Error:")
+            val resultSummary = if (isError) summary else summary.trim()
+
+            val result = SummaryResult(details.title, details.author, resultSummary, isError)
+            if (!isError) {
+                addTextSummary(result.title, result.author, result.summary, true)
+            }
+            return result
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return SummaryResult(url, "YouTube", "Error: ${e.message}", true)
+        }
+    }
+
+    private suspend fun summarizeTextOrDocument(
+        urlOrText: String,
+        length: Int,
+        isDocument: Boolean,
+        documentText: String?
+    ): SummaryResult {
+        val textToSummarize = if (isDocument) documentText!! else urlOrText
+        if (!isDocument && (textToSummarize.startsWith("http") || textToSummarize.startsWith("https")) && runCatching {
+                URL(
+                    textToSummarize
+                ).host
+            }.getOrNull().isNullOrEmpty()) {
+            return SummaryResult(null, null, "Exception: invalid link", isError = true)
+        }
+        if (textToSummarize.length < 100) {
+            return SummaryResult(null, null, "Exception: too short", isError = true)
+        }
+
+        val currentLocale: Locale = context.resources.configuration.locales[0]
+        val language: String = if (useOriginalLanguage.value) {
+            "the same language as the text"
+        } else {
+            currentLocale.getDisplayLanguage(Locale.ENGLISH)
+        }
+
+        val promptFn = when (model.value) {
+            AIProvider.OPENAI -> when (length) {
+                0 -> if (isDocument) Prompts::openAIPromptDocument0 else Prompts::openAIPromptText0
+                1 -> if (isDocument) Prompts::openAIPromptDocument1 else Prompts::openAIPromptText1
+                else -> if (isDocument) Prompts::openAIPromptDocument3 else Prompts::openAIPromptText3
+            }
+
+            AIProvider.GEMINI -> when (length) {
+                0 -> if (isDocument) Prompts::geminiPromptDocument0 else Prompts::geminiPromptText0
+                1 -> if (isDocument) Prompts::geminiPromptDocument1 else Prompts::geminiPromptText1
+                else -> if (isDocument) Prompts::geminiPromptDocument3 else Prompts::geminiPromptText3
+            }
+
+            else -> return SummaryResult(null, null, "Error: Unsupported model.", true)
+        }
+        val systemPrompt = promptFn(language)
+
+        val summary = llmSummarize(textToSummarize, systemPrompt)
+        val isError = summary.startsWith("Error:")
+        val resultSummary = if (isError) summary else summary.trim()
+
+        val result = SummaryResult(
+            if (isDocument) urlOrText else null,
+            if (isDocument) "Document" else null,
+            resultSummary,
+            isError
+        )
+        if (!isError) {
+            addTextSummary(result.title, result.author, result.summary, false)
+        }
+        return result
+    }
+
+    private suspend fun llmSummarize(textToSummarize: String, systemPrompt: String): String =
+        withContext(Dispatchers.IO) {
+            val currentModel = model.value
+            val currentApiKey = apiKey.value
+            val currentBaseUrl = baseUrl.value
+
+            val summary = when (currentModel) {
+                AIProvider.OPENAI -> OpenAIHandler.generateContentSync(
+                    currentApiKey,
+                    systemPrompt,
+                    textToSummarize,
+                    currentBaseUrl
+                )
+
+                AIProvider.GEMINI -> GeminiHandler.generateContentSync(
+                    currentApiKey,
+                    systemPrompt,
+                    textToSummarize
+                )
+
+                AIProvider.GROQ -> "Error: Groq is not implemented."
+            }
+
+            // The handlers already return a string starting with "Error: " on failure.
+            // We can add more specific error mapping here if needed.
+            if (summary.contains(
+                    "API key not valid",
+                    ignoreCase = true
+                ) || summary.contains("API key is invalid", ignoreCase = true)
+            ) {
+                return@withContext "Error: Exception: incorrect key"
+            }
+            if (summary.contains("rate limit", ignoreCase = true)) {
+                return@withContext "Error: Exception: rate limit"
+            }
+            return@withContext summary
+        }
 }
 
+data class SummaryResult(
+    val title: String?,
+    val author: String?,
+    val summary: String?,
+    val isError: Boolean = false
+)
 
 data class TextSummary(
     val id: String,

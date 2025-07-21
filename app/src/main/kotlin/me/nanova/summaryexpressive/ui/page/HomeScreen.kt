@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.res.Resources
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Build
@@ -99,13 +98,9 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.TextSummaryViewModel
-import me.nanova.summaryexpressive.llm.AIProvider
-import me.nanova.summaryexpressive.llm.GeminiHandler
-import me.nanova.summaryexpressive.llm.OpenAIHandler
+import me.nanova.summaryexpressive.llm.YouTube.isYouTubeLink
 import org.apache.poi.xwpf.usermodel.XWPFDocument
 import java.io.FileNotFoundException
-import java.net.URL
-import java.util.Locale
 import java.util.UUID
 
 
@@ -120,10 +115,6 @@ fun HomeScreen(
     viewModel: TextSummaryViewModel,
     initialUrl: String? = null
 ) {
-    var transcriptResult by remember { mutableStateOf<String?>(null) } // State for the transcript retrieval result
-    var title by remember { mutableStateOf<String?>(null) }
-    var author by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) } // For Loading-Animation
     var isExtracting by remember { mutableStateOf(false) } // For Loading-Animation
     var url by remember { mutableStateOf(initialUrl ?: "") }
     val scope = rememberCoroutineScope() // Coroutine scope for async calls
@@ -138,7 +129,8 @@ fun HomeScreen(
         stringResource(id = R.string.long_length)
     ) // Lengths
     val showCancelIcon by remember { derivedStateOf { url.isNotBlank() } }
-    var isError by remember { mutableStateOf(false) }
+    val isLoading by viewModel.isLoading.collectAsState()
+    val summaryResult by viewModel.currentSummaryResult.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val apiKey by viewModel.apiKey.collectAsState()
     var isDocument by remember { mutableStateOf(false) }
@@ -171,6 +163,7 @@ fun HomeScreen(
                             context,
                             uri
                         )
+
                         else -> extractTextFromImage(context, uri)
                     }
                     isExtracting = false
@@ -184,38 +177,7 @@ fun HomeScreen(
 
     fun summarize() {
         focusManager.clearFocus()
-        isLoading = true // Start Loading-Animation
-        if (isError) {
-            transcriptResult = ""
-        }
-        isError = false // No error
-        scope.launch {
-            val resultSummary: SummaryResult
-
-            if (!isDocument) {
-                resultSummary = summarize(url, selectedIndex, viewModel)
-                title = resultSummary.title ?: ""
-                author = resultSummary.author ?: ""
-            } else {
-                title = url
-                author = ""
-                val text = "Document: $textDocument"
-                resultSummary = summarize(text, selectedIndex, viewModel)
-            }
-
-            transcriptResult = resultSummary.summary ?: "No summary available"
-            isError = resultSummary.isError
-            isLoading = false // Stop Loading-Animation
-            if (!isError) {
-                // Add to history
-                viewModel.addTextSummary(
-                    title,
-                    author,
-                    transcriptResult,
-                    isYouTubeLink(url)
-                )
-            }
-        }
+        viewModel.summarize(url, selectedIndex, isDocument, textDocument)
     }
 
 
@@ -294,14 +256,14 @@ fun HomeScreen(
                                     value = url,
                                     onValueChange = { url = it },
                                     label = { Text("URL/Text") },
-                                    isError = isError,
+                                    isError = summaryResult?.isError == true,
                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                                     keyboardActions = KeyboardActions(onDone = { summarize() }),
                                     supportingText = {
-                                        if (isError) {
+                                        if (summaryResult?.isError == true) {
                                             Text(
                                                 modifier = Modifier.fillMaxWidth(),
-                                                text = when (transcriptResult) {
+                                                text = when (summaryResult?.summary) {
                                                     "Exception: no internet" -> stringResource(id = R.string.noInternet)
                                                     "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
                                                     "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
@@ -322,7 +284,8 @@ fun HomeScreen(
 
                                                     "Exception: rate limit" -> stringResource(id = R.string.rateLimit)
                                                     "Exception: no key" -> stringResource(id = R.string.noKey)
-                                                    else -> transcriptResult ?: "unknown error 3"
+                                                    else -> summaryResult?.summary
+                                                        ?: "unknown error 3"
                                                 },
                                                 color = MaterialTheme.colorScheme.error
                                             )
@@ -333,8 +296,7 @@ fun HomeScreen(
                                             IconButton(
                                                 onClick = {
                                                     url = ""
-                                                    transcriptResult = null
-                                                    isError = false // No error
+                                                    viewModel.clearCurrentSummary()
                                                     focusRequester.requestFocus()
                                                     isDocument = false
                                                     singleLine = false
@@ -414,9 +376,10 @@ fun HomeScreen(
                                     }
                                 }
                             }
+                            val currentResult = summaryResult
                             if (showLength) {
                                 Box(
-                                    modifier = if (isError) {
+                                    modifier = if (currentResult?.isError ?: false) {
                                         Modifier.padding(top = 11.dp)
                                     } else {
                                         Modifier.padding(top = 15.dp)
@@ -441,7 +404,7 @@ fun HomeScreen(
                                     }
                                 }
                             }
-                            if (!transcriptResult.isNullOrEmpty() && !isError) {
+                            if (currentResult != null && !currentResult.isError && !currentResult.summary.isNullOrEmpty()) {
                                 Card(
                                     modifier = modifier
                                         .padding(top = 15.dp, bottom = 15.dp)
@@ -452,23 +415,26 @@ fun HomeScreen(
                                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                                 // Copy the contents of the box to the clipboard
                                                 clipboardManager.setPrimaryClip(
-                                                    ClipData.newPlainText(null, transcriptResult)
+                                                    ClipData.newPlainText(
+                                                        null,
+                                                        currentResult.summary
+                                                    )
                                                 )
                                             }
                                         )
                                 ) {
-                                    if (!title.isNullOrEmpty()) {
+                                    if (!currentResult.title.isNullOrEmpty()) {
                                         Text(
-                                            text = title ?: "",
+                                            text = currentResult.title,
                                             style = MaterialTheme.typography.titleLarge,
                                             fontWeight = FontWeight.Bold,
                                             modifier = modifier
                                                 .padding(top = 12.dp, start = 12.dp, end = 12.dp)
                                         )
-                                        if (!author.isNullOrEmpty()) {
+                                        if (!currentResult.author.isNullOrEmpty()) {
                                             Row {
                                                 Text(
-                                                    text = author ?: "",
+                                                    text = currentResult.author,
                                                     style = MaterialTheme.typography.bodyLarge,
                                                     modifier = modifier
                                                         .padding(
@@ -488,8 +454,7 @@ fun HomeScreen(
                                         }
                                     }
                                     Text(
-                                        text = transcriptResult
-                                            ?: stringResource(id = R.string.noTranscript),
+                                        text = currentResult.summary,
                                         style = MaterialTheme.typography.labelLarge,
                                         modifier = modifier
                                             .padding(
@@ -565,7 +530,7 @@ fun HomeScreen(
                                                     isPaused = false
                                                     currentPosition = 0
                                                 } else {
-                                                    val transcript = transcriptResult
+                                                    val transcript = currentResult.summary
                                                     if (transcript != null) {
                                                         utteranceId = UUID.randomUUID().toString()
                                                         tts?.speak(
@@ -589,7 +554,7 @@ fun HomeScreen(
                                             IconButton(
                                                 onClick = {
                                                     if (isPaused) {
-                                                        val transcript = transcriptResult
+                                                        val transcript = currentResult.summary
                                                         if (transcript != null) {
                                                             val remainingText =
                                                                 transcript.substring(currentPosition)
@@ -624,7 +589,10 @@ fun HomeScreen(
                                         IconButton(
                                             onClick = {
                                                 clipboardManager.setPrimaryClip(
-                                                    ClipData.newPlainText(null, transcriptResult)
+                                                    ClipData.newPlainText(
+                                                        null,
+                                                        currentResult.summary
+                                                    )
                                                 )
                                                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
                                                     Toast.makeText(
@@ -645,7 +613,10 @@ fun HomeScreen(
                                             onClick = {
                                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                                     type = "text/plain"
-                                                    putExtra(Intent.EXTRA_TEXT, transcriptResult)
+                                                    putExtra(
+                                                        Intent.EXTRA_TEXT,
+                                                        currentResult.summary
+                                                    )
                                                 }
                                                 val chooserIntent =
                                                     Intent.createChooser(shareIntent, null)
@@ -727,112 +698,6 @@ fun HomeScreen(
             }
         }
     }
-}
-
-data class SummaryResult(
-    val title: String?,
-    val author: String?,
-    val summary: String?,
-    val isError: Boolean = false
-)
-
-private const val DOCUMENT_PREFIX = "Document:"
-
-suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel): SummaryResult {
-    val text = url
-
-    if (text.isBlank()) {
-        return SummaryResult(null, null, "Exception: no content", isError = true)
-    }
-
-    if ((text.startsWith("http") || text.startsWith("https")) && URL(text).host.isNullOrEmpty()) {
-        return SummaryResult(
-            null,
-            null,
-            "Exception: invalid link",
-            isError = true
-        ) // Re-using invalid link error as URL processing is removed
-    }
-
-    if (text.startsWith(DOCUMENT_PREFIX) && text.length < 100) {
-        return SummaryResult(null, null, "Exception: too short", isError = true)
-    }
-
-    val key = viewModel.apiKey.value
-    val baseUrl = viewModel.baseUrl.value
-    if (key.isEmpty()) {
-        return SummaryResult(null, null, "Exception: no key", isError = true)
-    }
-
-    val model = viewModel.model.value
-    val useOriginalLanguage = viewModel.useOriginalLanguage.value
-
-    val currentLocale: Locale = Resources.getSystem().configuration.locales[0]
-    val language: String = if (useOriginalLanguage) {
-        "the same language as the text"
-    } else {
-        currentLocale.getDisplayLanguage(Locale.ENGLISH)
-    }
-
-    // TODO: Implement prompt selection logic from youtube.py using Prompts.kt
-    val instructions = "Summarize the following text in $language: "
-
-    return withContext(Dispatchers.IO) {
-        try {
-            val summary = when (model) {
-                AIProvider.GEMINI -> GeminiHandler.Companion.generateContentSync(
-                    key,
-                    instructions,
-                    text
-                )
-
-                AIProvider.OPENAI -> OpenAIHandler.Companion.generateContentSync(
-                    key,
-                    instructions,
-                    text,
-                    baseUrl
-                )
-
-                else -> return@withContext SummaryResult(
-                    null,
-                    null,
-                    "Unsupported model",
-                    isError = true
-                )
-            }
-
-            if (summary.startsWith("Error:")) {
-                throw Exception(summary)
-            }
-
-            SummaryResult(
-                title = null,
-                author = null,
-                summary = summary,
-                isError = false
-            )
-        } catch (e: Exception) {
-            var errorMessage = e.message ?: "Unknown error"
-            if ("API key not valid" in errorMessage || "API key is invalid" in errorMessage) {
-                errorMessage = "Exception: incorrect key"
-            } else if ("rate limit" in errorMessage.lowercase()) {
-                errorMessage = "Exception: rate limit"
-            } else if (errorMessage.startsWith("Error: ")) {
-                errorMessage = errorMessage.substringAfter("Error: ")
-            }
-            SummaryResult(
-                title = null,
-                author = null,
-                summary = errorMessage,
-                isError = true
-            )
-        }
-    }
-}
-
-fun isYouTubeLink(input: String): Boolean {
-    val youtubePattern = Regex("""^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.*$""")
-    return youtubePattern.matches(input)
 }
 
 suspend fun extractTextFromPdf(context: Context, selectedPdfUri: Uri): String {
