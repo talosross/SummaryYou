@@ -1,11 +1,9 @@
-name: CI/CD
+name: CI
 
 on:
   push:
     branches:
       - '**'
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -26,71 +24,18 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Run unit tests
-        run: ./gradlew test
+        run: ./gradlew clean test
 
       - name: Build debug APK (for testing build process)
-        run: ./gradlew build
-
-  build-release-apk:
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: build-and-test
-    permissions:
-      contents: write
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: 21
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Extract version info from tag
-        id: extract-versions
-        run: |
-          set -e
-          # Example: Extracting from a tag like v1.2.3(45)
-          TAG_NAME=${GITHUB_REF#refs/tags/} # e.g., v1.2.3(45)
-          VERSION_NAME=$(echo "$TAG_NAME" | sed -n 's/^v\([^(]*\).*$/\1/p') # Extracts 1.2.3
-          VERSION_CODE=$(echo "$TAG_NAME" | sed -n 's/.*(\([0-9]*\)).*$/\1/p') # Extracts 45
-
-          # Fallback to gradle file if parsing tag fails or if you prefer this method
-          if [ -z "$VERSION_NAME" ] || [ -z "$VERSION_CODE" ]; then
-            echo "Could not parse version from tag, falling back to build.gradle.kts"
-            VERSION_NAME=$(grep -E 'versionName\s' app/build.gradle.kts | sed -n 's/.*versionName\s*=\s*["'\'']\([^"'\'']*\)["'\''].*/\1/p')
-            VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | sed -n 's/.*versionCode\s*=\s*\([0-9]*\).*/\1/p')
-          fi
-
-          echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_ENV
-          echo "VERSION_CODE=${VERSION_CODE}" >> $GITHUB_ENV
-          echo "Tag: ${TAG_NAME}"
-          echo "Version Name: ${VERSION_NAME}"
-          echo "Version Code: ${VERSION_CODE}"
-
-
-      - name: Create release folder
-        run: mkdir -p app/build/outputs/apk/release
-
-      - name: Build release APK
-        run: ./gradlew assembleRelease
-
-      - name: Rename artifact
-        run: mv "app/build/outputs/apk/release/app-release.apk" "app/build/outputs/apk/release/SummaryExpressive-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
-
-      - name: Publish GitHub release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: "Release ${{ env.VERSION_NAME }} (${{ env.VERSION_CODE }})"
-          prerelease: false
-          draft: false
-          token: ${{ secrets.ADMIN_TOKEN }}
-          files: app/build/outputs/apk/release/SummaryExpressive-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
+        run: ./gradlew clean build
