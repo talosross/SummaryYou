@@ -1,12 +1,9 @@
 package me.nanova.summaryexpressive.ui.page
 
 import android.content.ClipData
-import android.content.Context
 import android.content.Intent
-import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Build
-import android.provider.OpenableColumns
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
@@ -49,9 +46,9 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -87,20 +84,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.createBitmap
 import androidx.navigation.NavHostController
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.TextSummaryViewModel
 import me.nanova.summaryexpressive.llm.YouTube.isYouTubeLink
-import org.apache.poi.xwpf.usermodel.XWPFDocument
-import java.io.FileNotFoundException
+import me.nanova.summaryexpressive.ui.util.extractTextFromDocx
+import me.nanova.summaryexpressive.ui.util.extractTextFromImage
+import me.nanova.summaryexpressive.ui.util.extractTextFromPdf
+import me.nanova.summaryexpressive.ui.util.getFileName
 import java.util.UUID
 
 
@@ -177,15 +169,14 @@ fun HomeScreen(
     }
 
 
-    Box {
+    Box(modifier = modifier) {
         Scaffold(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                LargeTopAppBar(
-                    modifier = Modifier
-                        .height(110.dp),
+                MediumFlexibleTopAppBar(
+                    modifier = Modifier.height(100.dp),
                     colors = TopAppBarDefaults.topAppBarColors(
                     ),
                     title = {
@@ -215,439 +206,430 @@ fun HomeScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize(),
-                contentPadding = innerPadding,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                contentPadding = innerPadding
             ) {
                 item {
                     Column(
-                        modifier = modifier
-                            .fillMaxSize()
-                            .fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.headlineMedium
+                        )
 
-                        Column(
-                            modifier = modifier
-                                .fillMaxSize()
-                                .padding(top = 50.dp, start = 20.dp, end = 20.dp)
-                        ) {
-                            Text(
-                                text = "Summary Expressive",
-                                style = MaterialTheme.typography.headlineLarge
+                        // Loading-Animation
+                        if (isLoading) {
+                            LinearWavyProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 5.dp)
                             )
-                            // Loading-Animation
-                            if (isLoading) {
-                                LinearWavyProgressIndicator(
-                                    modifier = modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 5.dp)
-                                )
-                            } else {
-                                Spacer(modifier = modifier.height(height = 9.dp))
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                OutlinedTextField(
-                                    value = url,
-                                    onValueChange = { url = it },
-                                    label = { Text("URL/Text") },
-                                    isError = summaryResult?.isError == true,
-                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                                    keyboardActions = KeyboardActions(onDone = { summarize() }),
-                                    supportingText = {
-                                        if (summaryResult?.isError == true) {
-                                            Text(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                text = when (summaryResult?.summary) {
-                                                    "Exception: no internet" -> stringResource(id = R.string.noInternet)
-                                                    "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
-                                                    "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
-                                                    "Exception: no content" -> stringResource(id = R.string.noContent)
-                                                    "Exception: too short" -> stringResource(id = R.string.tooShort)
-                                                    "Exception: paywall detected" -> stringResource(
-                                                        id = R.string.paywallDetected
-                                                    )
+                        } else {
+                            Spacer(modifier = Modifier.height(height = 8.dp))
+                        }
 
-                                                    "Exception: too long" -> stringResource(id = R.string.tooLong)
-                                                    "Exception: incorrect key" -> {
-                                                        if (apiKey.isEmpty()) {
-                                                            stringResource(id = R.string.incorrectKeyOpenSource)
-                                                        } else {
-                                                            stringResource(id = R.string.incorrectKey)
-                                                        }
-                                                    }
-
-                                                    "Exception: rate limit" -> stringResource(id = R.string.rateLimit)
-                                                    "Exception: no key" -> stringResource(id = R.string.noKey)
-                                                    else -> summaryResult?.summary
-                                                        ?: "unknown error 3"
-                                                },
-                                                color = MaterialTheme.colorScheme.error
-                                            )
-                                        }
-                                    },
-                                    trailingIcon = {
-                                        if (showCancelIcon) {
-                                            IconButton(
-                                                onClick = {
-                                                    url = ""
-                                                    viewModel.clearCurrentSummary()
-                                                    focusRequester.requestFocus()
-                                                    isDocument = false
-                                                    singleLine = false
-                                                }
-                                            ) {
-                                                Icon(
-                                                    painter = painterResource(id = R.drawable.outline_cancel_24),
-                                                    contentDescription = "Cancel"
-                                                )
-                                            }
-                                        }
-                                    },
-                                    singleLine = if (multiLine) {
-                                        singleLine
-                                    } else {
-                                        true
-                                    },
-                                    modifier = modifier
-                                        .weight(1f)
-                                        .padding(top = 20.dp)
-                                        .focusRequester(focusRequester)
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column {
-                                    OutlinedButton(
-                                        onClick = {
-                                            launcher.launch(
-                                                arrayOf(
-                                                    "application/pdf",
-                                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                                    "image/png",
-                                                    "image/jpeg",
-                                                    "image/jpg"
-                                                )
-                                            )
-                                        },
-                                        modifier = modifier
-                                            .padding(top = 27.dp)
-                                            .height(58.dp)
-                                    ) {
-                                        Box {
-                                            if (isExtracting) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier
-                                                        .size(24.dp)
-                                                        .align(Alignment.Center)
-                                                )
-                                            }
-                                            Icon(
-                                                if (isDocument && !isExtracting) {
-                                                    Icons.Filled.CheckCircle
-                                                } else {
-                                                    Icons.Filled.AddCircle
-                                                },
-                                                contentDescription = "Floating action button",
-                                                modifier = Modifier.align(Alignment.Center)
-                                            )
-                                        }
-                                    }
-                                    if (multiLine && !singleLine) {
-                                        val textLength = url.length
-                                        val lineBreaks = url.count { it == '\n' }
-                                        val maxLength = 100 // Maximum length of the URL field
-                                        if (textLength >= maxLength || lineBreaks >= 1) {
-                                            Button(
-                                                onClick = { singleLine = true },
-                                                modifier = modifier
-                                                    .height(72.dp)
-                                                    .padding(top = 15.dp)
-                                            ) {
-                                                Icon(
-                                                    painter = painterResource(id = R.drawable.outline_keyboard_arrow_up_24),
-                                                    contentDescription = "minimize"
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            val currentResult = summaryResult
-                            if (showLength) {
-                                Box(
-                                    modifier = if (currentResult?.isError ?: false) {
-                                        Modifier.padding(top = 11.dp)
-                                    } else {
-                                        Modifier.padding(top = 15.dp)
-                                    }
-                                ) {
-                                    SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
-                                        options.forEachIndexed { index, label ->
-                                            SegmentedButton(
-                                                shape = SegmentedButtonDefaults.itemShape(
-                                                    index = index,
-                                                    count = options.size
-                                                ),
-                                                onClick = {
-                                                    selectedIndex = index
-                                                    viewModel.setShowLengthNumberValue(index)
-                                                },
-                                                selected = index == selectedIndex
-                                            ) {
-                                                Text(label)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            if (currentResult != null && !currentResult.isError && !currentResult.summary.isNullOrEmpty()) {
-                                Card(
-                                    modifier = modifier
-                                        .padding(top = 15.dp, bottom = 15.dp)
-                                        .fillMaxWidth()
-                                        .combinedClickable(
-                                            onClick = {},
-                                            onLongClick = {
-                                                scope.launch {
-                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    // Copy the contents of the box to the clipboard
-                                                    clipboard.setClipEntry(
-                                                        ClipData.newPlainText(
-                                                            "User Input",
-                                                            currentResult.summary
-                                                        ).toClipEntry()
-                                                    )
-                                                }
-                                            }
-                                        )
-                                ) {
-                                    if (!currentResult.title.isNullOrEmpty()) {
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = url,
+                                onValueChange = { url = it },
+                                label = { Text("URL/Text") },
+                                isError = summaryResult?.isError == true,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = { summarize() }),
+                                supportingText = {
+                                    if (summaryResult?.isError == true) {
                                         Text(
-                                            text = currentResult.title,
-                                            style = MaterialTheme.typography.titleLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = modifier
-                                                .padding(top = 12.dp, start = 12.dp, end = 12.dp)
-                                        )
-                                        if (!currentResult.author.isNullOrEmpty()) {
-                                            Row {
-                                                Text(
-                                                    text = currentResult.author,
-                                                    style = MaterialTheme.typography.bodyLarge,
-                                                    modifier = modifier
-                                                        .padding(
-                                                            top = 4.dp,
-                                                            start = 12.dp,
-                                                            end = 12.dp
-                                                        )
+                                            modifier = Modifier.fillMaxWidth(),
+                                            text = when (summaryResult?.summary) {
+                                                "Exception: no internet" -> stringResource(id = R.string.noInternet)
+                                                "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
+                                                "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
+                                                "Exception: no content" -> stringResource(id = R.string.noContent)
+                                                "Exception: too short" -> stringResource(id = R.string.tooShort)
+                                                "Exception: paywall detected" -> stringResource(
+                                                    id = R.string.paywallDetected
                                                 )
-                                                if (isYouTubeLink(url)) {
-                                                    Icon(
-                                                        painter = painterResource(id = R.drawable.youtube),
-                                                        contentDescription = null,
-                                                        modifier = Modifier.padding(top = 1.dp)
-                                                    )
+
+                                                "Exception: too long" -> stringResource(id = R.string.tooLong)
+                                                "Exception: incorrect key" -> {
+                                                    if (apiKey.isEmpty()) {
+                                                        stringResource(id = R.string.incorrectKeyOpenSource)
+                                                    } else {
+                                                        stringResource(id = R.string.incorrectKey)
+                                                    }
                                                 }
-                                            }
-                                        }
+
+                                                "Exception: rate limit" -> stringResource(id = R.string.rateLimit)
+                                                "Exception: no key" -> stringResource(id = R.string.noKey)
+                                                else -> summaryResult?.summary
+                                                    ?: "unknown error 3"
+                                            },
+                                            color = MaterialTheme.colorScheme.error
+                                        )
                                     }
-                                    Text(
-                                        text = currentResult.summary,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        modifier = modifier
-                                            .padding(
-                                                start = 12.dp,
-                                                end = 12.dp,
-                                                top = 10.dp,
-                                                bottom = 12.dp
-                                            )
-                                    )
-                                    var tts: TextToSpeech? by remember { mutableStateOf(null) }
-                                    var isSpeaking by remember { mutableStateOf(false) }
-                                    var isPaused by remember { mutableStateOf(false) }
-                                    var currentPosition by remember { mutableIntStateOf(0) }
-                                    var utteranceId by remember { mutableStateOf("") }
-                                    val copied = stringResource(id = R.string.copied)
-
-                                    val utteranceProgressListener =
-                                        object : UtteranceProgressListener() {
-                                            override fun onStart(utteranceId: String) {
-                                                // Is called when an utterance starts
-                                            }
-
-                                            override fun onDone(utteranceId: String) {
-                                                // Is called when an utterance is done
-                                                currentPosition = 0
-                                                isSpeaking = false
-                                                isPaused = false
-                                            }
-
-                                            override fun onError(utteranceId: String) {
-                                                // Is called when an error occurs
-                                            }
-
-                                            override fun onRangeStart(
-                                                utteranceId: String,
-                                                start: Int,
-                                                end: Int,
-                                                frame: Int
-                                            ) {
-                                                // Is called when a new range of text is being spoken
-                                                currentPosition = end
-                                            }
-                                        }
-                                    tts?.setOnUtteranceProgressListener(utteranceProgressListener)
-                                    DisposableEffect(Unit) {
-                                        tts = TextToSpeech(context) { status ->
-                                            if (status == TextToSpeech.SUCCESS) {
-                                                // TTS-Engine successfully initialized
-                                                Log.d(
-                                                    "TTS",
-                                                    "Text-to-Speech engine was successfully initialized."
-                                                )
-                                            } else {
-                                                // Error initializing the TTS-Engine
-                                                Log.d(
-                                                    "TTS",
-                                                    "Error initializing the Text-to-Speech engine."
-                                                )
-                                            }
-                                        }
-                                        onDispose {
-                                            tts?.stop()
-                                            tts?.shutdown()
-                                        }
-                                    }
-
-                                    Row {
+                                },
+                                trailingIcon = {
+                                    if (showCancelIcon) {
                                         IconButton(
                                             onClick = {
-                                                if (isSpeaking) {
-                                                    tts?.stop()
-                                                    isSpeaking = false
-                                                    isPaused = false
-                                                    currentPosition = 0
-                                                } else {
+                                                url = ""
+                                                viewModel.clearCurrentSummary()
+                                                focusRequester.requestFocus()
+                                                isDocument = false
+                                                singleLine = false
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.outline_cancel_24),
+                                                contentDescription = "Cancel"
+                                            )
+                                        }
+                                    }
+                                },
+                                singleLine = if (multiLine) singleLine else true,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(top = 20.dp)
+                                    .focusRequester(focusRequester)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                OutlinedButton(
+                                    onClick = {
+                                        launcher.launch(
+                                            arrayOf(
+                                                "application/pdf",
+                                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                "image/png",
+                                                "image/jpeg",
+                                                "image/jpg",
+                                                "image/webp"
+                                            )
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .padding(top = 27.dp)
+                                        .height(58.dp)
+                                ) {
+                                    Box {
+                                        if (isExtracting) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier
+                                                    .size(24.dp)
+                                                    .align(Alignment.Center)
+                                            )
+                                        }
+                                        Icon(
+                                            if (isDocument && !isExtracting) {
+                                                Icons.Filled.CheckCircle
+                                            } else {
+                                                Icons.Filled.AddCircle
+                                            },
+                                            contentDescription = "Floating action button",
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
+                                }
+                                if (multiLine && !singleLine) {
+                                    val textLength = url.length
+                                    val lineBreaks = url.count { it == '\n' }
+                                    val maxLength = 100 // Maximum length of the URL field
+                                    if (textLength >= maxLength || lineBreaks >= 1) {
+                                        Button(
+                                            onClick = { singleLine = true },
+                                            modifier = Modifier
+                                                .height(72.dp)
+                                                .padding(top = 15.dp)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.outline_keyboard_arrow_up_24),
+                                                contentDescription = "minimize"
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        val currentResult = summaryResult
+                        if (showLength) {
+                            Box(
+                                modifier = if (currentResult?.isError ?: false) {
+                                    Modifier.padding(top = 11.dp)
+                                } else {
+                                    Modifier.padding(top = 15.dp)
+                                }
+                            ) {
+                                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                                    options.forEachIndexed { index, label ->
+                                        SegmentedButton(
+                                            shape = SegmentedButtonDefaults.itemShape(
+                                                index = index,
+                                                count = options.size
+                                            ),
+                                            onClick = {
+                                                selectedIndex = index
+                                                viewModel.setShowLengthNumberValue(index)
+                                            },
+                                            selected = index == selectedIndex
+                                        ) {
+                                            Text(label)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (currentResult != null && !currentResult.isError && !currentResult.summary.isNullOrEmpty()) {
+                            Card(
+                                modifier = Modifier
+                                    .padding(top = 15.dp, bottom = 15.dp)
+                                    .fillMaxWidth()
+                                    .combinedClickable(
+                                        onClick = {},
+                                        onLongClick = {
+                                            scope.launch {
+                                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                // Copy the contents of the box to the clipboard
+                                                clipboard.setClipEntry(
+                                                    ClipData.newPlainText(
+                                                        "User Input",
+                                                        currentResult.summary
+                                                    ).toClipEntry()
+                                                )
+                                            }
+                                        }
+                                    )
+                            ) {
+                                if (!currentResult.title.isNullOrEmpty()) {
+                                    Text(
+                                        text = currentResult.title,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier
+                                            .padding(top = 12.dp, start = 12.dp, end = 12.dp)
+                                    )
+                                    if (!currentResult.author.isNullOrEmpty()) {
+                                        Row {
+                                            Text(
+                                                text = currentResult.author,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                modifier = Modifier
+                                                    .padding(
+                                                        top = 4.dp,
+                                                        start = 12.dp,
+                                                        end = 12.dp
+                                                    )
+                                            )
+                                            if (isYouTubeLink(url)) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.youtube),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.padding(top = 1.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                Text(
+                                    text = currentResult.summary,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier
+                                        .padding(
+                                            start = 12.dp,
+                                            end = 12.dp,
+                                            top = 10.dp,
+                                            bottom = 12.dp
+                                        )
+                                )
+                                var tts: TextToSpeech? by remember { mutableStateOf(null) }
+                                var isSpeaking by remember { mutableStateOf(false) }
+                                var isPaused by remember { mutableStateOf(false) }
+                                var currentPosition by remember { mutableIntStateOf(0) }
+                                var utteranceId by remember { mutableStateOf("") }
+                                val copied = stringResource(id = R.string.copied)
+
+                                val utteranceProgressListener =
+                                    object : UtteranceProgressListener() {
+                                        override fun onStart(utteranceId: String) {
+                                            // Is called when an utterance starts
+                                        }
+
+                                        override fun onDone(utteranceId: String) {
+                                            // Is called when an utterance is done
+                                            currentPosition = 0
+                                            isSpeaking = false
+                                            isPaused = false
+                                        }
+
+                                        override fun onError(utteranceId: String) {
+                                            // Is called when an error occurs
+                                        }
+
+                                        override fun onRangeStart(
+                                            utteranceId: String,
+                                            start: Int,
+                                            end: Int,
+                                            frame: Int
+                                        ) {
+                                            // Is called when a new range of text is being spoken
+                                            currentPosition = end
+                                        }
+                                    }
+                                tts?.setOnUtteranceProgressListener(utteranceProgressListener)
+                                DisposableEffect(Unit) {
+                                    tts = TextToSpeech(context) { status ->
+                                        if (status == TextToSpeech.SUCCESS) {
+                                            // TTS-Engine successfully initialized
+                                            Log.d(
+                                                "TTS",
+                                                "Text-to-Speech engine was successfully initialized."
+                                            )
+                                        } else {
+                                            // Error initializing the TTS-Engine
+                                            Log.d(
+                                                "TTS",
+                                                "Error initializing the Text-to-Speech engine."
+                                            )
+                                        }
+                                    }
+                                    onDispose {
+                                        tts?.stop()
+                                        tts?.shutdown()
+                                    }
+                                }
+
+                                Row {
+                                    IconButton(
+                                        onClick = {
+                                            if (isSpeaking) {
+                                                tts?.stop()
+                                                isSpeaking = false
+                                                isPaused = false
+                                                currentPosition = 0
+                                            } else {
+                                                val transcript = currentResult.summary
+                                                utteranceId = UUID.randomUUID().toString()
+                                                tts?.speak(
+                                                    transcript,
+                                                    TextToSpeech.QUEUE_FLUSH,
+                                                    null,
+                                                    utteranceId
+                                                )
+                                                isSpeaking = true
+                                            }
+                                        }
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.outline_volume_up_24),
+                                            contentDescription = if (isSpeaking) "finish" else "read"
+                                        )
+                                    }
+
+                                    AnimatedVisibility(visible = isSpeaking) {
+                                        IconButton(
+                                            onClick = {
+                                                if (isPaused) {
                                                     val transcript = currentResult.summary
-                                                    utteranceId = UUID.randomUUID().toString()
+                                                    val remainingText =
+                                                        transcript.substring(currentPosition)
+                                                    utteranceId =
+                                                        UUID.randomUUID().toString()
                                                     tts?.speak(
-                                                        transcript,
+                                                        remainingText,
                                                         TextToSpeech.QUEUE_FLUSH,
                                                         null,
                                                         utteranceId
                                                     )
-                                                    isSpeaking = true
+                                                    isPaused = false
+                                                } else {
+                                                    tts?.stop()
+                                                    isPaused = true
                                                 }
                                             }
                                         ) {
                                             Icon(
-                                                painter = painterResource(id = R.drawable.outline_volume_up_24),
-                                                contentDescription = if (isSpeaking) "finish" else "read"
-                                            )
-                                        }
-
-                                        AnimatedVisibility(visible = isSpeaking) {
-                                            IconButton(
-                                                onClick = {
-                                                    if (isPaused) {
-                                                        val transcript = currentResult.summary
-                                                        val remainingText =
-                                                            transcript.substring(currentPosition)
-                                                        utteranceId =
-                                                            UUID.randomUUID().toString()
-                                                        tts?.speak(
-                                                            remainingText,
-                                                            TextToSpeech.QUEUE_FLUSH,
-                                                            null,
-                                                            utteranceId
-                                                        )
-                                                        isPaused = false
-                                                    } else {
-                                                        tts?.stop()
-                                                        isPaused = true
-                                                    }
-                                                }
-                                            ) {
-                                                Icon(
-                                                    painter = if (isPaused) {
-                                                        painterResource(id = R.drawable.outline_play_circle_filled_24)
-                                                    } else {
-                                                        painterResource(id = R.drawable.outline_pause_circle_filled_24)
-                                                    },
-                                                    contentDescription = if (isPaused) "continue" else "pause"
-                                                )
-                                            }
-                                        }
-                                        Spacer(modifier = Modifier.weight(1f))
-
-                                        IconButton(
-                                            onClick = {
-                                                scope.launch {
-                                                    clipboard.setClipEntry(
-                                                        ClipData.newPlainText(
-                                                            "User Input",
-                                                            currentResult.summary
-                                                        ).toClipEntry()
-                                                    )
-                                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                                                        Toast.makeText(
-                                                            context,
-                                                            copied,
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    }
-                                                }
-                                            }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.outline_content_copy_24),
-                                                contentDescription = "copy"
-                                            )
-                                        }
-
-                                        IconButton(
-                                            onClick = {
-                                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                                    type = "text/plain"
-                                                    putExtra(
-                                                        Intent.EXTRA_TEXT,
-                                                        currentResult.summary
-                                                    )
-                                                }
-                                                val chooserIntent =
-                                                    Intent.createChooser(shareIntent, null)
-                                                context.startActivity(chooserIntent)
-                                            }
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.Share,
-                                                contentDescription = "share"
+                                                painter = if (isPaused) {
+                                                    painterResource(id = R.drawable.outline_play_circle_filled_24)
+                                                } else {
+                                                    painterResource(id = R.drawable.outline_pause_circle_filled_24)
+                                                },
+                                                contentDescription = if (isPaused) "continue" else "pause"
                                             )
                                         }
                                     }
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .padding(top = 15.dp, bottom = 90.dp)
-                                        .fillMaxSize(),
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Row {
-                                        Button(
-                                            onClick = {
-                                                summarize()
-                                            },
-                                            contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-                                        ) {
-                                            Icon(
-                                                Icons.Filled.Refresh,
-                                                contentDescription = "Refresh",
-                                                modifier = Modifier.size(ButtonDefaults.IconSize)
-                                            )
-                                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                            Text(stringResource(id = R.string.regenerate))
+                                    Spacer(modifier = Modifier.weight(1f))
+
+                                    IconButton(
+                                        onClick = {
+                                            scope.launch {
+                                                clipboard.setClipEntry(
+                                                    ClipData.newPlainText(
+                                                        "User Input",
+                                                        currentResult.summary
+                                                    ).toClipEntry()
+                                                )
+                                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        copied,
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            }
                                         }
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.outline_content_copy_24),
+                                            contentDescription = "copy"
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = {
+                                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(
+                                                    Intent.EXTRA_TEXT,
+                                                    currentResult.summary
+                                                )
+                                            }
+                                            val chooserIntent =
+                                                Intent.createChooser(shareIntent, null)
+                                            context.startActivity(chooserIntent)
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Share,
+                                            contentDescription = "share"
+                                        )
+                                    }
+                                }
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .padding(top = 15.dp, bottom = 90.dp)
+                                    .fillMaxSize(),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Row {
+                                    Button(
+                                        onClick = {
+                                            summarize()
+                                        },
+                                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Refresh,
+                                            contentDescription = "Refresh",
+                                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                                        )
+                                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                        Text(stringResource(id = R.string.regenerate))
                                     }
                                 }
                             }
@@ -657,6 +639,7 @@ fun HomeScreen(
             }
         }
     }
+
     Box(
         modifier = Modifier
             .imePadding()
@@ -692,83 +675,4 @@ fun HomeScreen(
             }
         }
     }
-}
-
-suspend fun extractTextFromPdf(context: Context, selectedPdfUri: Uri): String {
-    // Open the PDF file
-    val pdfRenderer = PdfRenderer(context.contentResolver.openFileDescriptor(selectedPdfUri, "r")!!)
-
-    // Initialize the text recognizer
-    val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-
-    // Initialize the StringBuilder
-    val extractedText = StringBuilder()
-
-    // Iterate through the pages of the PDF
-    for (pageNumber in 0 until pdfRenderer.pageCount) {
-        // Get the page as an image
-        val page = pdfRenderer.openPage(pageNumber)
-        val pageImage = createBitmap(page.width, page.height)
-        page.render(pageImage, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-
-        // Create an input image from the page image
-        val inputImage = InputImage.fromBitmap(pageImage, 0)
-
-        // Recognize text from the page image
-        val result = textRecognizer.process(inputImage).await()
-        extractedText.append(result.text)
-
-        // Close the page
-        page.close()
-    }
-
-    // Close the PDF file
-    pdfRenderer.close()
-
-    // Return the extracted text
-    return extractedText.toString()
-}
-
-
-suspend fun extractTextFromDocx(context: Context, selectedDocxUri: Uri): String =
-    withContext(Dispatchers.IO) {
-        context.contentResolver.openInputStream(selectedDocxUri)?.use { inputStream ->
-            XWPFDocument(inputStream).use { doc ->
-                val extractedText = StringBuilder()
-                doc.paragraphs.forEach { paragraph ->
-                    extractedText.append(paragraph.text).append("\n")
-                }
-                extractedText.toString()
-            }
-        }
-            ?: throw FileNotFoundException("Can't open InputStream for the URI: $selectedDocxUri")
-    }
-
-suspend fun extractTextFromImage(context: Context, selectedImageUri: Uri): String =
-    withContext(Dispatchers.IO) {
-        // Initialize the text recognizer
-        val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-
-        // Load the image from the URI
-        val inputImage = InputImage.fromFilePath(context, selectedImageUri)
-
-        // Recognize text from the image
-        val result = textRecognizer.process(inputImage).await()
-
-        // Return the extracted text
-        result.text
-    }
-
-fun getFileName(context: Context, uri: Uri): String {
-    var name = ""
-    val cursor = context.contentResolver.query(uri, null, null, null, null)
-    cursor?.let {
-        it.moveToFirst()
-        val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        if (index != -1) {
-            name = cursor.getString(index)
-        }
-        it.close()
-    }
-    return name
 }

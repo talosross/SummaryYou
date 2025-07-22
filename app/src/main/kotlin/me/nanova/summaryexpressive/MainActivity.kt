@@ -423,7 +423,7 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
             }.getOrNull().isNullOrEmpty()) {
             return SummaryResult(null, null, "Exception: invalid link", isError = true)
         }
-        if (textToSummarize.length < 100) {
+        if (isDocument && textToSummarize.length < 100) {
             return SummaryResult(null, null, "Exception: too short", isError = true)
         }
 
