@@ -17,11 +17,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.HelpCenter
+import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.ModelTraining
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.FormatLineSpacing
+import androidx.compose.material.icons.rounded.InvertColors
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Translate
+import androidx.compose.material.icons.rounded.VpnKey
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -48,7 +59,6 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -87,7 +97,7 @@ fun SettingsScreen(
                     IconButton(onClick = { navController.navigate("home") }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Localized description"
+                            contentDescription = "Go Back"
                         )
                     }
                 },
@@ -270,8 +280,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     supportingContent = { Text(stringResource(id = R.string.useOriginalLanguageDescription)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.outline_translate_24),
-                            contentDescription = "Localized description",
+                            Icons.Rounded.Translate,
+                            contentDescription = "Language Settings",
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     trailingContent = {
@@ -295,8 +306,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     headlineContent = { Text(stringResource(id = R.string.chooseLanguage)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.outline_language_24),
+                            Icons.Rounded.Language,
                             contentDescription = "Localized description",
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     supportingContent = { Text(stringResource(id = R.string.chooseLanguageDescription)) },
@@ -308,8 +320,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     headlineContent = { Text(stringResource(id = R.string.design)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.baseline_dark_mode_24),
-                            contentDescription = "Localized description",
+                            Icons.Rounded.DarkMode,
+                            contentDescription = "Dark mode",
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     supportingContent = {
@@ -328,8 +341,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     supportingContent = { Text(stringResource(id = R.string.useUltraDarkDescription)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.outline_invert_colors_24),
-                            contentDescription = "Localized description",
+                            Icons.Rounded.InvertColors,
+                            contentDescription = "Ultra Dark mode",
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     trailingContent = {
@@ -348,8 +362,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     supportingContent = { Text(stringResource(id = R.string.useMultiLinesDescription)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.outline_format_line_spacing_24),
-                            contentDescription = "Localized description",
+                            Icons.Rounded.FormatLineSpacing,
+                            contentDescription = "Lines Spacing",
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     trailingContent = {
@@ -367,8 +382,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     supportingContent = { Text(stringResource(id = R.string.useLengthOptionsDescription)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.outline_short_text_24),
-                            contentDescription = "Localized description",
+                            Icons.AutoMirrored.Rounded.ShortText,
+                            contentDescription = "Length Options",
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     trailingContent = {
@@ -388,8 +404,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     supportingContent = { Text(stringResource(id = R.string.setApiKeyDescription)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.baseline_vpn_key_24),
-                            contentDescription = "Localized description",
+                            Icons.Rounded.VpnKey,
+                            contentDescription = "API Key",
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 )
@@ -401,8 +418,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.outline_person_edit_24),
-                            contentDescription = "Localized description",
+                            Icons.Default.ModelTraining,
+                            contentDescription = "AI Model",
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 )
@@ -418,8 +436,9 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     headlineContent = { Text(stringResource(id = R.string.tutorial)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.round_help_center_24),
-                            contentDescription = "Localized description",
+                            Icons.AutoMirrored.Rounded.HelpCenter,
+                            contentDescription = "Tutorial",
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     supportingContent = { Text(stringResource(id = R.string.tutorialDescription)) },
@@ -436,7 +455,8 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     leadingContent = {
                         Icon(
                             Icons.Default.Info,
-                            contentDescription = "Localized description",
+                            contentDescription = "Codebase",
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     supportingContent = { Text(stringResource(id = R.string.githubDescription)) },
@@ -453,14 +473,15 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                     headlineContent = { Text(stringResource(id = R.string.googlePlay)) },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(id = R.drawable.round_star_rate_24),
-                            contentDescription = "Localized description",
+                            Icons.Rounded.Star,
+                            contentDescription = "Rate app",
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     supportingContent = { Text(stringResource(id = R.string.googlePlayDescription)) },
                 )
                 Text(
-                    text = "Version ${getVersionName(context)} - $model",
+                    text = "Version ${getVersionName(context)} - ${getVersionCode(context)}",
                     modifier = Modifier
                         .align(alignment = CenterHorizontally)
                         .padding(top = 10.dp)

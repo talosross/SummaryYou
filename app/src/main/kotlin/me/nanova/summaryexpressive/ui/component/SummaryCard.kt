@@ -13,8 +13,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.PauseCircleFilled
+import androidx.compose.material.icons.outlined.PlayCircleFilled
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -87,7 +92,7 @@ fun SummaryCard(
                     if (isYouTube) {
                         Icon(
                             painter = painterResource(id = R.drawable.youtube),
-                            contentDescription = null,
+                            contentDescription = "Youtube Icon",
                             modifier = Modifier.padding(top = 1.dp)
                         )
                     }
@@ -192,8 +197,9 @@ fun SummaryActionButtons(summary: String?) {
             }
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.outline_volume_up_24),
-                contentDescription = if (isSpeaking) "finish" else "read"
+                Icons.AutoMirrored.Outlined.VolumeUp,
+                contentDescription = if (isSpeaking) "Finish" else "Read",
+                modifier = Modifier.size(24.dp)
             )
         }
 
@@ -219,15 +225,13 @@ fun SummaryActionButtons(summary: String?) {
                 }
             ) {
                 Icon(
-                    painter = if (isPaused) {
-                        painterResource(id = R.drawable.outline_play_circle_filled_24)
-                    } else {
-                        painterResource(id = R.drawable.outline_pause_circle_filled_24)
-                    },
-                    contentDescription = if (isPaused) "continue" else "pause"
+                    if (isPaused) Icons.Outlined.PlayCircleFilled else Icons.Outlined.PauseCircleFilled,
+                    contentDescription = if (isPaused) "Continue" else "Pause",
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
+
         Spacer(modifier = Modifier.weight(1f))
 
         IconButton(
@@ -248,8 +252,9 @@ fun SummaryActionButtons(summary: String?) {
             }
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.outline_content_copy_24),
-                contentDescription = "copy"
+                Icons.Rounded.ContentCopy,
+                contentDescription = "Copy",
+                modifier = Modifier.size(24.dp)
             )
         }
 
@@ -269,7 +274,8 @@ fun SummaryActionButtons(summary: String?) {
         ) {
             Icon(
                 imageVector = Icons.Outlined.Share,
-                contentDescription = "share"
+                contentDescription = "Share",
+                modifier = Modifier.size(24.dp)
             )
         }
     }

@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -41,7 +43,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -94,8 +95,9 @@ fun HistoryScreen(
                             onClick = { searchMode = true }
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.outline_search_24),
-                                contentDescription = stringResource(id = R.string.search)
+                                Icons.Outlined.Search,
+                                contentDescription = stringResource(id = R.string.search),
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     },
@@ -199,7 +201,7 @@ fun HistoryScreen(
                                     }
                                 }
                             ) {
-                                Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+                                Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
                             }
                         },
                     )

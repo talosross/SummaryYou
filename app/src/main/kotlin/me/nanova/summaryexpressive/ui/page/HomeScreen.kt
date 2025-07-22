@@ -24,11 +24,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -70,7 +74,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.toClipEntry
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -294,8 +297,9 @@ private fun HomeTopAppBar(
                 onClick = { navController.navigate("history") }
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.outline_library_books_24),
-                    contentDescription = "History"
+                    Icons.AutoMirrored.Outlined.LibraryBooks,
+                    contentDescription = "History",
+                    modifier = Modifier.size(24.dp)
                 )
             }
         },
@@ -364,8 +368,9 @@ private fun UrlInputSection(
                 if (showCancelIcon) {
                     IconButton(onClick = onClear) {
                         Icon(
-                            painter = painterResource(id = R.drawable.outline_cancel_24),
-                            contentDescription = "Cancel"
+                            Icons.Outlined.Cancel,
+                            contentDescription = "Cancel",
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -415,8 +420,9 @@ private fun UrlInputSection(
                             .padding(top = 15.dp)
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.outline_keyboard_arrow_up_24),
-                            contentDescription = "minimize"
+                            Icons.Outlined.KeyboardArrowUp,
+                            contentDescription = "Minimize",
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -532,7 +538,11 @@ private fun HomeFloatingActionButtons(
                 onClick = onPaste,
                 modifier = modifier.padding(bottom = 20.dp, end = 15.dp)
             ) {
-                Icon(painter = painterResource(id = R.drawable.outline_content_paste_24), "Paste")
+                Icon(
+                    Icons.Rounded.ContentPaste,
+                    contentDescription = "Paste",
+                    modifier = Modifier.size(24.dp)
+                )
             }
             FloatingActionButton(
                 onClick = {
