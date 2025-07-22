@@ -35,6 +35,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -47,10 +48,8 @@ import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
@@ -75,6 +74,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -431,6 +433,7 @@ private fun UrlInputSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SummaryLengthSelector(
     selectedIndex: Int,
@@ -439,21 +442,25 @@ private fun SummaryLengthSelector(
     isError: Boolean
 ) {
     Box(
-        modifier = if (isError) {
-            Modifier.padding(top = 11.dp)
-        } else {
-            Modifier.padding(top = 15.dp)
-        }
+        modifier = if (isError) Modifier.padding(top = 11.dp) else Modifier.padding(top = 15.dp)
     ) {
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+        ) {
             options.forEachIndexed { index, label ->
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = options.size
-                    ),
-                    onClick = { onSelectedIndexChange(index) },
-                    selected = index == selectedIndex
+                ToggleButton(
+                    checked = selectedIndex == index,
+                    onCheckedChange = { onSelectedIndexChange(index) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { role = Role.RadioButton },
+                    shapes =
+                        when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
                 ) {
                     Text(label)
                 }

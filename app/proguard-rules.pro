@@ -64,3 +64,16 @@
 -keep class io.ktor.serialization.gson.** { *; }
 -keep class com.google.gson.Gson
 
+# Ktor and its dependencies (Netty, Reactor, etc.) have optional references
+# to classes not present in Android. We must tell R8 not to warn about them.
+-dontwarn io.micrometer.context.**
+-dontwarn io.netty.**
+-dontwarn io.opentelemetry.api.incubator.**
+-dontwarn javax.enterprise.inject.spi.Extension
+-dontwarn jdk.jfr.**
+-dontwarn jdk.net.**
+-dontwarn org.HdrHistogram.**
+-dontwarn org.LatencyUtils.**
+-dontwarn org.eclipse.jetty.**
+-dontwarn reactor.blockhound.integration.BlockHoundIntegration
+
