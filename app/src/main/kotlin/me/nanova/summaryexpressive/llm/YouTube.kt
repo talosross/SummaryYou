@@ -31,8 +31,12 @@ private data class CaptionTrack(
     data class Name(val simpleText: String)
 }
 
+/**
+ * ref: https://github.com/jdepoix/youtube-transcript-api/blob/d2a409d0ce7a7bd35fe6b911ac698038ebf599cc/youtube_transcript_api/_transcripts.py#L359
+ */
 object YouTube {
-    private const val INNERTUBE_CONTEXT_JSON = """{"client": {"clientName": "ANDROID", "clientVersion": "20.10.38"}}"""
+    private const val INNERTUBE_CONTEXT_JSON =
+        """{"client": {"clientName": "ANDROID", "clientVersion": "20.10.38"}}"""
     private val gson = Gson()
     private val client = HttpClient(CIO) {
         install(HttpCookies) {
@@ -68,64 +72,74 @@ object YouTube {
         }
     }
 
-    private suspend fun getPlayerResponseFromApi(videoId: String, html: String): JsonObject? = withContext(Dispatchers.IO) {
-        val apiKey = Regex("\"INNERTUBE_API_KEY\"\\s*:\\s*\"([^\"]+)\"").find(html)?.groupValues?.get(1)
-        if (apiKey == null) {
-            Log.e("YouTube", "Could not find INNERTUBE_API_KEY in watch page HTML.")
-            return@withContext null
-        }
-
-        val context = gson.fromJson(INNERTUBE_CONTEXT_JSON, JsonObject::class.java)
-
-        val apiUrl = "https://www.youtube.com/youtubei/v1/player?key=$apiKey"
-        val requestBody = JsonObject().apply {
-            add("context", context)
-            addProperty("videoId", videoId)
-        }
-
-        try {
-            val response = client.post(apiUrl) {
-                contentType(ContentType.Application.Json)
-                setBody(gson.toJson(requestBody))
-            }
-            if (response.status.isSuccess()) {
-                return@withContext gson.fromJson(response.bodyAsText(), JsonObject::class.java)
-            } else {
-                Log.e("YouTube", "Failed to fetch from /player API: ${response.status}. Body: ${response.bodyAsText()}")
+    private suspend fun getPlayerResponseFromApi(videoId: String, html: String): JsonObject? =
+        withContext(Dispatchers.IO) {
+            val apiKey =
+                Regex("\"INNERTUBE_API_KEY\"\\s*:\\s*\"([^\"]+)\"").find(html)?.groupValues?.get(1)
+            if (apiKey == null) {
+                Log.e("YouTube", "Could not find INNERTUBE_API_KEY in watch page HTML.")
                 return@withContext null
             }
-        } catch (e: Exception) {
-            Log.e("YouTube", "Exception in getPlayerResponseFromApi for video $videoId", e)
-            return@withContext null
-        }
-    }
 
-    private suspend fun getPlayerResponse(videoId: String): JsonObject? = withContext(Dispatchers.IO) {
-        val watchPageHtml = getWatchPageHtml(videoId) ?: return@withContext null
-        // Always use the /player API to fetch the player response, as it's more reliable
-        // than parsing the inline JSON from the watch page, which might be incomplete.
-        return@withContext getPlayerResponseFromApi(videoId, watchPageHtml)
-    }
+            val context = gson.fromJson(INNERTUBE_CONTEXT_JSON, JsonObject::class.java)
 
-    suspend fun getVideoDetails(videoId: String): Pair<VideoDetails, JsonObject>? = withContext(Dispatchers.IO) {
-        try {
-            val playerResponse = getPlayerResponse(videoId) ?: return@withContext null
-            val details = playerResponse.getAsJsonObject("videoDetails")
-            val title = details?.get("title")?.asString
-            val author = details?.get("author")?.asString
+            val apiUrl = "https://www.youtube.com/youtubei/v1/player?key=$apiKey"
+            val requestBody = JsonObject().apply {
+                add("context", context)
+                addProperty("videoId", videoId)
+            }
 
-            if (title != null && author != null) {
-                return@withContext Pair(VideoDetails(title, author), playerResponse)
-            } else {
-                Log.w("YouTube", "Could not extract video details from 'videoDetails' for $videoId")
+            try {
+                val response = client.post(apiUrl) {
+                    contentType(ContentType.Application.Json)
+                    setBody(gson.toJson(requestBody))
+                }
+                if (response.status.isSuccess()) {
+                    return@withContext gson.fromJson(response.bodyAsText(), JsonObject::class.java)
+                } else {
+                    Log.e(
+                        "YouTube",
+                        "Failed to fetch from /player API: ${response.status}. Body: ${response.bodyAsText()}"
+                    )
+                    return@withContext null
+                }
+            } catch (e: Exception) {
+                Log.e("YouTube", "Exception in getPlayerResponseFromApi for video $videoId", e)
                 return@withContext null
             }
-        } catch (e: Exception) {
-            Log.e("YouTube", "Exception in getVideoDetails for video $videoId", e)
-            e.printStackTrace()
-            return@withContext null
         }
-    }
+
+    private suspend fun getPlayerResponse(videoId: String): JsonObject? =
+        withContext(Dispatchers.IO) {
+            val watchPageHtml = getWatchPageHtml(videoId) ?: return@withContext null
+            // Always use the /player API to fetch the player response, as it's more reliable
+            // than parsing the inline JSON from the watch page, which might be incomplete.
+            return@withContext getPlayerResponseFromApi(videoId, watchPageHtml)
+        }
+
+    suspend fun getVideoDetails(videoId: String): Pair<VideoDetails, JsonObject>? =
+        withContext(Dispatchers.IO) {
+            try {
+                val playerResponse = getPlayerResponse(videoId) ?: return@withContext null
+                val details = playerResponse.getAsJsonObject("videoDetails")
+                val title = details?.get("title")?.asString
+                val author = details?.get("author")?.asString
+
+                if (title != null && author != null) {
+                    return@withContext Pair(VideoDetails(title, author), playerResponse)
+                } else {
+                    Log.w(
+                        "YouTube",
+                        "Could not extract video details from 'videoDetails' for $videoId"
+                    )
+                    return@withContext null
+                }
+            } catch (e: Exception) {
+                Log.e("YouTube", "Exception in getVideoDetails for video $videoId", e)
+                e.printStackTrace()
+                return@withContext null
+            }
+        }
 
     suspend fun getTranscript(
         videoId: String,
@@ -138,7 +152,10 @@ object YouTube {
                 val status = playabilityStatus.get("status")?.asString
                 if (status == "LOGIN_REQUIRED" || status == "UNPLAYABLE") {
                     val reason = playabilityStatus.get("reason")?.asString ?: status
-                    Log.e("YouTube", "Cannot get transcript for $videoId. Status: $status, Reason: $reason")
+                    Log.e(
+                        "YouTube",
+                        "Cannot get transcript for $videoId. Status: $status, Reason: $reason"
+                    )
                     return@withContext null
                 }
             }
@@ -162,11 +179,12 @@ object YouTube {
             }
 
             // Select the best track (prefer manual over auto, prefer specified language over english)
-            val track = tracks.firstOrNull { it.languageCode == preferredLanguage && it.kind != "asr" } // Manual, preferred lang
-                ?: tracks.firstOrNull { it.languageCode == "en" && it.kind != "asr" } // Manual, English
-                ?: tracks.firstOrNull { it.languageCode.startsWith(preferredLanguage) } // Auto, preferred lang
-                ?: tracks.firstOrNull { it.languageCode.startsWith("en") } // Auto, English
-                ?: tracks.firstOrNull() // Any available track
+            val track =
+                tracks.firstOrNull { it.languageCode == preferredLanguage && it.kind != "asr" } // Manual, preferred lang
+                    ?: tracks.firstOrNull { it.languageCode == "en" && it.kind != "asr" } // Manual, English
+                    ?: tracks.firstOrNull { it.languageCode.startsWith(preferredLanguage) } // Auto, preferred lang
+                    ?: tracks.firstOrNull { it.languageCode.startsWith("en") } // Auto, English
+                    ?: tracks.firstOrNull() // Any available track
 
             if (track != null) {
                 val transcriptUrl = if (track.baseUrl.contains("fmt=srv3")) {

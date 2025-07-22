@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
@@ -284,26 +283,24 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
                         )
                     }
                 )
-                if (Build.VERSION.SDK_INT >= 33) {
-                    ListItem(
-                        modifier = Modifier
-                            .clickable {
-                                val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
-                                val uri = Uri.fromParts("package", context.packageName, null)
-                                intent.data = uri
-                                context.startActivity(intent)
-                            }
-                            .fillMaxWidth(),
-                        headlineContent = { Text(stringResource(id = R.string.chooseLanguage)) },
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.outline_language_24),
-                                contentDescription = "Localized description",
-                            )
-                        },
-                        supportingContent = { Text(stringResource(id = R.string.chooseLanguageDescription)) },
-                    )
-                }
+                ListItem(
+                    modifier = Modifier
+                        .clickable {
+                            val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
+                            val uri = Uri.fromParts("package", context.packageName, null)
+                            intent.data = uri
+                            context.startActivity(intent)
+                        }
+                        .fillMaxWidth(),
+                    headlineContent = { Text(stringResource(id = R.string.chooseLanguage)) },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_language_24),
+                            contentDescription = "Localized description",
+                        )
+                    },
+                    supportingContent = { Text(stringResource(id = R.string.chooseLanguageDescription)) },
+                )
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = { showDialogDesign = showDialogDesign.not() })
@@ -492,19 +489,18 @@ fun getVersionName(context: Context): String? {
     return packageInfo.versionName
 }
 
-fun getVersionCode(context: Context): Int {
+fun getVersionCode(context: Context): Long {
     val packageInfo: PackageInfo = try {
         context.packageManager.getPackageInfo(context.packageName, 0)
     } catch (e: PackageManager.NameNotFoundException) {
         throw RuntimeException(e)
     }
-    @Suppress("DEPRECATION")
-    return packageInfo.versionCode
+    return packageInfo.longVersionCode
 }
 
 
 @Composable
-fun RadioButtonItem(
+private fun RadioButtonItem(
     text: String,
     selected: Boolean,
     onSelectionChange: () -> Unit

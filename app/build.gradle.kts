@@ -12,10 +12,10 @@ android {
     }
     defaultConfig {
         applicationId = "me.nanova.summaryexpressive"
-        minSdk = 26
+        minSdk = 33
         targetSdk = 36
         versionCode = 1
-        versionName = "1.3.0"
+        versionName = "0.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -64,13 +64,32 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.16.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
     implementation("androidx.activity:activity-compose:1.10.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")
+    // nav
+    implementation("androidx.navigation:navigation-compose:2.9.2")
+    // jetpack
     implementation(platform("androidx.compose:compose-bom:2025.07.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material:material-icons-core")
     // use alpha version for material expressive
     implementation("androidx.compose.material3:material3:1.4.0-alpha18")
+
+    // store
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
+
+    // ml & llm
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services")
+    implementation("io.ktor:ktor-client-android:3.2.2")
+    implementation("ai.koog:koog-agents:0.3.0")
+
+    // util, ui
+    implementation("com.google.code.gson:gson:2.13.1")
+    implementation("org.apache.poi:poi-ooxml:5.4.1")
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.coil-kt:coil-gif:2.7.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-tooling-preview")
@@ -81,20 +100,4 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2025.07.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-
-    implementation("androidx.navigation:navigation-compose:2.9.2")
-    implementation("com.google.code.gson:gson:2.13.1")
-    implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation("io.coil-kt:coil-gif:2.7.0")
-    implementation("com.google.mlkit:text-recognition:16.0.1")
-
-    implementation("org.apache.poi:poi-ooxml:5.4.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-
-    implementation("io.ktor:ktor-client-android:3.2.2")
-    implementation("ai.koog:koog-agents:0.3.0")
-
-    implementation("androidx.datastore:datastore-preferences:1.1.7")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")
 }

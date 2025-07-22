@@ -1,7 +1,6 @@
 package me.nanova.summaryexpressive.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
@@ -96,7 +95,7 @@ fun SummaryExpressiveTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        dynamicColor -> {
             val context = LocalContext.current
             if (darkTheme && oLedModeEnabled)
                 dynamicDarkColorScheme(context).copy(
@@ -122,10 +121,7 @@ fun SummaryExpressiveTheme(
         SideEffect {
             val window = (view.context as Activity).window
             WindowCompat.setDecorFitsSystemWindows(window, false)
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                window.isNavigationBarContrastEnforced = false
-            }
+            window.isNavigationBarContrastEnforced = false
             val windowsInsetsController = WindowCompat.getInsetsController(window, view)
             windowsInsetsController.isAppearanceLightStatusBars = !darkTheme
             windowsInsetsController.isAppearanceLightNavigationBars = !darkTheme

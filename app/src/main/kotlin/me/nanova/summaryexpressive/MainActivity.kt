@@ -37,6 +37,7 @@ import me.nanova.summaryexpressive.llm.GeminiHandler
 import me.nanova.summaryexpressive.llm.OpenAIHandler
 import me.nanova.summaryexpressive.llm.Prompts
 import me.nanova.summaryexpressive.llm.YouTube
+import me.nanova.summaryexpressive.model.SummaryResult
 import me.nanova.summaryexpressive.ui.page.HistoryScreen
 import me.nanova.summaryexpressive.ui.page.HomeScreen
 import me.nanova.summaryexpressive.ui.page.OnboardingScreen
@@ -474,14 +475,14 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
             val currentBaseUrl = baseUrl.value
 
             val summary = when (currentModel) {
-                AIProvider.OPENAI -> OpenAIHandler.generateContentSync(
+                AIProvider.OPENAI -> OpenAIHandler.generateContent(
                     currentApiKey,
                     systemPrompt,
                     textToSummarize,
                     currentBaseUrl
                 )
 
-                AIProvider.GEMINI -> GeminiHandler.generateContentSync(
+                AIProvider.GEMINI -> GeminiHandler.generateContent(
                     currentApiKey,
                     systemPrompt,
                     textToSummarize
@@ -505,13 +506,6 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
             return@withContext summary
         }
 }
-
-data class SummaryResult(
-    val title: String?,
-    val author: String?,
-    val summary: String?,
-    val isError: Boolean = false
-)
 
 data class TextSummary(
     val id: String,

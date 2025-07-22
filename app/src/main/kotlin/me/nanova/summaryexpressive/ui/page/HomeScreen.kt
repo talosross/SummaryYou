@@ -1,18 +1,11 @@
 package me.nanova.summaryexpressive.ui.page
 
 import android.content.ClipData
-import android.content.Intent
 import android.net.Uri
-import android.os.Build
-import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,10 +29,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -57,9 +48,9 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -81,7 +72,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -89,16 +79,30 @@ import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.TextSummaryViewModel
 import me.nanova.summaryexpressive.llm.YouTube.isYouTubeLink
+import me.nanova.summaryexpressive.model.SummaryResult
+import me.nanova.summaryexpressive.ui.component.SummaryCard
 import me.nanova.summaryexpressive.ui.util.extractTextFromDocx
 import me.nanova.summaryexpressive.ui.util.extractTextFromImage
 import me.nanova.summaryexpressive.ui.util.extractTextFromPdf
 import me.nanova.summaryexpressive.ui.util.getFileName
-import java.util.UUID
 
+
+private object MimeTypes {
+    const val PDF = "application/pdf"
+    const val DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    const val PNG = "image/png"
+    const val JPEG = "image/jpeg"
+    const val JPG = "image/jpg"
+    const val WEBP = "image/webp"
+
+    val allSupported = arrayOf(PDF, DOCX, PNG, JPEG, JPG, WEBP)
+}
 
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
-    ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalLayoutApi::class
 )
 @Composable
 fun HomeScreen(
@@ -112,7 +116,6 @@ fun HomeScreen(
     val scope = rememberCoroutineScope() // Coroutine scope for async calls
     val context = LocalContext.current
     val clipboard = LocalClipboard.current // Clipboard
-    val haptics = LocalHapticFeedback.current // Vibrations
     val focusManager = LocalFocusManager.current // Hide cursor
     val focusRequester = remember { FocusRequester() } // Show cursor after removing
     var selectedIndex by remember { mutableIntStateOf(0) } // Summary length index
@@ -121,7 +124,6 @@ fun HomeScreen(
         stringResource(id = R.string.middle_length),
         stringResource(id = R.string.long_length)
     ) // Lengths
-    val showCancelIcon by remember { derivedStateOf { url.isNotBlank() } }
     val isLoading by viewModel.isLoading.collectAsState()
     val summaryResult by viewModel.currentSummaryResult.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -129,7 +131,6 @@ fun HomeScreen(
     var isDocument by remember { mutableStateOf(false) }
     var textDocument by remember { mutableStateOf<String?>(null) }
     var singleLine by remember { mutableStateOf(false) }
-    val stillLoading = stringResource(id = R.string.stillLoading)
     val showLength by viewModel.showLength.collectAsState()
     val showLengthNumber by viewModel.showLengthNumber.collectAsState()
     val multiLine by viewModel.multiLine.collectAsState()
@@ -146,8 +147,8 @@ fun HomeScreen(
                     isDocument = true
                     url = getFileName(context, uri)
                     textDocument = when (mimeType) {
-                        "application/pdf" -> extractTextFromPdf(context, uri)
-                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> extractTextFromDocx(
+                        MimeTypes.PDF -> extractTextFromPdf(context, uri)
+                        MimeTypes.DOCX -> extractTextFromDocx(
                             context,
                             uri
                         )
@@ -175,32 +176,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                MediumFlexibleTopAppBar(
-                    modifier = Modifier.height(100.dp),
-                    colors = TopAppBarDefaults.topAppBarColors(
-                    ),
-                    title = {
-
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = { navController.navigate("settings") }
-                        ) {
-                            Icon(Icons.Outlined.Settings, contentDescription = "Settings")
-                        }
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = { navController.navigate("history") }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.outline_library_books_24),
-                                contentDescription = "History"
-                            )
-                        }
-                    },
-                    scrollBehavior = scrollBehavior
-                )
+                HomeTopAppBar(navController, scrollBehavior)
             },
         ) { innerPadding ->
             LazyColumn(
@@ -231,408 +207,50 @@ fun HomeScreen(
                             Spacer(modifier = Modifier.height(height = 8.dp))
                         }
 
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            OutlinedTextField(
-                                value = url,
-                                onValueChange = { url = it },
-                                label = { Text("URL/Text") },
-                                isError = summaryResult?.isError == true,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                                keyboardActions = KeyboardActions(onDone = { summarize() }),
-                                supportingText = {
-                                    if (summaryResult?.isError == true) {
-                                        Text(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            text = when (summaryResult?.summary) {
-                                                "Exception: no internet" -> stringResource(id = R.string.noInternet)
-                                                "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
-                                                "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
-                                                "Exception: no content" -> stringResource(id = R.string.noContent)
-                                                "Exception: too short" -> stringResource(id = R.string.tooShort)
-                                                "Exception: paywall detected" -> stringResource(
-                                                    id = R.string.paywallDetected
-                                                )
+                        UrlInputSection(
+                            url = url,
+                            onUrlChange = { url = it },
+                            onSummarize = { summarize() },
+                            summaryResult = summaryResult,
+                            apiKey = apiKey,
+                            onClear = {
+                                url = ""
+                                viewModel.clearCurrentSummary()
+                                focusRequester.requestFocus()
+                                isDocument = false
+                                singleLine = false
+                            },
+                            focusRequester = focusRequester,
+                            onLaunchFilePicker = {
+                                launcher.launch(MimeTypes.allSupported)
+                            },
+                            isDocument = isDocument,
+                            isExtracting = isExtracting,
+                            multiLine = multiLine,
+                            singleLine = singleLine,
+                            onSingleLineChange = { singleLine = it }
+                        )
 
-                                                "Exception: too long" -> stringResource(id = R.string.tooLong)
-                                                "Exception: incorrect key" -> {
-                                                    if (apiKey.isEmpty()) {
-                                                        stringResource(id = R.string.incorrectKeyOpenSource)
-                                                    } else {
-                                                        stringResource(id = R.string.incorrectKey)
-                                                    }
-                                                }
-
-                                                "Exception: rate limit" -> stringResource(id = R.string.rateLimit)
-                                                "Exception: no key" -> stringResource(id = R.string.noKey)
-                                                else -> summaryResult?.summary
-                                                    ?: "unknown error 3"
-                                            },
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                },
-                                trailingIcon = {
-                                    if (showCancelIcon) {
-                                        IconButton(
-                                            onClick = {
-                                                url = ""
-                                                viewModel.clearCurrentSummary()
-                                                focusRequester.requestFocus()
-                                                isDocument = false
-                                                singleLine = false
-                                            }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.outline_cancel_24),
-                                                contentDescription = "Cancel"
-                                            )
-                                        }
-                                    }
-                                },
-                                singleLine = if (multiLine) singleLine else true,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(top = 20.dp)
-                                    .focusRequester(focusRequester)
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column {
-                                OutlinedButton(
-                                    onClick = {
-                                        launcher.launch(
-                                            arrayOf(
-                                                "application/pdf",
-                                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                                "image/png",
-                                                "image/jpeg",
-                                                "image/jpg",
-                                                "image/webp"
-                                            )
-                                        )
-                                    },
-                                    modifier = Modifier
-                                        .padding(top = 27.dp)
-                                        .height(58.dp)
-                                ) {
-                                    Box {
-                                        if (isExtracting) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier
-                                                    .size(24.dp)
-                                                    .align(Alignment.Center)
-                                            )
-                                        }
-                                        Icon(
-                                            if (isDocument && !isExtracting) {
-                                                Icons.Filled.CheckCircle
-                                            } else {
-                                                Icons.Filled.AddCircle
-                                            },
-                                            contentDescription = "Floating action button",
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                    }
-                                }
-                                if (multiLine && !singleLine) {
-                                    val textLength = url.length
-                                    val lineBreaks = url.count { it == '\n' }
-                                    val maxLength = 100 // Maximum length of the URL field
-                                    if (textLength >= maxLength || lineBreaks >= 1) {
-                                        Button(
-                                            onClick = { singleLine = true },
-                                            modifier = Modifier
-                                                .height(72.dp)
-                                                .padding(top = 15.dp)
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.outline_keyboard_arrow_up_24),
-                                                contentDescription = "minimize"
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
 
                         val currentResult = summaryResult
                         if (showLength) {
-                            Box(
-                                modifier = if (currentResult?.isError ?: false) {
-                                    Modifier.padding(top = 11.dp)
-                                } else {
-                                    Modifier.padding(top = 15.dp)
-                                }
-                            ) {
-                                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                                    options.forEachIndexed { index, label ->
-                                        SegmentedButton(
-                                            shape = SegmentedButtonDefaults.itemShape(
-                                                index = index,
-                                                count = options.size
-                                            ),
-                                            onClick = {
-                                                selectedIndex = index
-                                                viewModel.setShowLengthNumberValue(index)
-                                            },
-                                            selected = index == selectedIndex
-                                        ) {
-                                            Text(label)
-                                        }
-                                    }
-                                }
-                            }
+                            SummaryLengthSelector(
+                                selectedIndex = selectedIndex,
+                                onSelectedIndexChange = {
+                                    selectedIndex = it
+                                    viewModel.setShowLengthNumberValue(it)
+                                },
+                                options = options,
+                                isError = currentResult?.isError ?: false
+                            )
                         }
 
                         if (currentResult != null && !currentResult.isError && !currentResult.summary.isNullOrEmpty()) {
-                            Card(
-                                modifier = Modifier
-                                    .padding(top = 15.dp, bottom = 15.dp)
-                                    .fillMaxWidth()
-                                    .combinedClickable(
-                                        onClick = {},
-                                        onLongClick = {
-                                            scope.launch {
-                                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                // Copy the contents of the box to the clipboard
-                                                clipboard.setClipEntry(
-                                                    ClipData.newPlainText(
-                                                        "User Input",
-                                                        currentResult.summary
-                                                    ).toClipEntry()
-                                                )
-                                            }
-                                        }
-                                    )
-                            ) {
-                                if (!currentResult.title.isNullOrEmpty()) {
-                                    Text(
-                                        text = currentResult.title,
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier
-                                            .padding(top = 12.dp, start = 12.dp, end = 12.dp)
-                                    )
-                                    if (!currentResult.author.isNullOrEmpty()) {
-                                        Row {
-                                            Text(
-                                                text = currentResult.author,
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                modifier = Modifier
-                                                    .padding(
-                                                        top = 4.dp,
-                                                        start = 12.dp,
-                                                        end = 12.dp
-                                                    )
-                                            )
-                                            if (isYouTubeLink(url)) {
-                                                Icon(
-                                                    painter = painterResource(id = R.drawable.youtube),
-                                                    contentDescription = null,
-                                                    modifier = Modifier.padding(top = 1.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                                Text(
-                                    text = currentResult.summary,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    modifier = Modifier
-                                        .padding(
-                                            start = 12.dp,
-                                            end = 12.dp,
-                                            top = 10.dp,
-                                            bottom = 12.dp
-                                        )
-                                )
-                                var tts: TextToSpeech? by remember { mutableStateOf(null) }
-                                var isSpeaking by remember { mutableStateOf(false) }
-                                var isPaused by remember { mutableStateOf(false) }
-                                var currentPosition by remember { mutableIntStateOf(0) }
-                                var utteranceId by remember { mutableStateOf("") }
-                                val copied = stringResource(id = R.string.copied)
-
-                                val utteranceProgressListener =
-                                    object : UtteranceProgressListener() {
-                                        override fun onStart(utteranceId: String) {
-                                            // Is called when an utterance starts
-                                        }
-
-                                        override fun onDone(utteranceId: String) {
-                                            // Is called when an utterance is done
-                                            currentPosition = 0
-                                            isSpeaking = false
-                                            isPaused = false
-                                        }
-
-                                        override fun onError(utteranceId: String) {
-                                            // Is called when an error occurs
-                                        }
-
-                                        override fun onRangeStart(
-                                            utteranceId: String,
-                                            start: Int,
-                                            end: Int,
-                                            frame: Int
-                                        ) {
-                                            // Is called when a new range of text is being spoken
-                                            currentPosition = end
-                                        }
-                                    }
-                                tts?.setOnUtteranceProgressListener(utteranceProgressListener)
-                                DisposableEffect(Unit) {
-                                    tts = TextToSpeech(context) { status ->
-                                        if (status == TextToSpeech.SUCCESS) {
-                                            // TTS-Engine successfully initialized
-                                            Log.d(
-                                                "TTS",
-                                                "Text-to-Speech engine was successfully initialized."
-                                            )
-                                        } else {
-                                            // Error initializing the TTS-Engine
-                                            Log.d(
-                                                "TTS",
-                                                "Error initializing the Text-to-Speech engine."
-                                            )
-                                        }
-                                    }
-                                    onDispose {
-                                        tts?.stop()
-                                        tts?.shutdown()
-                                    }
-                                }
-
-                                Row {
-                                    IconButton(
-                                        onClick = {
-                                            if (isSpeaking) {
-                                                tts?.stop()
-                                                isSpeaking = false
-                                                isPaused = false
-                                                currentPosition = 0
-                                            } else {
-                                                val transcript = currentResult.summary
-                                                utteranceId = UUID.randomUUID().toString()
-                                                tts?.speak(
-                                                    transcript,
-                                                    TextToSpeech.QUEUE_FLUSH,
-                                                    null,
-                                                    utteranceId
-                                                )
-                                                isSpeaking = true
-                                            }
-                                        }
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.outline_volume_up_24),
-                                            contentDescription = if (isSpeaking) "finish" else "read"
-                                        )
-                                    }
-
-                                    AnimatedVisibility(visible = isSpeaking) {
-                                        IconButton(
-                                            onClick = {
-                                                if (isPaused) {
-                                                    val transcript = currentResult.summary
-                                                    val remainingText =
-                                                        transcript.substring(currentPosition)
-                                                    utteranceId =
-                                                        UUID.randomUUID().toString()
-                                                    tts?.speak(
-                                                        remainingText,
-                                                        TextToSpeech.QUEUE_FLUSH,
-                                                        null,
-                                                        utteranceId
-                                                    )
-                                                    isPaused = false
-                                                } else {
-                                                    tts?.stop()
-                                                    isPaused = true
-                                                }
-                                            }
-                                        ) {
-                                            Icon(
-                                                painter = if (isPaused) {
-                                                    painterResource(id = R.drawable.outline_play_circle_filled_24)
-                                                } else {
-                                                    painterResource(id = R.drawable.outline_pause_circle_filled_24)
-                                                },
-                                                contentDescription = if (isPaused) "continue" else "pause"
-                                            )
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.weight(1f))
-
-                                    IconButton(
-                                        onClick = {
-                                            scope.launch {
-                                                clipboard.setClipEntry(
-                                                    ClipData.newPlainText(
-                                                        "User Input",
-                                                        currentResult.summary
-                                                    ).toClipEntry()
-                                                )
-                                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                                                    Toast.makeText(
-                                                        context,
-                                                        copied,
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
-                                            }
-                                        }
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.outline_content_copy_24),
-                                            contentDescription = "copy"
-                                        )
-                                    }
-
-                                    IconButton(
-                                        onClick = {
-                                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                                type = "text/plain"
-                                                putExtra(
-                                                    Intent.EXTRA_TEXT,
-                                                    currentResult.summary
-                                                )
-                                            }
-                                            val chooserIntent =
-                                                Intent.createChooser(shareIntent, null)
-                                            context.startActivity(chooserIntent)
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Share,
-                                            contentDescription = "share"
-                                        )
-                                    }
-                                }
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .padding(top = 15.dp, bottom = 90.dp)
-                                    .fillMaxSize(),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Row {
-                                    Button(
-                                        onClick = {
-                                            summarize()
-                                        },
-                                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-                                    ) {
-                                        Icon(
-                                            Icons.Filled.Refresh,
-                                            contentDescription = "Refresh",
-                                            modifier = Modifier.size(ButtonDefaults.IconSize)
-                                        )
-                                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                        Text(stringResource(id = R.string.regenerate))
-                                    }
-                                }
-                            }
+                            SummaryResultSection(
+                                summaryResult = currentResult,
+                                url = url,
+                                onRegenerate = { summarize() }
+                            )
                         }
                     }
                 }
@@ -640,6 +258,268 @@ fun HomeScreen(
         }
     }
 
+    HomeFloatingActionButtons(
+        modifier = modifier,
+        onPaste = {
+            scope.launch {
+                clipboard.getClipEntry()?.let {
+                    url = it.clipData.getItemAt(0).text.toString()
+                }
+            }
+        },
+        onSummarize = { summarize() },
+        isExtracting = isExtracting
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun HomeTopAppBar(
+    navController: NavHostController,
+    scrollBehavior: TopAppBarScrollBehavior
+) {
+    MediumFlexibleTopAppBar(
+        modifier = Modifier.height(100.dp),
+        colors = TopAppBarDefaults.topAppBarColors(),
+        title = { },
+        navigationIcon = {
+            IconButton(
+                onClick = { navController.navigate("settings") }
+            ) {
+                Icon(Icons.Outlined.Settings, contentDescription = "Settings")
+            }
+        },
+        actions = {
+            IconButton(
+                onClick = { navController.navigate("history") }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.outline_library_books_24),
+                    contentDescription = "History"
+                )
+            }
+        },
+        scrollBehavior = scrollBehavior
+    )
+}
+
+@Composable
+private fun UrlInputSection(
+    url: String,
+    onUrlChange: (String) -> Unit,
+    onSummarize: () -> Unit,
+    summaryResult: SummaryResult?,
+    apiKey: String,
+    onClear: () -> Unit,
+    focusRequester: FocusRequester,
+    onLaunchFilePicker: () -> Unit,
+    isDocument: Boolean,
+    isExtracting: Boolean,
+    multiLine: Boolean,
+    singleLine: Boolean,
+    onSingleLineChange: (Boolean) -> Unit
+) {
+    val showCancelIcon by remember { derivedStateOf { url.isNotBlank() } }
+    Row(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = url,
+            onValueChange = onUrlChange,
+            label = { Text("URL/Text") },
+            isError = summaryResult?.isError == true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { onSummarize() }),
+            supportingText = {
+                if (summaryResult?.isError == true) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = when (summaryResult.summary) {
+                            "Exception: no internet" -> stringResource(id = R.string.noInternet)
+                            "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
+                            "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
+                            "Exception: no content" -> stringResource(id = R.string.noContent)
+                            "Exception: too short" -> stringResource(id = R.string.tooShort)
+                            "Exception: paywall detected" -> stringResource(
+                                id = R.string.paywallDetected
+                            )
+
+                            "Exception: too long" -> stringResource(id = R.string.tooLong)
+                            "Exception: incorrect key" -> {
+                                if (apiKey.isEmpty()) {
+                                    stringResource(id = R.string.incorrectKeyOpenSource)
+                                } else {
+                                    stringResource(id = R.string.incorrectKey)
+                                }
+                            }
+
+                            "Exception: rate limit" -> stringResource(id = R.string.rateLimit)
+                            "Exception: no key" -> stringResource(id = R.string.noKey)
+                            else -> summaryResult.summary
+                                ?: "unknown error 3"
+                        },
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            trailingIcon = {
+                if (showCancelIcon) {
+                    IconButton(onClick = onClear) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_cancel_24),
+                            contentDescription = "Cancel"
+                        )
+                    }
+                }
+            },
+            singleLine = if (multiLine) singleLine else true,
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 20.dp)
+                .focusRequester(focusRequester)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            OutlinedButton(
+                onClick = onLaunchFilePicker,
+                modifier = Modifier
+                    .padding(top = 27.dp)
+                    .height(58.dp)
+            ) {
+                Box {
+                    if (isExtracting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .align(Alignment.Center)
+                        )
+                    }
+                    Icon(
+                        if (isDocument && !isExtracting) {
+                            Icons.Filled.CheckCircle
+                        } else {
+                            Icons.Filled.AddCircle
+                        },
+                        contentDescription = "Floating action button",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
+            if (multiLine && !singleLine) {
+                val textLength = url.length
+                val lineBreaks = url.count { it == '\n' }
+                val maxLength = 100 // Maximum length of the URL field
+                if (textLength >= maxLength || lineBreaks >= 1) {
+                    Button(
+                        onClick = { onSingleLineChange(true) },
+                        modifier = Modifier
+                            .height(72.dp)
+                            .padding(top = 15.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_keyboard_arrow_up_24),
+                            contentDescription = "minimize"
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryLengthSelector(
+    selectedIndex: Int,
+    onSelectedIndexChange: (Int) -> Unit,
+    options: List<String>,
+    isError: Boolean
+) {
+    Box(
+        modifier = if (isError) {
+            Modifier.padding(top = 11.dp)
+        } else {
+            Modifier.padding(top = 15.dp)
+        }
+    ) {
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            options.forEachIndexed { index, label ->
+                SegmentedButton(
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = options.size
+                    ),
+                    onClick = { onSelectedIndexChange(index) },
+                    selected = index == selectedIndex
+                ) {
+                    Text(label)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryResultSection(
+    summaryResult: SummaryResult,
+    url: String,
+    onRegenerate: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
+    val haptics = LocalHapticFeedback.current
+
+    SummaryCard(
+        modifier = Modifier.padding(top = 15.dp, bottom = 15.dp),
+        title = summaryResult.title,
+        author = summaryResult.author,
+        summary = summaryResult.summary,
+        isYouTube = isYouTubeLink(url),
+        onLongClick = {
+            scope.launch {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                clipboard.setClipEntry(
+                    ClipData.newPlainText(
+                        "User Input",
+                        summaryResult.summary
+                    ).toClipEntry()
+                )
+            }
+        }
+    )
+
+    Column(
+        modifier = Modifier
+            .padding(top = 15.dp, bottom = 90.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row {
+            Button(
+                onClick = onRegenerate,
+                contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+            ) {
+                Icon(
+                    Icons.Filled.Refresh,
+                    contentDescription = "Refresh",
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(stringResource(id = R.string.regenerate))
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HomeFloatingActionButtons(
+    modifier: Modifier,
+    onPaste: () -> Unit,
+    onSummarize: () -> Unit,
+    isExtracting: Boolean
+) {
+    val context = LocalContext.current
+    val stillLoading = stringResource(id = R.string.stillLoading)
     Box(
         modifier = Modifier
             .imePadding()
@@ -649,14 +529,7 @@ fun HomeScreen(
     ) {
         Column {
             FloatingActionButton(
-                onClick = {
-                    scope.launch {
-                        // Check if there is anything on the clipboard
-                        clipboard.getClipEntry()?.let {
-                            url = it.clipData.getItemAt(0).text.toString()
-                        }
-                    }
-                },
+                onClick = onPaste,
                 modifier = modifier.padding(bottom = 20.dp, end = 15.dp)
             ) {
                 Icon(painter = painterResource(id = R.drawable.outline_content_paste_24), "Paste")
@@ -666,7 +539,7 @@ fun HomeScreen(
                     if (isExtracting) {
                         Toast.makeText(context, stillLoading, Toast.LENGTH_SHORT).show()
                     } else {
-                        summarize()
+                        onSummarize()
                     }
                 },
                 modifier = modifier.padding(bottom = 60.dp, end = 15.dp)
