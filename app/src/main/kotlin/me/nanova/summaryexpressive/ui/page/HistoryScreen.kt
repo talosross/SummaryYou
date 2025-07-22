@@ -1,7 +1,6 @@
 package me.nanova.summaryexpressive.ui.page
 
 import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Build
 import android.speech.tts.TextToSpeech
@@ -46,6 +45,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,16 +53,18 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.TextSummaryViewModel
 import java.util.UUID
@@ -70,7 +72,6 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    modifier: Modifier = Modifier,
     navController: NavHostController,
     viewModel: TextSummaryViewModel
 ) {
@@ -271,10 +272,9 @@ fun Textbox(
 ) {
     val haptics = LocalHapticFeedback.current
     val context = LocalContext.current
-    val clipboardManager = ContextCompat.getSystemService(
-        context, ClipboardManager::class.java
-    ) as ClipboardManager
+    val clipboard = LocalClipboard.current
     val contextForToast = LocalContext.current.applicationContext
+    val coroutineScope = rememberCoroutineScope()
 
     /* ---------------- card ---------------- */
     Card(
@@ -420,9 +420,13 @@ fun Textbox(
             /* -------- copy -------- */
             IconButton(
                 onClick = {
-                    clipboardManager.setPrimaryClip(ClipData.newPlainText(null, text))
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
-                        Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
+                    coroutineScope.launch {
+                        clipboard.setClipEntry(
+                            ClipData.newPlainText("History Summary", text.orEmpty()).toClipEntry()
+                        )
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+                            Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
+                    }
                 }
             ) {
                 Icon(

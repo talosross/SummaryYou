@@ -63,7 +63,6 @@ import me.nanova.summaryexpressive.llm.AIProvider
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    modifier: Modifier = Modifier,
     navController: NavHostController,
     viewModel: TextSummaryViewModel
 ) {

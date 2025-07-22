@@ -1,8 +1,6 @@
 package me.nanova.summaryexpressive.llm
 
 object Prompts {
-    // Prompts from youtube.py for later migration
-
     // OpenAI Prompts
     fun openAIPromptVideo0(title: String, language: String) = "You will be provided with a transcript of the video$title, and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points. The very short summary should be in $language."
     fun openAIPromptVideo1(title: String, language: String) = "You will be provided with a transcript of the video$title, and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in $language. If it includes a conclusion or key takeaway, make sure to include that in the end."

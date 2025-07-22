@@ -1,7 +1,6 @@
 package me.nanova.summaryexpressive.ui.page
 
 import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.pdf.PdfRenderer
@@ -78,15 +77,16 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import androidx.navigation.NavHostController
 import com.google.mlkit.vision.common.InputImage
@@ -118,7 +118,8 @@ fun HomeScreen(
     var isExtracting by remember { mutableStateOf(false) } // For Loading-Animation
     var url by remember { mutableStateOf(initialUrl ?: "") }
     val scope = rememberCoroutineScope() // Coroutine scope for async calls
-    val context = LocalContext.current // Clipboard
+    val context = LocalContext.current
+    val clipboard = LocalClipboard.current // Clipboard
     val haptics = LocalHapticFeedback.current // Vibrations
     val focusManager = LocalFocusManager.current // Hide cursor
     val focusRequester = remember { FocusRequester() } // Show cursor after removing
@@ -140,11 +141,6 @@ fun HomeScreen(
     val showLength by viewModel.showLength.collectAsState()
     val showLengthNumber by viewModel.showLengthNumber.collectAsState()
     val multiLine by viewModel.multiLine.collectAsState()
-
-    val clipboardManager = ContextCompat.getSystemService(
-        context,
-        ClipboardManager::class.java
-    ) as ClipboardManager
 
     val result = remember { mutableStateOf<Uri?>(null) }
     val launcher =
@@ -412,14 +408,16 @@ fun HomeScreen(
                                         .combinedClickable(
                                             onClick = {},
                                             onLongClick = {
-                                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                // Copy the contents of the box to the clipboard
-                                                clipboardManager.setPrimaryClip(
-                                                    ClipData.newPlainText(
-                                                        null,
-                                                        currentResult.summary
+                                                scope.launch {
+                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    // Copy the contents of the box to the clipboard
+                                                    clipboard.setClipEntry(
+                                                        ClipData.newPlainText(
+                                                            "User Input",
+                                                            currentResult.summary
+                                                        ).toClipEntry()
                                                     )
-                                                )
+                                                }
                                             }
                                         )
                                 ) {
@@ -531,16 +529,14 @@ fun HomeScreen(
                                                     currentPosition = 0
                                                 } else {
                                                     val transcript = currentResult.summary
-                                                    if (transcript != null) {
-                                                        utteranceId = UUID.randomUUID().toString()
-                                                        tts?.speak(
-                                                            transcript,
-                                                            TextToSpeech.QUEUE_FLUSH,
-                                                            null,
-                                                            utteranceId
-                                                        )
-                                                        isSpeaking = true
-                                                    }
+                                                    utteranceId = UUID.randomUUID().toString()
+                                                    tts?.speak(
+                                                        transcript,
+                                                        TextToSpeech.QUEUE_FLUSH,
+                                                        null,
+                                                        utteranceId
+                                                    )
+                                                    isSpeaking = true
                                                 }
                                             }
                                         ) {
@@ -555,19 +551,17 @@ fun HomeScreen(
                                                 onClick = {
                                                     if (isPaused) {
                                                         val transcript = currentResult.summary
-                                                        if (transcript != null) {
-                                                            val remainingText =
-                                                                transcript.substring(currentPosition)
-                                                            utteranceId =
-                                                                UUID.randomUUID().toString()
-                                                            tts?.speak(
-                                                                remainingText,
-                                                                TextToSpeech.QUEUE_FLUSH,
-                                                                null,
-                                                                utteranceId
-                                                            )
-                                                            isPaused = false
-                                                        }
+                                                        val remainingText =
+                                                            transcript.substring(currentPosition)
+                                                        utteranceId =
+                                                            UUID.randomUUID().toString()
+                                                        tts?.speak(
+                                                            remainingText,
+                                                            TextToSpeech.QUEUE_FLUSH,
+                                                            null,
+                                                            utteranceId
+                                                        )
+                                                        isPaused = false
                                                     } else {
                                                         tts?.stop()
                                                         isPaused = true
@@ -588,18 +582,20 @@ fun HomeScreen(
 
                                         IconButton(
                                             onClick = {
-                                                clipboardManager.setPrimaryClip(
-                                                    ClipData.newPlainText(
-                                                        null,
-                                                        currentResult.summary
+                                                scope.launch {
+                                                    clipboard.setClipEntry(
+                                                        ClipData.newPlainText(
+                                                            "User Input",
+                                                            currentResult.summary
+                                                        ).toClipEntry()
                                                     )
-                                                )
-                                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                                                    Toast.makeText(
-                                                        context,
-                                                        copied,
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
+                                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                                                        Toast.makeText(
+                                                            context,
+                                                            copied,
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
                                                 }
                                             }
                                         ) {
@@ -673,10 +669,8 @@ fun HomeScreen(
                 onClick = {
                     scope.launch {
                         // Check if there is anything on the clipboard
-                        val clipData = clipboardManager.primaryClip
-                        if (clipData != null && clipData.itemCount > 0) {
-                            val clipItem = clipData.getItemAt(0)
-                            url = clipItem.text.toString()
+                        clipboard.getClipEntry()?.let {
+                            url = it.clipData.getItemAt(0).text.toString()
                         }
                     }
                 },
@@ -744,7 +738,7 @@ suspend fun extractTextFromDocx(context: Context, selectedDocxUri: Uri): String 
                 doc.paragraphs.forEach { paragraph ->
                     extractedText.append(paragraph.text).append("\n")
                 }
-                return@withContext extractedText.toString()
+                extractedText.toString()
             }
         }
             ?: throw FileNotFoundException("Can't open InputStream for the URI: $selectedDocxUri")

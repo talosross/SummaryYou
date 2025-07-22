@@ -1,7 +1,6 @@
 package me.nanova.summaryexpressive
 
 import android.app.Application
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -65,10 +64,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             val viewModel: TextSummaryViewModel = viewModel()
             val design by viewModel.designNumber.collectAsState()
-            val oledMode by viewModel.ultraDark.collectAsState()
+            val oLedMode by viewModel.ultraDark.collectAsState()
             val showOnboarding by viewModel.showOnboardingScreen.collectAsState()
 
-            SummaryExpressiveTheme(design = design, oLedModeEnabled = oledMode) {
+            SummaryExpressiveTheme(design = design, oLedModeEnabled = oLedMode) {
                 val navController = rememberNavController()
                 var shouldShowOnboarding by rememberSaveable { mutableStateOf(showOnboarding) }
                 // A surface container using the 'background' color from the theme
@@ -91,8 +90,6 @@ class MainActivity : ComponentActivity() {
 }
 
 class TextSummaryViewModel(application: Application) : AndroidViewModel(application) {
-    private val context: Context = application.applicationContext
-
     val textSummaries = mutableStateListOf<TextSummary>()
 
     // Original Language in summary
@@ -100,7 +97,7 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
     val useOriginalLanguage: StateFlow<Boolean> = _useOriginalLanguage.asStateFlow()
     fun setUseOriginalLanguageValue(newValue: Boolean) = viewModelScope.launch {
         UserPreferencesRepository.setUseOriginalLanguage(
-            context,
+            getApplication(),
             newValue
         )
     }
@@ -109,60 +106,80 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
     private val _multiLine = MutableStateFlow(true)
     val multiLine: StateFlow<Boolean> = _multiLine.asStateFlow()
     fun setMultiLineValue(newValue: Boolean) =
-        viewModelScope.launch { UserPreferencesRepository.setMultiLine(context, newValue) }
+        viewModelScope.launch { UserPreferencesRepository.setMultiLine(getApplication(), newValue) }
 
     // UltraDark - Mode
     private val _ultraDark = MutableStateFlow(false)
     val ultraDark: StateFlow<Boolean> = _ultraDark.asStateFlow()
     fun setUltraDarkValue(newValue: Boolean) =
-        viewModelScope.launch { UserPreferencesRepository.setUltraDark(context, newValue) }
+        viewModelScope.launch { UserPreferencesRepository.setUltraDark(getApplication(), newValue) }
 
     // DesignNumber for Dark, Light or System
     private val _designNumber = MutableStateFlow(0)
     val designNumber: StateFlow<Int> = _designNumber.asStateFlow()
     fun setDesignNumber(newValue: Int) =
-        viewModelScope.launch { UserPreferencesRepository.setDesignNumber(context, newValue) }
+        viewModelScope.launch {
+            UserPreferencesRepository.setDesignNumber(
+                getApplication(),
+                newValue
+            )
+        }
 
     // API Key
     private val _apiKey = MutableStateFlow("")
     val apiKey: StateFlow<String> = _apiKey.asStateFlow()
     fun setApiKeyValue(newValue: String) =
-        viewModelScope.launch { UserPreferencesRepository.setApiKey(context, newValue) }
+        viewModelScope.launch { UserPreferencesRepository.setApiKey(getApplication(), newValue) }
 
     // API base url
     private val _baseUrl = MutableStateFlow("")
     val baseUrl: StateFlow<String> = _baseUrl.asStateFlow()
     fun setBaseUrlValue(newValue: String) =
-        viewModelScope.launch { UserPreferencesRepository.setBaseUrl(context, newValue) }
+        viewModelScope.launch { UserPreferencesRepository.setBaseUrl(getApplication(), newValue) }
 
     // AI-Model
     private val _model = MutableStateFlow(AIProvider.OPENAI)
     val model: StateFlow<AIProvider> = _model.asStateFlow()
     fun setModelValue(newValue: String) =
-        viewModelScope.launch { UserPreferencesRepository.setModel(context, newValue) }
+        viewModelScope.launch { UserPreferencesRepository.setModel(getApplication(), newValue) }
 
     // OnboardingScreen
     private val _showOnboardingScreen = MutableStateFlow(true)
     val showOnboardingScreen: StateFlow<Boolean> = _showOnboardingScreen.asStateFlow()
     fun setShowOnboardingScreenValue(newValue: Boolean) =
-        viewModelScope.launch { UserPreferencesRepository.setShowOnboarding(context, newValue) }
+        viewModelScope.launch {
+            UserPreferencesRepository.setShowOnboarding(
+                getApplication(),
+                newValue
+            )
+        }
 
     // Show length
     private val _showLength = MutableStateFlow(true)
     val showLength: StateFlow<Boolean> = _showLength.asStateFlow()
     fun setShowLengthValue(newValue: Boolean) =
-        viewModelScope.launch { UserPreferencesRepository.setShowLength(context, newValue) }
+        viewModelScope.launch {
+            UserPreferencesRepository.setShowLength(
+                getApplication(),
+                newValue
+            )
+        }
 
     // Show length number
     private val _showLengthNumber = MutableStateFlow(0)
     val showLengthNumber: StateFlow<Int> = _showLengthNumber.asStateFlow()
     fun setShowLengthNumberValue(newValue: Int) =
-        viewModelScope.launch { UserPreferencesRepository.setShowLengthNumber(context, newValue) }
+        viewModelScope.launch {
+            UserPreferencesRepository.setShowLengthNumber(
+                getApplication(),
+                newValue
+            )
+        }
 
     init {
         // Load summaries from DataStore
         viewModelScope.launch {
-            UserPreferencesRepository.getTextSummaries(context).collect { summariesJson ->
+            UserPreferencesRepository.getTextSummaries(getApplication()).collect { summariesJson ->
                 val type = object : TypeToken<List<TextSummary>>() {}.type
                 val summaries = Gson().fromJson<List<TextSummary>>(summariesJson, type)
                 textSummaries.clear()
@@ -172,37 +189,41 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
 
         // Collect preferences from DataStore
         viewModelScope.launch {
-            UserPreferencesRepository.getUseOriginalLanguage(context)
+            UserPreferencesRepository.getUseOriginalLanguage(getApplication())
                 .collect { _useOriginalLanguage.value = it }
         }
         viewModelScope.launch {
-            UserPreferencesRepository.getMultiLine(context).collect { _multiLine.value = it }
+            UserPreferencesRepository.getMultiLine(getApplication())
+                .collect { _multiLine.value = it }
         }
         viewModelScope.launch {
-            UserPreferencesRepository.getUltraDark(context).collect { _ultraDark.value = it }
+            UserPreferencesRepository.getUltraDark(getApplication())
+                .collect { _ultraDark.value = it }
         }
         viewModelScope.launch {
-            UserPreferencesRepository.getDesignNumber(context).collect { _designNumber.value = it }
+            UserPreferencesRepository.getDesignNumber(getApplication())
+                .collect { _designNumber.value = it }
         }
         viewModelScope.launch {
-            UserPreferencesRepository.getApiKey(context).collect { _apiKey.value = it }
+            UserPreferencesRepository.getApiKey(getApplication()).collect { _apiKey.value = it }
         }
         viewModelScope.launch {
-            UserPreferencesRepository.getBaseUrl(context).collect { _baseUrl.value = it }
+            UserPreferencesRepository.getBaseUrl(getApplication()).collect { _baseUrl.value = it }
         }
         viewModelScope.launch {
-            UserPreferencesRepository.getModel(context)
+            UserPreferencesRepository.getModel(getApplication())
                 .collect { _model.value = AIProvider.valueOf(it) }
         }
         viewModelScope.launch {
-            UserPreferencesRepository.getShowOnboarding(context)
+            UserPreferencesRepository.getShowOnboarding(getApplication())
                 .collect { _showOnboardingScreen.value = it }
         }
         viewModelScope.launch {
-            UserPreferencesRepository.getShowLength(context).collect { _showLength.value = it }
+            UserPreferencesRepository.getShowLength(getApplication())
+                .collect { _showLength.value = it }
         }
         viewModelScope.launch {
-            UserPreferencesRepository.getShowLengthNumber(context)
+            UserPreferencesRepository.getShowLengthNumber(getApplication())
                 .collect { _showLengthNumber.value = it }
         }
     }
@@ -224,7 +245,7 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
     private fun saveTextSummaries() {
         viewModelScope.launch {
             val textSummariesJson = Gson().toJson(textSummaries)
-            UserPreferencesRepository.setTextSummaries(context, textSummariesJson)
+            UserPreferencesRepository.setTextSummaries(getApplication(), textSummariesJson)
         }
     }
 
@@ -274,12 +295,12 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
         _currentSummaryResult.value = null
     }
 
-    fun summarize(urlOrText: String, length: Int, isDocument: Boolean, documentText: String?) {
+    fun summarize(urlOrFilename: String, length: Int, isDocument: Boolean, documentText: String?) {
         viewModelScope.launch {
             _isLoading.value = true
             _currentSummaryResult.value = null // Clear previous result
 
-            val result = summarizeInternal(urlOrText, length, isDocument, documentText)
+            val result = summarizeInternal(urlOrFilename, length, isDocument, documentText)
 
             _currentSummaryResult.value = result
             _isLoading.value = false
@@ -287,14 +308,14 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     private suspend fun summarizeInternal(
-        urlOrText: String,
+        urlOrFilename: String,
         length: Int,
         isDocument: Boolean,
         documentText: String?
     ): SummaryResult {
-        val isYouTube = YouTube.isYouTubeLink(urlOrText)
+        val isYouTube = YouTube.isYouTubeLink(urlOrFilename)
 
-        if (urlOrText.isBlank() || (isDocument && documentText.isNullOrBlank())) {
+        if (urlOrFilename.isBlank() || (isDocument && documentText.isNullOrBlank())) {
             return SummaryResult(null, null, "Exception: no content", isError = true)
         }
 
@@ -304,9 +325,9 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
         }
 
         return if (isYouTube) {
-            summarizeYouTubeVideo(urlOrText, length)
+            summarizeYouTubeVideo(urlOrFilename, length)
         } else {
-            summarizeTextOrDocument(urlOrText, length, isDocument, documentText)
+            summarizeTextOrDocument(urlOrFilename, length, isDocument, documentText)
         }
     }
 
@@ -330,7 +351,8 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
 
             if (model.value == AIProvider.GEMINI) {
                 contentToSummarize = url // Gemini uses URL
-                val currentLocale: Locale = context.resources.configuration.locales[0]
+                val currentLocale: Locale =
+                    getApplication<Application>().resources.configuration.locales[0]
                 val languageName =
                     if (useOriginalLanguage.value) currentLocale.displayLanguage else "English"
                 val promptFn = when (length) {
@@ -388,12 +410,12 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     private suspend fun summarizeTextOrDocument(
-        urlOrText: String,
+        urlOrFilename: String,
         length: Int,
         isDocument: Boolean,
         documentText: String?
     ): SummaryResult {
-        val textToSummarize = if (isDocument) documentText!! else urlOrText
+        val textToSummarize = if (isDocument) documentText!! else urlOrFilename
         if (!isDocument && (textToSummarize.startsWith("http") || textToSummarize.startsWith("https")) && runCatching {
                 URL(
                     textToSummarize
@@ -405,7 +427,7 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
             return SummaryResult(null, null, "Exception: too short", isError = true)
         }
 
-        val currentLocale: Locale = context.resources.configuration.locales[0]
+        val currentLocale: Locale = getApplication<Application>().resources.configuration.locales[0]
         val language: String = if (useOriginalLanguage.value) {
             "the same language as the text"
         } else {
@@ -434,7 +456,7 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
         val resultSummary = if (isError) summary else summary.trim()
 
         val result = SummaryResult(
-            if (isDocument) urlOrText else null,
+            if (isDocument) urlOrFilename else null,
             if (isDocument) "Document" else null,
             resultSummary,
             isError
@@ -516,14 +538,12 @@ fun AppNavigation(
         }
         composable("settings") {
             SettingsScreen(
-                modifier = Modifier,
                 navController = navController,
                 viewModel = viewModel
             )
         }
         composable("history") {
             HistoryScreen(
-                modifier = Modifier,
                 navController = navController,
                 viewModel = viewModel
             )
