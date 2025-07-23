@@ -5,7 +5,6 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -80,17 +79,18 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.YouTube.isYouTubeLink
 import me.nanova.summaryexpressive.model.SummaryResult
-import me.nanova.summaryexpressive.vm.SummaryViewModel
 import me.nanova.summaryexpressive.ui.component.SummaryCard
 import me.nanova.summaryexpressive.util.extractTextFromDocx
 import me.nanova.summaryexpressive.util.extractTextFromImage
 import me.nanova.summaryexpressive.util.extractTextFromPdf
 import me.nanova.summaryexpressive.util.getFileName
+import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 
 private object MimeTypes {

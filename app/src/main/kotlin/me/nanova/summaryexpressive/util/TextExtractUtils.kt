@@ -6,7 +6,6 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Xml
 import androidx.core.graphics.createBitmap
-import org.jsoup.Jsoup
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -17,6 +16,7 @@ import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import org.jsoup.Jsoup
 import org.xmlpull.v1.XmlPullParser
 import java.io.FileNotFoundException
 import java.io.InputStream

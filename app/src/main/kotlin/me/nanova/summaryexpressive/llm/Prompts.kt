@@ -1,45 +1,76 @@
 package me.nanova.summaryexpressive.llm
 
 object Prompts {
-    // OpenAI Prompts
-    fun openAIPromptVideo0(title: String, language: String) = "You will be provided with a transcript of the video '$title', and your task is to generate a very short, concise summary with a maximum of 20 words of the transcript using only 3 bullet points. The very short summary should be in $language."
-    fun openAIPromptVideo1(title: String, language: String) = "You will be provided with a transcript of the video '$title', and your task is to generate a very short, concise summary with a maximum of 60 words of the transcript in $language. If it includes a conclusion or key takeaway, make sure to include that in the end."
-    fun openAIPromptVideo3(title: String, language: String) = "You will be provided with a transcript of the video '$title', and your task is to generate a summary of the transcript in $language. If it includes a conclusion or key takeaway, make sure to include that in the end."
-    fun openAIPromptArticle0(title: String, language: String) = "You will be provided with the article '$title', and your task is to generate a very short, concise summary with a maximum of 20 words of the text in $language using only 3 bullet points."
-    fun openAIPromptArticle1(title: String, language: String) = "You will be provided with the article '$title', and your task is to generate a very short, concise summary with a maximum of 60 words of the text in $language. If it includes a conclusion or key takeaway, make sure to include that in the end."
-    fun openAIPromptArticle3(title: String, language: String) = "You will be provided with the article '$title', and your task is to generate a summary of the text in $language. If it includes a conclusion or key takeaway, make sure to include that in the end."
-    fun openAIPromptText0(language: String) = "You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 20 words of the text in $language using only 3 bullet points."
-    fun openAIPromptText1(language: String) = "You will be provided with a text and your task is to generate a very short, concise summary with a maximum of 60 words of the text in $language. If it includes a conclusion or key takeaway, make sure to include that in the end."
-    fun openAIPromptText3(language: String) = "You will be provided with a text and your task is to generate a summary of the text in $language. If it includes a conclusion or key takeaway, make sure to include that in the end."
-    fun openAIPromptDocument0(language: String) = "You will be provided with a document, and your task is to generate a very short, concise summary with a maximum of 20 words of the document in $language using only 3 bullet points."
-    fun openAIPromptDocument1(language: String) = "You will be provided with a document, and your task is to generate a very short, concise summary with a maximum of 60 words of the document in $language. If it includes a conclusion or key takeaway, make sure to include that in the end."
-    fun openAIPromptDocument3(language: String) = "You will be provided with a document, and your task is to generate a summary of the document in $language. If it includes a conclusion or key takeaway, make sure to include that in the end."
 
-    // Gemini Prompts
-    fun geminiPromptVideo0(title: String, language: String) = "Act as an expert content summarizer. Extract exactly 3 key points from the video '$title'. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in $language."
-    fun geminiPromptVideo1(title: String, language: String) = "Act as a professional summarizer. Condense the video '$title' into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in $language."
-    fun geminiPromptVideo3(title: String, language: String) = "Act as a content analysis specialist. Create a detailed summary of the video '$title' using exactly 130 words. Cover the main topic, key points, and any conclusions in a cohesive narrative. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the 130-word summary in $language."
-    fun geminiPromptArticle0(title: String, language: String) = "Act as an expert content summarizer. Extract exactly 3 key points from the article '$title'. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in $language."
-    fun geminiPromptArticle1(title: String, language: String) = "Act as a professional summarizer. Condense the article '$title' into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in $language."
-    fun geminiPromptArticle3(title: String, language: String) = "Act as a content analysis specialist. Create a comprehensive summary of the article '$title' that captures its essential information, arguments, and conclusions. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the summary in $language."
-    fun geminiPromptText0(language: String) = "Act as an expert content summarizer. Extract exactly 3 key points from this text. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in $language."
-    fun geminiPromptText1(language: String) = "Act as a professional summarizer. Condense this text into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in $language."
-    fun geminiPromptText3(language: String) = "Act as a content analysis specialist. Create a comprehensive summary of this text that captures its essential information, arguments, and conclusions. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the summary in $language."
-    fun geminiPromptDocument0(language: String) = "Act as an expert content summarizer. Extract exactly 3 key points from this document. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in $language."
-    fun geminiPromptDocument1(language: String) = "Act as a professional summarizer. Condense this document into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in $language."
-    fun geminiPromptDocument3(language: String) = "Act as a content analysis specialist. Create a comprehensive summary of this document that captures its essential information, arguments, and conclusions. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the summary in $language."
+    enum class ContentType {
+        VIDEO_TRANSCRIPT, ARTICLE, TEXT, DOCUMENT
+    }
 
-    // Groq Prompts
-    fun groqPromptVideo0(title: String, language: String) = "Act as an expert content summarizer. Extract exactly 3 key points from the video transcript '$title'. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in $language."
-    fun groqPromptVideo1(title: String, language: String) = "Act as a professional summarizer. Condense the video transcript '$title' into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in $language."
-    fun groqPromptVideo3(title: String, language: String) = "Act as a content analysis specialist. Create a detailed summary of the video transcript '$title' using exactly 130 words. Cover the main topic, key points, and any conclusions in a cohesive narrative. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the 130-word summary in $language."
-    fun groqPromptArticle0(title: String, language: String) = "Act as an expert content summarizer. Extract exactly 3 key points from the article '$title'. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in $language."
-    fun groqPromptArticle1(title: String, language: String) = "Act as a professional summarizer. Condense the article '$title' into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in $language."
-    fun groqPromptArticle3(title: String, language: String) = "Act as a content analysis specialist. Create a comprehensive summary of the article '$title' that captures its essential information, arguments, and conclusions. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the summary in $language."
-    fun groqPromptText0(language: String) = "Act as an expert content summarizer. Extract exactly 3 key points from this text. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in $language."
-    fun groqPromptText1(language: String) = "Act as a professional summarizer. Condense this text into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in $language."
-    fun groqPromptText3(language: String) = "Act as a content analysis specialist. Create a comprehensive summary of this text that captures its essential information, arguments, and conclusions. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the summary in $language."
-    fun groqPromptDocument0(language: String) = "Act as an expert content summarizer. Extract exactly 3 key points from this document. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in $language."
-    fun groqPromptDocument1(language: String) = "Act as a professional summarizer. Condense this document into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in $language."
-    fun groqPromptDocument3(language: String) = "Act as a content analysis specialist. Create a comprehensive summary of this document that captures its essential information, arguments, and conclusions. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the summary in $language."
+    // --- Template components ---
+    private const val CONCLUSION_TAKEAWAY = "If it includes a conclusion or key takeaway, make sure to include that in the end."
+
+    private fun getOpenAIContentSource(type: ContentType, title: String?): String {
+        val titlePart = if (!title.isNullOrBlank()) " '$title'" else ""
+        return when (type) {
+            ContentType.VIDEO_TRANSCRIPT -> "a transcript of the video$titlePart"
+            ContentType.ARTICLE -> "the article$titlePart"
+            ContentType.TEXT -> "a text"
+            ContentType.DOCUMENT -> "a document"
+        }
+    }
+
+    // --- OpenAI Prompts ---
+    fun openAIPrompt(type: ContentType, title: String?, length: Int, language: String): String {
+        val contentSource = getOpenAIContentSource(type, title)
+        val contentTypeString = when (type) {
+            ContentType.VIDEO_TRANSCRIPT -> "transcript"
+            ContentType.ARTICLE -> "text"
+            ContentType.TEXT -> "text"
+            ContentType.DOCUMENT -> "document"
+        }
+
+        val summarySpec = when (length) {
+            0 -> "a very short, concise summary with a maximum of 20 words of the $contentTypeString using only 3 bullet points"
+            1 -> "a very short, concise summary with a maximum of 60 words of the $contentTypeString. $CONCLUSION_TAKEAWAY"
+            else -> "a summary of the $contentTypeString. $CONCLUSION_TAKEAWAY"
+        }
+
+        return "You will be provided with $contentSource, and your task is to generate $summarySpec in $language."
+    }
+
+    // --- Gemini/Groq Prompts ---
+
+    private fun getGeneralContentSource(type: ContentType, title: String?, forVideo: String): String {
+        val titlePart = if (!title.isNullOrBlank()) " '$title'" else ""
+        return when (type) {
+            ContentType.VIDEO_TRANSCRIPT -> "$forVideo$titlePart"
+            ContentType.ARTICLE -> "the article$titlePart"
+            ContentType.TEXT -> "this text"
+            ContentType.DOCUMENT -> "this document"
+        }
+    }
+
+    fun geminiPrompt(type: ContentType, title: String?, length: Int, language: String): String {
+        val contentSource = getGeneralContentSource(type, title, "the video")
+        return buildGeminiGroqPrompt(contentSource, type, length, language)
+    }
+
+    fun groqPrompt(type: ContentType, title: String?, length: Int, language: String): String {
+        val contentSource = getGeneralContentSource(type, title, "the video transcript")
+        return buildGeminiGroqPrompt(contentSource, type, length, language)
+    }
+
+    private fun buildGeminiGroqPrompt(contentSource: String, type: ContentType, length: Int, language: String): String {
+        return when (length) {
+            0 -> "Act as an expert content summarizer. Extract exactly 3 key points from $contentSource. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in $language."
+            1 -> "Act as a professional summarizer. Condense $contentSource into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in $language."
+            else -> {
+                if (type == ContentType.VIDEO_TRANSCRIPT) {
+                    "Act as a content analysis specialist. Create a detailed summary of $contentSource using exactly 130 words. Cover the main topic, key points, and any conclusions in a cohesive narrative. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the 130-word summary in $language."
+                } else {
+                    "Act as a content analysis specialist. Create a comprehensive summary of $contentSource that captures its essential information, arguments, and conclusions. Do not include any headings, introductions, or phrases like 'In summary' or 'In conclusion'. No markdown formatting. Deliver only the summary in $language."
+                }
+            }
+        }
+    }
 }

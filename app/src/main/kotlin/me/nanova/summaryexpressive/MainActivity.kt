@@ -16,7 +16,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import me.nanova.summaryexpressive.ui.AppNavigation
-import me.nanova.summaryexpressive.ui.page.OnboardingScreen
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.SummaryViewModel
 
@@ -48,7 +47,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                        AppNavigation(navController, sharedUrl, showOnboarding)
+                    AppNavigation(navController, sharedUrl, showOnboarding)
                 }
             }
         }
