@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.util.Xml
 import androidx.core.graphics.createBitmap
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
@@ -11,8 +12,10 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import org.apache.poi.xwpf.usermodel.XWPFDocument
+import org.xmlpull.v1.XmlPullParser
 import java.io.FileNotFoundException
+import java.io.InputStream
+import java.util.zip.ZipInputStream
 
 suspend fun extractTextFromPdf(context: Context, selectedPdfUri: Uri): String {
     // Open the PDF file
@@ -49,18 +52,49 @@ suspend fun extractTextFromPdf(context: Context, selectedPdfUri: Uri): String {
     return extractedText.toString()
 }
 
-suspend fun extractTextFromDocx(context: Context, selectedDocxUri: Uri): String =
-    withContext(Dispatchers.IO) {
-        context.contentResolver.openInputStream(selectedDocxUri)?.use { inputStream ->
-            XWPFDocument(inputStream).use { doc ->
-                val extractedText = StringBuilder()
-                doc.paragraphs.forEach { paragraph ->
-                    extractedText.append(paragraph.text).append("\n")
+private fun parseDocxXml(xmlInputStream: InputStream): String {
+    val parser = Xml.newPullParser().apply {
+        setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
+        setInput(xmlInputStream, null)
+    }
+
+    val extractedText = StringBuilder()
+    var eventType = parser.eventType
+    while (eventType != XmlPullParser.END_DOCUMENT) {
+        when (eventType) {
+            XmlPullParser.START_TAG -> {
+                if (parser.name == "w:t" && parser.next() == XmlPullParser.TEXT) {
+                    extractedText.append(parser.text)
                 }
-                extractedText.toString()
+            }
+
+            XmlPullParser.END_TAG -> {
+                if (parser.name == "w:p") {
+                    extractedText.append("\n")
+                }
             }
         }
+        eventType = parser.next()
+    }
+    return extractedText.toString().trim()
+}
+
+suspend fun extractTextFromDocx(context: Context, selectedDocxUri: Uri): String =
+    withContext(Dispatchers.IO) {
+        val inputStream = context.contentResolver.openInputStream(selectedDocxUri)
             ?: throw FileNotFoundException("Can't open InputStream for the URI: $selectedDocxUri")
+
+        inputStream.use { stream ->
+            ZipInputStream(stream).use { zis ->
+                generateSequence { zis.nextEntry }
+                    .find { it.name == "word/document.xml" }
+                    ?.let {
+                        return@withContext parseDocxXml(zis)
+                    }
+            }
+        }
+
+        throw FileNotFoundException("word/document.xml not found in the DOCX file.")
     }
 
 suspend fun extractTextFromImage(context: Context, selectedImageUri: Uri): String =

@@ -87,7 +87,6 @@ dependencies {
 
     // util, ui
     implementation("com.google.code.gson:gson:2.13.1")
-    implementation("org.apache.poi:poi-ooxml:5.4.1")
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("io.coil-kt:coil-gif:2.7.0")
 

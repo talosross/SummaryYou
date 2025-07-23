@@ -153,11 +153,7 @@ fun HomeScreen(
                     url = getFileName(context, uri)
                     textDocument = when (mimeType) {
                         MimeTypes.PDF -> extractTextFromPdf(context, uri)
-                        MimeTypes.DOCX -> extractTextFromDocx(
-                            context,
-                            uri
-                        )
-
+                        MimeTypes.DOCX -> extractTextFromDocx(context, uri)
                         else -> extractTextFromImage(context, uri)
                     }
                     isExtracting = false
