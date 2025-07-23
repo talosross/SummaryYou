@@ -6,7 +6,6 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -63,6 +62,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.AIProvider
@@ -73,7 +73,7 @@ import me.nanova.summaryexpressive.vm.SummaryViewModel
 @Composable
 fun SettingsScreen(
     navController: NavHostController,
-    viewModel: SummaryViewModel
+    viewModel: SummaryViewModel = hiltViewModel()
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -105,12 +105,16 @@ fun SettingsScreen(
             )
         },
     ) { innerPadding ->
-        ScrollContent(innerPadding, viewModel)
+        ScrollContent(innerPadding, viewModel, navController)
     }
 }
 
 @Composable
-fun ScrollContent(innerPadding: PaddingValues, viewModel: SummaryViewModel) {
+fun ScrollContent(
+    innerPadding: PaddingValues,
+    viewModel: SummaryViewModel,
+    navController: NavHostController
+) {
     val context = LocalContext.current
     val activity = LocalActivity.current
     var showDialogDesign by remember { mutableStateOf(false) }
@@ -125,14 +129,6 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: SummaryViewModel) {
     val ultraDark by viewModel.ultraDark.collectAsState()
     val multiLine by viewModel.multiLine.collectAsState()
     val showLength by viewModel.showLength.collectAsState()
-    var showTutorial by remember { mutableStateOf(false) }
-
-    if (showTutorial) {
-        OnboardingScreen(
-            onDone = { showTutorial = false },
-            modifier = Modifier.fillMaxSize()
-        )
-    }
 
     if (showDialogDesign) {
         AlertDialog(
@@ -426,12 +422,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: SummaryViewModel) {
                 )
                 ListItem(
                     modifier = Modifier
-                        .clickable(onClick = {
-                            viewModel.setShowOnboardingScreenValue(true)
-                            val intent = Intent(context, context.javaClass)
-                            context.startActivity(intent)
-                            (context as? ComponentActivity)?.finish()
-                        })
+                        .clickable(onClick = { navController.navigate("onboarding") })
                         .fillMaxWidth(),
                     headlineContent = { Text(stringResource(id = R.string.tutorial)) },
                     leadingContent = {

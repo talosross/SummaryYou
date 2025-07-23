@@ -1,4 +1,4 @@
-package me.nanova.summaryexpressive.utils
+package me.nanova.summaryexpressive.util
 
 import android.content.Context
 import android.graphics.pdf.PdfRenderer

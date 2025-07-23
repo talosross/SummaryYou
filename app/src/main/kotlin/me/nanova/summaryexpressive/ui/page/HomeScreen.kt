@@ -5,6 +5,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -86,10 +87,10 @@ import me.nanova.summaryexpressive.llm.YouTube.isYouTubeLink
 import me.nanova.summaryexpressive.model.SummaryResult
 import me.nanova.summaryexpressive.vm.SummaryViewModel
 import me.nanova.summaryexpressive.ui.component.SummaryCard
-import me.nanova.summaryexpressive.utils.extractTextFromDocx
-import me.nanova.summaryexpressive.utils.extractTextFromImage
-import me.nanova.summaryexpressive.utils.extractTextFromPdf
-import me.nanova.summaryexpressive.utils.getFileName
+import me.nanova.summaryexpressive.util.extractTextFromDocx
+import me.nanova.summaryexpressive.util.extractTextFromImage
+import me.nanova.summaryexpressive.util.extractTextFromPdf
+import me.nanova.summaryexpressive.util.getFileName
 
 
 private object MimeTypes {
@@ -113,8 +114,8 @@ private object MimeTypes {
 fun HomeScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    viewModel: SummaryViewModel,
-    initialUrl: String? = null
+    initialUrl: String? = null,
+    viewModel: SummaryViewModel = hiltViewModel()
 ) {
     var isExtracting by remember { mutableStateOf(false) } // For Loading-Animation
     var url by remember { mutableStateOf(initialUrl ?: "") }

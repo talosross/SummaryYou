@@ -12,14 +12,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
+import dagger.hilt.android.AndroidEntryPoint
 import me.nanova.summaryexpressive.ui.AppNavigation
 import me.nanova.summaryexpressive.ui.page.OnboardingScreen
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private var sharedUrl: String? = null
 
@@ -35,7 +37,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val viewModel: SummaryViewModel = viewModel()
+            val viewModel: SummaryViewModel = hiltViewModel()
             val design by viewModel.designNumber.collectAsState()
             val oLedMode by viewModel.ultraDark.collectAsState()
             val showOnboarding by viewModel.showOnboardingScreen.collectAsState()
@@ -46,13 +48,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    if (showOnboarding) {
-                        OnboardingScreen(onDone = {
-                            viewModel.setShowOnboardingScreenValue(false)
-                        })
-                    } else {
-                        AppNavigation(navController, viewModel, sharedUrl)
-                    }
+                        AppNavigation(navController, sharedUrl, showOnboarding)
                 }
             }
         }

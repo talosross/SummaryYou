@@ -8,26 +8,38 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import me.nanova.summaryexpressive.ui.page.HistoryScreen
 import me.nanova.summaryexpressive.ui.page.HomeScreen
+import me.nanova.summaryexpressive.ui.page.OnboardingScreen
 import me.nanova.summaryexpressive.ui.page.SettingsScreen
 import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    viewModel: SummaryViewModel,
-    initialUrl: String? = null
+    initialUrl: String? = null,
+    showOnboarding: Boolean
 ) {
-    NavHost(navController, startDestination = "home") {
+    val viewModel: SummaryViewModel = hiltViewModel()
+    val startDestination = if (showOnboarding) "onboarding" else "home"
+
+    NavHost(navController, startDestination = startDestination) {
+        composable("onboarding") {
+            OnboardingScreen(onDone = {
+                viewModel.setShowOnboardingScreenValue(false)
+                navController.navigate("home") {
+                    popUpTo("onboarding") { inclusive = true }
+                }
+            })
+        }
         composable("home") {
             HomeScreen(
                 modifier = Modifier,
                 navController = navController,
-                viewModel = viewModel,
                 initialUrl = initialUrl
             )
         }
@@ -51,8 +63,7 @@ fun AppNavigation(
             }
         ) {
             SettingsScreen(
-                navController = navController,
-                viewModel = viewModel
+                navController = navController
             )
         }
         composable(
@@ -75,8 +86,7 @@ fun AppNavigation(
             }
         ) {
             HistoryScreen(
-                navController = navController,
-                viewModel = viewModel
+                navController = navController
             )
         }
     }

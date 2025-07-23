@@ -20,7 +20,7 @@ import me.nanova.summaryexpressive.llm.Prompts
 import me.nanova.summaryexpressive.llm.YouTube
 import me.nanova.summaryexpressive.model.SummaryResult
 import me.nanova.summaryexpressive.model.TextSummary
-import me.nanova.summaryexpressive.utils.extractTextFromArticleUrl
+import me.nanova.summaryexpressive.util.extractTextFromArticleUrl
 import java.net.URL
 import java.util.Locale
 import java.util.UUID
