@@ -37,7 +37,7 @@ import me.nanova.summaryexpressive.R
 
 @Composable
 fun OnboardingScreen(
-    onContinueClicked: () -> Unit,
+    onDone: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var screen by remember { mutableIntStateOf(1) }
@@ -80,7 +80,7 @@ fun OnboardingScreen(
                         FilledTonalButton(
                             modifier = Modifier
                                 .padding(vertical = 18.dp),
-                            onClick = onContinueClicked
+                            onClick = onDone
                         ) {
                             Text(text = stringResource(id = R.string.skip))
                         }
@@ -182,7 +182,7 @@ fun OnboardingScreen(
                     Button(
                         modifier = Modifier
                             .padding(vertical = 18.dp),
-                        onClick = onContinueClicked
+                        onClick = onDone
                     ) {
                         Text(text = stringResource(id = R.string.finishButton))
                     }

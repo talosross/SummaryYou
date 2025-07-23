@@ -48,14 +48,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import me.nanova.summaryexpressive.R
-import me.nanova.summaryexpressive.TextSummaryViewModel
 import me.nanova.summaryexpressive.ui.component.SummaryCard
+import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     navController: NavHostController,
-    viewModel: TextSummaryViewModel
+    viewModel: SummaryViewModel
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())

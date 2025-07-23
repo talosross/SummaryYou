@@ -82,9 +82,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
-import me.nanova.summaryexpressive.TextSummaryViewModel
 import me.nanova.summaryexpressive.llm.YouTube.isYouTubeLink
 import me.nanova.summaryexpressive.model.SummaryResult
+import me.nanova.summaryexpressive.vm.SummaryViewModel
 import me.nanova.summaryexpressive.ui.component.SummaryCard
 import me.nanova.summaryexpressive.utils.extractTextFromDocx
 import me.nanova.summaryexpressive.utils.extractTextFromImage
@@ -113,7 +113,7 @@ private object MimeTypes {
 fun HomeScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    viewModel: TextSummaryViewModel,
+    viewModel: SummaryViewModel,
     initialUrl: String? = null
 ) {
     var isExtracting by remember { mutableStateOf(false) } // For Loading-Animation

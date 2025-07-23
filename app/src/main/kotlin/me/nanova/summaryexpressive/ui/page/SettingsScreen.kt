@@ -65,15 +65,15 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import me.nanova.summaryexpressive.R
-import me.nanova.summaryexpressive.TextSummaryViewModel
 import me.nanova.summaryexpressive.llm.AIProvider
+import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavHostController,
-    viewModel: TextSummaryViewModel
+    viewModel: SummaryViewModel
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -110,7 +110,7 @@ fun SettingsScreen(
 }
 
 @Composable
-fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) {
+fun ScrollContent(innerPadding: PaddingValues, viewModel: SummaryViewModel) {
     val context = LocalContext.current
     val activity = LocalActivity.current
     var showDialogDesign by remember { mutableStateOf(false) }
@@ -129,7 +129,7 @@ fun ScrollContent(innerPadding: PaddingValues, viewModel: TextSummaryViewModel) 
 
     if (showTutorial) {
         OnboardingScreen(
-            onContinueClicked = { showTutorial = false },
+            onDone = { showTutorial = false },
             modifier = Modifier.fillMaxSize()
         )
     }

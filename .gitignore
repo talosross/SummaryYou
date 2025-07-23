@@ -17,3 +17,4 @@ app/jni/api-keys.c
 *.aar
 *.ap_
 *.aab
+.repo_ignore
