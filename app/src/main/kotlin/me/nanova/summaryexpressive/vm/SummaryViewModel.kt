@@ -82,9 +82,9 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
     fun setShowLengthValue(newValue: Boolean) =
         savePreference(UserPreferencesRepository::setShowLength, newValue)
 
-    // Show length number
-    private val _showLengthNumber = MutableStateFlow(0)
-    val showLengthNumber: StateFlow<Int> = _showLengthNumber.asStateFlow()
+    // Length number
+    private val _lengthNumber = MutableStateFlow(0)
+    val lengthNumber: StateFlow<Int> = _lengthNumber.asStateFlow()
     fun setShowLengthNumberValue(newValue: Int) =
         savePreference(UserPreferencesRepository::setShowLengthNumber, newValue)
 
@@ -120,7 +120,7 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
             .collectInto(_showOnboardingScreen)
         UserPreferencesRepository.getShowLength(getApplication()).collectInto(_showLength)
         UserPreferencesRepository.getShowLengthNumber(getApplication())
-            .collectInto(_showLengthNumber)
+            .collectInto(_lengthNumber)
     }
 
     fun addTextSummary(title: String?, author: String?, text: String?, youtubeLink: Boolean) {

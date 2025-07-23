@@ -30,19 +30,20 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.OutlinedButton
@@ -55,7 +56,6 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -84,6 +84,7 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.YouTube.isYouTubeLink
+import me.nanova.summaryexpressive.model.SummaryException
 import me.nanova.summaryexpressive.model.SummaryResult
 import me.nanova.summaryexpressive.ui.component.SummaryCard
 import me.nanova.summaryexpressive.util.extractTextFromDocx
@@ -124,7 +125,6 @@ fun HomeScreen(
     val clipboard = LocalClipboard.current // Clipboard
     val focusManager = LocalFocusManager.current // Hide cursor
     val focusRequester = remember { FocusRequester() } // Show cursor after removing
-    var selectedIndex by remember { mutableIntStateOf(0) } // Summary length index
     val options = listOf(
         stringResource(id = R.string.short_length),
         stringResource(id = R.string.middle_length),
@@ -138,7 +138,8 @@ fun HomeScreen(
     var textDocument by remember { mutableStateOf<String?>(null) }
     var singleLine by remember { mutableStateOf(false) }
     val showLength by viewModel.showLength.collectAsState()
-    val showLengthNumber by viewModel.showLengthNumber.collectAsState()
+    val showLengthNumber by viewModel.lengthNumber.collectAsState()
+    var selectedIndex by remember { mutableIntStateOf(showLengthNumber) } // Summary length index
     val multiLine by viewModel.multiLine.collectAsState()
 
     val result = remember { mutableStateOf<Uri?>(null) }
@@ -162,15 +163,10 @@ fun HomeScreen(
             }
         }
 
-    if (!showLength) {
-        selectedIndex = showLengthNumber
-    }
-
     fun summarize() {
         focusManager.clearFocus()
         viewModel.summarize(url, selectedIndex, isDocument, textDocument)
     }
-
 
     Box(modifier = modifier) {
         Scaffold(
@@ -198,17 +194,6 @@ fun HomeScreen(
                             style = MaterialTheme.typography.headlineMedium
                         )
 
-                        // Loading-Animation
-                        if (isLoading) {
-                            LinearWavyProgressIndicator(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 5.dp)
-                            )
-                        } else {
-                            Spacer(modifier = Modifier.height(height = 8.dp))
-                        }
-
                         UrlInputSection(
                             url = url,
                             onUrlChange = { url = it },
@@ -233,7 +218,6 @@ fun HomeScreen(
                             onSingleLineChange = { singleLine = it }
                         )
 
-
                         val currentResult = summaryResult
                         if (showLength) {
                             SummaryLengthSelector(
@@ -245,6 +229,17 @@ fun HomeScreen(
                                 options = options,
                                 isError = currentResult?.isError ?: false
                             )
+                        }
+
+                        // Loading-Animation
+                        if (isLoading) {
+                            LinearWavyProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 5.dp)
+                            )
+                        } else {
+                            Spacer(modifier = Modifier.height(height = 8.dp))
                         }
 
                         if (currentResult != null && !currentResult.isError && !currentResult.summary.isNullOrEmpty()) {
@@ -306,6 +301,7 @@ private fun HomeTopAppBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun UrlInputSection(
     url: String,
@@ -322,7 +318,8 @@ private fun UrlInputSection(
     singleLine: Boolean,
     onSingleLineChange: (Boolean) -> Unit
 ) {
-    val showCancelIcon by remember { derivedStateOf { url.isNotBlank() } }
+    val showCancelIcon = remember(url) { url.isNotBlank() }
+
     Row(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = url,
@@ -335,30 +332,7 @@ private fun UrlInputSection(
                 if (summaryResult?.isError == true) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = when (summaryResult.summary) {
-                            "Exception: no internet" -> stringResource(id = R.string.noInternet)
-                            "Exception: invalid link" -> stringResource(id = R.string.invalidURL)
-                            "Exception: no transcript" -> stringResource(id = R.string.noTranscript)
-                            "Exception: no content" -> stringResource(id = R.string.noContent)
-                            "Exception: too short" -> stringResource(id = R.string.tooShort)
-                            "Exception: paywall detected" -> stringResource(
-                                id = R.string.paywallDetected
-                            )
-
-                            "Exception: too long" -> stringResource(id = R.string.tooLong)
-                            "Exception: incorrect key" -> {
-                                if (apiKey.isEmpty()) {
-                                    stringResource(id = R.string.incorrectKeyOpenSource)
-                                } else {
-                                    stringResource(id = R.string.incorrectKey)
-                                }
-                            }
-
-                            "Exception: rate limit" -> stringResource(id = R.string.rateLimit)
-                            "Exception: no key" -> stringResource(id = R.string.noKey)
-                            else -> summaryResult.summary
-                                ?: "unknown error 3"
-                        },
+                        text = getErrorMessage(summaryResult.errorMessage, apiKey),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -374,13 +348,17 @@ private fun UrlInputSection(
                     }
                 }
             },
+            maxLines = 15,
             singleLine = if (multiLine) singleLine else true,
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier
                 .weight(1f)
                 .padding(top = 20.dp)
                 .focusRequester(focusRequester)
         )
+
         Spacer(modifier = Modifier.width(16.dp))
+
         Column {
             OutlinedButton(
                 onClick = onLaunchFilePicker,
@@ -390,39 +368,49 @@ private fun UrlInputSection(
             ) {
                 Box {
                     if (isExtracting) {
-                        CircularProgressIndicator(
+                        LoadingIndicator(
                             modifier = Modifier
-                                .size(24.dp)
+                                .size(55.dp)
                                 .align(Alignment.Center)
                         )
                     }
                     Icon(
-                        if (isDocument && !isExtracting) {
-                            Icons.Filled.CheckCircle
-                        } else {
-                            Icons.Filled.AddCircle
-                        },
+                        if (isDocument && !isExtracting) Icons.Filled.CheckCircle else Icons.Filled.AddCircle,
                         contentDescription = "Floating action button",
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
             }
-            if (multiLine && !singleLine) {
+            if (multiLine) {
                 val textLength = url.length
                 val lineBreaks = url.count { it == '\n' }
-                val maxLength = 100 // Maximum length of the URL field
-                if (textLength >= maxLength || lineBreaks >= 1) {
-                    Button(
-                        onClick = { onSingleLineChange(true) },
-                        modifier = Modifier
-                            .height(72.dp)
-                            .padding(top = 15.dp)
-                    ) {
-                        Icon(
-                            Icons.Outlined.KeyboardArrowUp,
-                            contentDescription = "Minimize",
-                            modifier = Modifier.size(24.dp)
-                        )
+                if (textLength >= 100 || lineBreaks >= 1) {
+                    if (singleLine) {
+                        Button(
+                            onClick = { onSingleLineChange(false) },
+                            modifier = Modifier
+                                .height(72.dp)
+                                .padding(top = 15.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.KeyboardArrowDown,
+                                contentDescription = "Minimize",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = { onSingleLineChange(true) },
+                            modifier = Modifier
+                                .height(72.dp)
+                                .padding(top = 15.dp)
+                        ) {
+                            Icon(
+                                Icons.Outlined.KeyboardArrowUp,
+                                contentDescription = "Minimize",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -439,7 +427,7 @@ private fun SummaryLengthSelector(
     isError: Boolean
 ) {
     Box(
-        modifier = if (isError) Modifier.padding(top = 11.dp) else Modifier.padding(top = 15.dp)
+        modifier = if (isError) Modifier.padding(top = 5.dp) else Modifier.padding(top = 10.dp)
     ) {
         Row(
             Modifier.fillMaxWidth(),
@@ -561,5 +549,29 @@ private fun HomeFloatingActionButtons(
                 Icon(Icons.Filled.Check, "Check")
             }
         }
+    }
+}
+
+@Composable
+private fun getErrorMessage(errorMessage: String?, apiKey: String): String {
+    return when (errorMessage) {
+        SummaryException.NoInternetException.message -> stringResource(id = R.string.noInternet)
+        SummaryException.InvalidLinkException.message -> stringResource(id = R.string.invalidURL)
+        SummaryException.NoTranscriptException.message -> stringResource(id = R.string.noTranscript)
+        SummaryException.NoContentException.message -> stringResource(id = R.string.noContent)
+        SummaryException.TooShortException.message -> stringResource(id = R.string.tooShort)
+        SummaryException.PaywallException.message -> stringResource(id = R.string.paywallDetected)
+        SummaryException.TooLongException.message -> stringResource(id = R.string.tooLong)
+        SummaryException.IncorrectKeyException.message -> {
+            if (apiKey.isBlank()) {
+                stringResource(id = R.string.incorrectKeyOpenSource)
+            } else {
+                stringResource(id = R.string.incorrectKey)
+            }
+        }
+
+        SummaryException.RateLimitException.message -> stringResource(id = R.string.rateLimit)
+        SummaryException.NoKeyException.message -> stringResource(id = R.string.noKey)
+        else -> errorMessage ?: "unknown error"
     }
 }
