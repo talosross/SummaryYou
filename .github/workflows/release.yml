@@ -22,7 +22,7 @@ jobs:
           java-version: 21
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Cache Gradle packages
         uses: actions/cache@v4
@@ -58,7 +58,7 @@ jobs:
           java-version: 21
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Cache Gradle packages
         uses: actions/cache@v4
@@ -103,11 +103,10 @@ jobs:
         run: mv "app/build/outputs/apk/release/app-release.apk" "app/build/outputs/apk/release/SummaryExpressive-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
 
       - name: Publish GitHub release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: "Release ${{ env.VERSION_NAME }} (${{ env.VERSION_CODE }})"
           prerelease: false
           draft: false
-          token: ${{ secrets.ADMIN_TOKEN }}
           files: app/build/outputs/apk/release/SummaryExpressive-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
