@@ -1,5 +1,5 @@
 # Privacy Policy
-Talos Ross built the "Summary Expressive" app as an Open Source app. This SERVICE is provided by Talos Ross and is intended for use as described below.
+NanoNova built the "Summary Expressive" app as an Open Source app. This SERVICE is provided by NanoNova and is intended for use as described below.
 
 This page is used to inform visitors regarding my policies with the collection, use, and disclosure of Personal Information if anyone decides to use my Service.
 
@@ -34,4 +34,4 @@ We may update our Privacy Policy from time to time. We will notify you of any ch
 ## Contact Us
 If you have any questions or suggestions about our Privacy Policy, please do not hesitate to contact us at kid1412621@gmail.com.
 
-This privacy policy page was created and modified by Talos Ross.
+This privacy policy page was created and modified by NanoNova.

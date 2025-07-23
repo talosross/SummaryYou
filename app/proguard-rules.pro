@@ -42,4 +42,5 @@
 -dontwarn org.LatencyUtils.**
 -dontwarn org.eclipse.jetty.**
 -dontwarn reactor.blockhound.integration.BlockHoundIntegration
+-dontwarn java.lang.management.**
 

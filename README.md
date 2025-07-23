@@ -6,9 +6,7 @@
 
 ### Summarize YouTube-Videos, Articles, Images and Documents with AI
 
-
 </div>
-
 
 ## 📱 Screenshots
 
@@ -24,11 +22,11 @@
 </div>
 </div>
 
-<br>
+---
 
-## Download Version without key necessary (paid)
+## Play Store Version (coming soon)
 
-<a href='https://play.google.com/store/apps/details?id=com.talosross.SummaryExpressive'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='300'/></a>
+<a href='https://play.google.com/store/apps/details?id=me.nanova.SummaryExpressive'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='300'/></a>
 
 ## 📖 Features
 
@@ -39,7 +37,7 @@
 - Read-Out the summaries
 
 - History-Section
-  
+
 - Intelligent paywall detection
 
 - OLED-Dark Mode
@@ -49,11 +47,10 @@
 - [Material Design 3](https://m3.material.io/) style UI, with dynamic color theme.
 
 It uses GPT-3.5 OpenAI/Mixtral 8x7B Groq to summarize.
-  
+
 ## ⭐️ Star History
 
 ![Star History Chart](https://api.star-history.com/svg?repos=kid1412621/SummaryExpressive&type=Timeline)
-
 
 ## 🧱 Credits
 
@@ -62,7 +59,6 @@ Python with [Chaquopy](https://github.com/chaquo/chaquopy) as backend
 Some of the UI designs and codes are borrowed from [Seal](https://github.com/JunkFood02/Seal)
 
 [Material color utilities](https://github.com/material-foundation/material-color-utilities)
-
 
 ## 📃 License
 
