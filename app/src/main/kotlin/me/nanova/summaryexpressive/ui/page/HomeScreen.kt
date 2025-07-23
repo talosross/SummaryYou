@@ -86,10 +86,10 @@ import me.nanova.summaryexpressive.TextSummaryViewModel
 import me.nanova.summaryexpressive.llm.YouTube.isYouTubeLink
 import me.nanova.summaryexpressive.model.SummaryResult
 import me.nanova.summaryexpressive.ui.component.SummaryCard
-import me.nanova.summaryexpressive.ui.util.extractTextFromDocx
-import me.nanova.summaryexpressive.ui.util.extractTextFromImage
-import me.nanova.summaryexpressive.ui.util.extractTextFromPdf
-import me.nanova.summaryexpressive.ui.util.getFileName
+import me.nanova.summaryexpressive.utils.extractTextFromDocx
+import me.nanova.summaryexpressive.utils.extractTextFromImage
+import me.nanova.summaryexpressive.utils.extractTextFromPdf
+import me.nanova.summaryexpressive.utils.getFileName
 
 
 private object MimeTypes {

@@ -56,5 +56,5 @@
     <string name="tutorialDescription">Öğreticiyi Yeniden İzleyin</string>
     <string name="noHistory">Henüz hiçbir şeyi özetlemediniz.</string>
     <string name="copied">Kopyalandı</string>
-    <string name="stillLoading">Belge hala işleniyor...</string>
+    <string name="stillLoading">Belge hala işleniyor…</string>
 </resources>

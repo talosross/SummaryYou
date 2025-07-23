@@ -49,6 +49,7 @@ import me.nanova.summaryexpressive.ui.page.HomeScreen
 import me.nanova.summaryexpressive.ui.page.OnboardingScreen
 import me.nanova.summaryexpressive.ui.page.SettingsScreen
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
+import me.nanova.summaryexpressive.utils.extractTextFromArticleUrl
 import java.net.URL
 import java.util.Locale
 import java.util.UUID
@@ -320,21 +321,27 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
         isDocument: Boolean,
         documentText: String?
     ): SummaryResult {
-        val isYouTube = YouTube.isYouTubeLink(urlOrFilename)
-
         if (urlOrFilename.isBlank() || (isDocument && documentText.isNullOrBlank())) {
             return SummaryResult(null, null, "Exception: no content", isError = true)
         }
+
+        val isUrl =
+            !isDocument && (urlOrFilename.startsWith("http") || urlOrFilename.startsWith("https"))
+        if (isUrl && runCatching { URL(urlOrFilename).host }.getOrNull().isNullOrEmpty()) {
+            return SummaryResult(urlOrFilename, null, "Error: invalid link", isError = true)
+        }
+
+        val isYouTube = YouTube.isYouTubeLink(urlOrFilename)
 
         // API key is required for all LLM calls, regardless of input type
         if (apiKey.value.isEmpty()) {
             return SummaryResult(null, null, "Exception: no key", isError = true)
         }
 
-        return if (isYouTube) {
-            summarizeYouTubeVideo(urlOrFilename, length)
-        } else {
-            summarizeTextOrDocument(urlOrFilename, length, isDocument, documentText)
+        return when {
+            isYouTube -> summarizeYouTubeVideo(urlOrFilename, length)
+            isUrl -> summarizeArticle(urlOrFilename, length)
+            else -> summarizeTextOrDocument(urlOrFilename, length, isDocument, documentText)
         }
     }
 
@@ -416,6 +423,60 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    private suspend fun summarizeArticle(url: String, length: Int): SummaryResult =
+        withContext(Dispatchers.IO) {
+            try {
+                val article = extractTextFromArticleUrl(url)
+
+                val transcript = article.text
+                val title = article.title
+                val author = article.author
+
+                val currentLocale: Locale =
+                    getApplication<Application>().resources.configuration.locales[0]
+                val language: String = if (useOriginalLanguage.value) {
+                    "the same language as the text"
+                } else {
+                    currentLocale.getDisplayLanguage(Locale.ENGLISH)
+                }
+
+                val promptFn: (String, String) -> String = when (model.value) {
+                    AIProvider.OPENAI -> when (length) {
+                        0 -> Prompts::openAIPromptArticle0
+                        1 -> Prompts::openAIPromptArticle1
+                        else -> Prompts::openAIPromptArticle3
+                    }
+
+                    AIProvider.GEMINI -> when (length) {
+                        0 -> Prompts::geminiPromptArticle0
+                        1 -> Prompts::geminiPromptArticle1
+                        else -> Prompts::geminiPromptArticle3
+                    }
+
+                    AIProvider.GROQ -> when (length) {
+                        0 -> Prompts::groqPromptArticle0
+                        1 -> Prompts::groqPromptArticle1
+                        else -> Prompts::groqPromptArticle3
+                    }
+                }
+                val systemPrompt = promptFn(title, language)
+
+                val summary = llmSummarize(transcript, systemPrompt)
+                val isError = summary.startsWith("Error:")
+                val resultSummary = if (isError) summary else summary.trim()
+
+                val result = SummaryResult(title, author, resultSummary, isError)
+                if (!isError) {
+                    addTextSummary(result.title, result.author, result.summary, false)
+                }
+                return@withContext result
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return@withContext SummaryResult(url, "Article", "Error: ${e.message}", true)
+            }
+        }
+
     private suspend fun summarizeTextOrDocument(
         urlOrFilename: String,
         length: Int,
@@ -423,13 +484,6 @@ class TextSummaryViewModel(application: Application) : AndroidViewModel(applicat
         documentText: String?
     ): SummaryResult {
         val textToSummarize = if (isDocument) documentText!! else urlOrFilename
-        if (!isDocument && (textToSummarize.startsWith("http") || textToSummarize.startsWith("https")) && runCatching {
-                URL(
-                    textToSummarize
-                ).host
-            }.getOrNull().isNullOrEmpty()) {
-            return SummaryResult(null, null, "Exception: invalid link", isError = true)
-        }
         if (isDocument && textToSummarize.length < 100) {
             return SummaryResult(null, null, "Exception: too short", isError = true)
         }

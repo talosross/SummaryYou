@@ -44,25 +44,10 @@
 
 - Easy to use and user-friendly.
 
-- [Material Design 3](https://m3.material.io/) style UI, with dynamic color theme.
+- [Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) style UI, with
+  dynamic color theme.
 
-It uses GPT-3.5 OpenAI/Mixtral 8x7B Groq to summarize.
-
-## ⭐️ Star History
-
-![Star History Chart](https://api.star-history.com/svg?repos=kid1412621/SummaryExpressive&type=Timeline)
-
-## 🧱 Credits
-
-Python with [Chaquopy](https://github.com/chaquo/chaquopy) as backend
-
-Some of the UI designs and codes are borrowed from [Seal](https://github.com/JunkFood02/Seal)
-
-[Material color utilities](https://github.com/material-foundation/material-color-utilities)
-
-## 📃 License
-
-[<img src="SummaryExpressiveLicense.svg" />](https://github.com/kid1412621/SummaryExpressive/blob/master/LICENSE.txt)
+It uses OpenAI/Gemini to summarize.
 
 <div align="right">
 <table><td>
