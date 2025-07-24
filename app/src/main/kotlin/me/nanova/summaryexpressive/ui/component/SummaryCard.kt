@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
@@ -57,7 +58,7 @@ fun SummaryCard(
     summary: String?,
     isYouTube: Boolean,
     cardColors: CardColors = CardDefaults.cardColors(),
-    onLongClick: (() -> Unit)? = null
+    onLongClick: (() -> Unit)? = null,
 ) {
     Card(
         modifier = modifier
@@ -78,16 +79,11 @@ fun SummaryCard(
                     .padding(top = 12.dp, start = 12.dp, end = 12.dp)
             )
             if (!author.isNullOrEmpty()) {
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = author,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier
-                            .padding(
-                                top = 4.dp,
-                                start = 12.dp,
-                                end = 12.dp
-                            )
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 12.dp)
                     )
                     if (isYouTube) {
                         Icon(
@@ -102,7 +98,7 @@ fun SummaryCard(
         summary?.let {
             Text(
                 text = it,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier
                     .padding(
                         start = 12.dp,
@@ -116,8 +112,20 @@ fun SummaryCard(
     }
 }
 
+@Preview
 @Composable
-fun SummaryActionButtons(summary: String?) {
+fun SummaryCardPreview() {
+    SummaryCard(
+        title = "Sample Title",
+        author = "Sample Author",
+        summary = "This is a sample summary for preview purposes. It should be long enough to test the TTS functionality and also the layout of the card.",
+        isYouTube = true,
+    )
+}
+
+
+@Composable
+private fun SummaryActionButtons(summary: String?) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
@@ -151,7 +159,7 @@ fun SummaryActionButtons(summary: String?) {
                     utteranceId: String,
                     start: Int,
                     end: Int,
-                    frame: Int
+                    frame: Int,
                 ) {
                     // Is called when a new range of text is being spoken
                     currentPosition = end
@@ -279,4 +287,11 @@ fun SummaryActionButtons(summary: String?) {
             )
         }
     }
+}
+
+@Preview
+@Composable
+fun SummaryActionButtonsPreview() {
+    val summary = "This is a sample summary for preview purposes."
+    SummaryActionButtons(summary = summary)
 }
