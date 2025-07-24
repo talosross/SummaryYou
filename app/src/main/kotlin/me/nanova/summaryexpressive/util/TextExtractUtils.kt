@@ -10,7 +10,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.android.Android
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.Dispatchers
@@ -25,11 +25,11 @@ import java.util.zip.ZipInputStream
 data class ExtractedArticle(
     val text: String,
     val title: String,
-    val author: String
+    val author: String,
 )
 
 private suspend fun fetchUrlContent(url: String): String {
-    HttpClient(CIO).use { client ->
+    HttpClient(Android).use { client ->
         return client.get(url).bodyAsText()
     }
 }

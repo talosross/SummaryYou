@@ -5,7 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.request.get
@@ -26,7 +26,7 @@ private data class CaptionTrack(
     val baseUrl: String,
     val name: Name,
     val languageCode: String,
-    val kind: String? // "asr" for auto-generated
+    val kind: String?, // "asr" for auto-generated
 ) {
     data class Name(val simpleText: String)
 }
@@ -38,7 +38,7 @@ object YouTube {
     private const val INNERTUBE_CONTEXT_JSON =
         """{"client": {"clientName": "ANDROID", "clientVersion": "20.10.38"}}"""
     private val gson = Gson()
-    private val client = HttpClient(CIO) {
+    private val client = HttpClient(Android) {
         install(HttpCookies) {
             storage = AcceptAllCookiesStorage()
         }
@@ -144,7 +144,7 @@ object YouTube {
     suspend fun getTranscript(
         videoId: String,
         playerResponse: JsonObject,
-        preferredLanguage: String = "en"
+        preferredLanguage: String = "en",
     ): Pair<String, String>? = withContext(Dispatchers.IO) {
         try {
             val playabilityStatus = playerResponse.getAsJsonObject("playabilityStatus")
