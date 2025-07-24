@@ -40,7 +40,7 @@ fun OnboardingScreen(
     onDone: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var screen by remember { mutableIntStateOf(1) }
+    var step by remember { mutableIntStateOf(1) }
     val context = LocalContext.current
     val imageLoader = ImageLoader.Builder(context)
         .components {
@@ -55,7 +55,7 @@ fun OnboardingScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            when (screen) {
+            when (step) {
                 1 -> {
                     Image(
                         painter = painterResource(id = R.drawable.logo),
@@ -84,11 +84,11 @@ fun OnboardingScreen(
                         ) {
                             Text(text = stringResource(id = R.string.skip))
                         }
-                        Spacer(modifier = modifier.padding(start = 12.dp))
+                        Spacer(modifier = Modifier.padding(start = 12.dp))
                         Button(
                             modifier = Modifier
                                 .padding(vertical = 18.dp),
-                            onClick = { screen = 2 }
+                            onClick = { step = 2 }
                         ) {
                             Text(text = stringResource(id = R.string.continueButton))
                         }
@@ -106,7 +106,7 @@ fun OnboardingScreen(
                                 .build(), imageLoader = imageLoader
                         ),
                         contentDescription = null,
-                        modifier = modifier
+                        modifier = Modifier
                             .padding(top = 60.dp, start = 40.dp, end = 40.dp, bottom = 0.dp)
                             .clip(shape = RoundedCornerShape(20.dp)),
                     )
@@ -119,11 +119,11 @@ fun OnboardingScreen(
                     )
                     Button(
                         modifier = Modifier.padding(vertical = 18.dp),
-                        onClick = { screen = 3 }
+                        onClick = { step = 3 }
                     ) {
                         Text(text = stringResource(id = R.string.continueButton))
                     }
-                    Spacer(modifier = modifier.padding(top = 18.dp))
+                    Spacer(modifier = Modifier.padding(top = 18.dp))
                 }
 
                 3 -> {
@@ -137,7 +137,7 @@ fun OnboardingScreen(
                                 .build(), imageLoader = imageLoader
                         ),
                         contentDescription = null,
-                        modifier = modifier
+                        modifier = Modifier
                             .padding(top = 60.dp, start = 40.dp, end = 40.dp, bottom = 0.dp)
                             .clip(shape = RoundedCornerShape(20.dp)),
                     )
@@ -150,11 +150,11 @@ fun OnboardingScreen(
                     )
                     Button(
                         modifier = Modifier.padding(vertical = 18.dp),
-                        onClick = { screen = 4 }
+                        onClick = { step = 4 }
                     ) {
                         Text(text = stringResource(id = R.string.continueButton))
                     }
-                    Spacer(modifier = modifier.padding(top = 18.dp))
+                    Spacer(modifier = Modifier.padding(top = 18.dp))
                 }
 
                 4 -> {
@@ -168,7 +168,7 @@ fun OnboardingScreen(
                                 .build(), imageLoader = imageLoader
                         ),
                         contentDescription = null,
-                        modifier = modifier
+                        modifier = Modifier
                             .padding(top = 60.dp, start = 40.dp, end = 40.dp, bottom = 0.dp)
                             .clip(shape = RoundedCornerShape(20.dp)),
                     )
@@ -186,7 +186,7 @@ fun OnboardingScreen(
                     ) {
                         Text(text = stringResource(id = R.string.finishButton))
                     }
-                    Spacer(modifier = modifier.padding(top = 18.dp))
+                    Spacer(modifier = Modifier.padding(top = 18.dp))
                 }
             }
         }

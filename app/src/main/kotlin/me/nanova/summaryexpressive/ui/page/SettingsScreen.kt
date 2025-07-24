@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.HelpCenter
@@ -33,11 +34,14 @@ import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.VpnKey
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -56,24 +60,51 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.AIProvider
+import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.SummaryViewModel
 
+
+data class SettingsState(
+    val design: Int,
+    val apiKey: String,
+    val apiBaseUrl: String,
+    val model: AIProvider,
+    val useOriginalLanguage: Boolean,
+    val ultraDark: Boolean,
+    val multiLine: Boolean,
+    val showLength: Boolean,
+)
+
+data class SettingsActions(
+    val onDesignChange: (Int) -> Unit,
+    val onApiKeyChange: (String) -> Unit,
+    val onModelChange: (String) -> Unit,
+    val onBaseUrlChange: (String) -> Unit,
+    val onUseOriginalLanguageChange: (Boolean) -> Unit,
+    val onUltraDarkChange: (Boolean) -> Unit,
+    val onMultiLineChange: (Boolean) -> Unit,
+    val onShowLengthChange: (Boolean) -> Unit,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavHostController,
-    viewModel: SummaryViewModel = hiltViewModel()
+    viewModel: SummaryViewModel = hiltViewModel(),
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -84,8 +115,6 @@ fun SettingsScreen(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                ),
                 title = {
                     Text(
                         text = stringResource(id = R.string.settings),
@@ -105,15 +134,36 @@ fun SettingsScreen(
             )
         },
     ) { innerPadding ->
-        ScrollContent(innerPadding, viewModel, navController)
+        val state = SettingsState(
+            design = viewModel.designNumber.collectAsState().value,
+            apiKey = viewModel.apiKey.collectAsState().value,
+            apiBaseUrl = viewModel.baseUrl.collectAsState().value,
+            model = viewModel.model.collectAsState().value,
+            useOriginalLanguage = viewModel.useOriginalLanguage.collectAsState().value,
+            ultraDark = viewModel.ultraDark.collectAsState().value,
+            multiLine = viewModel.multiLine.collectAsState().value,
+            showLength = viewModel.showLength.collectAsState().value
+        )
+        val actions = SettingsActions(
+            onDesignChange = viewModel::setDesignNumber,
+            onApiKeyChange = viewModel::setApiKeyValue,
+            onModelChange = viewModel::setModelValue,
+            onBaseUrlChange = viewModel::setBaseUrlValue,
+            onUseOriginalLanguageChange = viewModel::setUseOriginalLanguageValue,
+            onUltraDarkChange = viewModel::setUltraDarkValue,
+            onMultiLineChange = viewModel::setMultiLineValue,
+            onShowLengthChange = viewModel::setShowLengthValue
+        )
+        ScrollContent(innerPadding, navController, state, actions)
     }
 }
 
 @Composable
-fun ScrollContent(
+private fun ScrollContent(
     innerPadding: PaddingValues,
-    viewModel: SummaryViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    state: SettingsState,
+    actions: SettingsActions,
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -121,14 +171,6 @@ fun ScrollContent(
     var showDialogRestart by remember { mutableStateOf(false) }
     var showDialogKey by remember { mutableStateOf(false) }
     var showDialogModel by remember { mutableStateOf(false) }
-    val design by viewModel.designNumber.collectAsState()
-    val apiKey by viewModel.apiKey.collectAsState()
-    val apiBaseUrl by viewModel.baseUrl.collectAsState()
-    val model by viewModel.model.collectAsState()
-    val useOriginalLanguage by viewModel.useOriginalLanguage.collectAsState()
-    val ultraDark by viewModel.ultraDark.collectAsState()
-    val multiLine by viewModel.multiLine.collectAsState()
-    val showLength by viewModel.showLength.collectAsState()
 
     if (showDialogDesign) {
         AlertDialog(
@@ -138,23 +180,23 @@ fun ScrollContent(
                 Column {
                     RadioButtonItem(
                         stringResource(id = R.string.systemDesign),
-                        selected = design == 0
+                        selected = state.design == 0
                     ) {
-                        viewModel.setDesignNumber(0)
+                        actions.onDesignChange(0)
                         activity?.recreate()
                     }
                     RadioButtonItem(
                         stringResource(id = R.string.lightDesign),
-                        selected = design == 2
+                        selected = state.design == 2
                     ) {
-                        viewModel.setDesignNumber(2)
+                        actions.onDesignChange(2)
                         activity?.recreate()
                     }
                     RadioButtonItem(
                         stringResource(id = R.string.darkDesign),
-                        selected = design == 1
+                        selected = state.design == 1
                     ) {
-                        viewModel.setDesignNumber(1)
+                        actions.onDesignChange(1)
                         activity?.recreate()
                     }
                 }
@@ -189,22 +231,20 @@ fun ScrollContent(
     }
 
     if (showDialogKey) {
-        var apiTextFieldValue by remember { mutableStateOf(apiKey) }
+        var apiTextFieldValue by remember { mutableStateOf(state.apiKey) }
         AlertDialog(
             onDismissRequest = { showDialogKey = false },
             title = { Text(stringResource(id = R.string.setApiKey)) },
             text = {
                 OutlinedTextField(
                     value = apiTextFieldValue,
-                    onValueChange = {
-                        apiTextFieldValue = it // Update the value in the local variable
-                    }
+                    onValueChange = { apiTextFieldValue = it }
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.setApiKeyValue(apiTextFieldValue) // Set the API key to the value from the text field
+                        actions.onApiKeyChange(apiTextFieldValue)
                         showDialogKey = false
                     }
                 ) {
@@ -220,8 +260,8 @@ fun ScrollContent(
     }
 
     if (showDialogModel) {
-        var selectedModel by remember { mutableStateOf(model) }
-        var apiBaseUrlTextFieldValue by remember { mutableStateOf(apiBaseUrl) }
+        var selectedModel by remember { mutableStateOf(state.model) }
+        var apiBaseUrlTextFieldValue by remember { mutableStateOf(state.apiBaseUrl) }
 
         AlertDialog(
             onDismissRequest = { showDialogModel = false },
@@ -245,8 +285,8 @@ fun ScrollContent(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.setModelValue(selectedModel.name)
-                        viewModel.setBaseUrlValue(apiBaseUrlTextFieldValue)
+                        actions.onModelChange(selectedModel.name)
+                        actions.onBaseUrlChange(apiBaseUrlTextFieldValue)
                         showDialogModel = false
                     }
                 ) {
@@ -261,35 +301,20 @@ fun ScrollContent(
         )
     }
 
-
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
         contentPadding = innerPadding,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Column {
-                ListItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    headlineContent = { Text(stringResource(id = R.string.useOriginalLanguage)) },
-                    supportingContent = { Text(stringResource(id = R.string.useOriginalLanguageDescription)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Translate,
-                            contentDescription = "Language Settings",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = useOriginalLanguage,
-                            onCheckedChange = { newValue ->
-                                viewModel.setUseOriginalLanguageValue(newValue)
-                            }
-                        )
-                    }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
+            ) {
                 ListItem(
                     modifier = Modifier
                         .clickable {
@@ -299,6 +324,7 @@ fun ScrollContent(
                             context.startActivity(intent)
                         }
                         .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.chooseLanguage)) },
                     leadingContent = {
                         Icon(
@@ -310,9 +336,41 @@ fun ScrollContent(
                     supportingContent = { Text(stringResource(id = R.string.chooseLanguageDescription)) },
                 )
                 ListItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    headlineContent = { Text(stringResource(id = R.string.useOriginalLanguage)) },
+                    supportingContent = { Text(stringResource(id = R.string.useOriginalLanguageDescription)) },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Translate,
+                            contentDescription = "Language Settings",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = state.useOriginalLanguage,
+                            onCheckedChange = { newValue ->
+                                actions.onUseOriginalLanguageChange(newValue)
+                            }
+                        )
+                    }
+                )
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+            ) {
+                ListItem(
                     modifier = Modifier
                         .clickable(onClick = { showDialogDesign = showDialogDesign.not() })
                         .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.design)) },
                     leadingContent = {
                         Icon(
@@ -323,7 +381,7 @@ fun ScrollContent(
                     },
                     supportingContent = {
                         Text(
-                            when (design) {
+                            when (state.design) {
                                 1 -> stringResource(id = R.string.darkDesign)
                                 2 -> stringResource(id = R.string.lightDesign)
                                 else -> stringResource(id = R.string.systemDesign)
@@ -333,6 +391,7 @@ fun ScrollContent(
                 )
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.useUltraDark)) },
                     supportingContent = { Text(stringResource(id = R.string.useUltraDarkDescription)) },
                     leadingContent = {
@@ -344,9 +403,9 @@ fun ScrollContent(
                     },
                     trailingContent = {
                         Switch(
-                            checked = ultraDark,
-                            onCheckedChange = { newValue ->
-                                viewModel.setUltraDarkValue(newValue)
+                            checked = state.ultraDark,
+                            onCheckedChange = {
+                                actions.onUltraDarkChange(it)
                                 activity?.recreate()
                             }
                         )
@@ -354,6 +413,7 @@ fun ScrollContent(
                 )
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.useMultiLines)) },
                     supportingContent = { Text(stringResource(id = R.string.useMultiLinesDescription)) },
                     leadingContent = {
@@ -365,15 +425,14 @@ fun ScrollContent(
                     },
                     trailingContent = {
                         Switch(
-                            checked = multiLine,
-                            onCheckedChange = { newValue ->
-                                viewModel.setMultiLineValue(newValue)
-                            }
+                            checked = state.multiLine,
+                            onCheckedChange = { actions.onMultiLineChange(it) }
                         )
                     }
                 )
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.useLengthOptions)) },
                     supportingContent = { Text(stringResource(id = R.string.useLengthOptionsDescription)) },
                     leadingContent = {
@@ -385,17 +444,26 @@ fun ScrollContent(
                     },
                     trailingContent = {
                         Switch(
-                            checked = showLength,
-                            onCheckedChange = { newValue ->
-                                viewModel.setShowLengthValue(newValue)
-                            }
+                            checked = state.showLength,
+                            onCheckedChange = { actions.onShowLengthChange(it) }
                         )
                     }
                 )
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+            ) {
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = { showDialogKey = showDialogKey.not() })
                         .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.setApiKey)) },
                     supportingContent = { Text(stringResource(id = R.string.setApiKeyDescription)) },
                     leadingContent = {
@@ -410,6 +478,7 @@ fun ScrollContent(
                     modifier = Modifier
                         .clickable(onClick = { showDialogModel = showDialogModel.not() })
                         .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.setModel)) },
                     supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
                     leadingContent = {
@@ -420,10 +489,21 @@ fun ScrollContent(
                         )
                     }
                 )
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+            ) {
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = { navController.navigate("onboarding") })
                         .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.tutorial)) },
                     leadingContent = {
                         Icon(
@@ -442,6 +522,7 @@ fun ScrollContent(
                             context.startActivity(intent)
                         }
                         .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.repository)) },
                     leadingContent = {
                         Icon(
@@ -461,6 +542,7 @@ fun ScrollContent(
                             context.startActivity(intent)
                         }
                         .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.googlePlay)) },
                     leadingContent = {
                         Icon(
@@ -471,16 +553,22 @@ fun ScrollContent(
                     },
                     supportingContent = { Text(stringResource(id = R.string.googlePlayDescription)) },
                 )
+            }
+        }
+
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalAlignment = CenterHorizontally
+            ) {
                 Text(
-                    text = "Version ${getVersionName(context)} - ${getVersionCode(context)}",
-                    modifier = Modifier
-                        .align(alignment = CenterHorizontally)
-                        .padding(top = 10.dp)
+                    text = "Version ${getVersionName(context)} - ${getVersionCode(context)}"
                 )
                 Text(
                     text = stringResource(id = R.string.madeBy),
                     modifier = Modifier
-                        .align(alignment = CenterHorizontally)
                         .clickable {
                             val url = "https://github.com/kid1412621"
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -510,24 +598,75 @@ fun getVersionCode(context: Context): Long {
     return packageInfo.longVersionCode
 }
 
-
 @Composable
 private fun RadioButtonItem(
     text: String,
     selected: Boolean,
-    onSelectionChange: () -> Unit
+    onSelectionChange: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSelectionChange() },
+            .selectable(
+                selected = selected,
+                onClick = onSelectionChange,
+                role = Role.RadioButton
+            )
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
             selected = selected,
-            onClick = { onSelectionChange() }
+            onClick = null
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(text = text, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ScrollContentPreview() {
+    SummaryExpressiveTheme {
+        val navController = rememberNavController()
+        val state = SettingsState(
+            design = 0,
+            apiKey = "test_key",
+            apiBaseUrl = "",
+            model = AIProvider.OPENAI,
+            useOriginalLanguage = false,
+            ultraDark = false,
+            multiLine = true,
+            showLength = true
+        )
+        val actions = SettingsActions(
+            onDesignChange = {},
+            onApiKeyChange = {},
+            onModelChange = {},
+            onBaseUrlChange = {},
+            onUseOriginalLanguageChange = {},
+            onUltraDarkChange = {},
+            onMultiLineChange = {},
+            onShowLengthChange = {}
+        )
+        Scaffold { innerPadding ->
+            ScrollContent(
+                innerPadding = innerPadding,
+                navController = navController,
+                state = state,
+                actions = actions
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RadioButtonItemPreview() {
+    SummaryExpressiveTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            RadioButtonItem(text = "Option 1", selected = true) {}
+            RadioButtonItem(text = "Option 2", selected = false) {}
+        }
     }
 }

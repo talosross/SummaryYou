@@ -168,105 +168,102 @@ fun HomeScreen(
         viewModel.summarize(url, selectedIndex, isDocument, textDocument)
     }
 
-    Box(modifier = modifier) {
-        Scaffold(
+    Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            HomeTopAppBar(navController, scrollBehavior)
+        },
+        floatingActionButton = {
+            HomeFloatingActionButtons(
+                onPaste = {
+                    scope.launch {
+                        clipboard.getClipEntry()?.let {
+                            url = it.clipData.getItemAt(0).text.toString()
+                        }
+                    }
+                },
+                onSummarize = { summarize() },
+                isExtracting = isExtracting
+            )
+        }
+    ) { innerPadding ->
+        LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                HomeTopAppBar(navController, scrollBehavior)
-            },
-        ) { innerPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentPadding = innerPadding
-            ) {
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.headlineMedium
-                        )
+                .fillMaxSize(),
+            contentPadding = innerPadding
+        ) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.app_name),
+                        style = MaterialTheme.typography.headlineMedium
+                    )
 
-                        UrlInputSection(
+                    UrlInputSection(
+                        url = url,
+                        onUrlChange = { url = it },
+                        onSummarize = { summarize() },
+                        summaryResult = summaryResult,
+                        apiKey = apiKey,
+                        onClear = {
+                            url = ""
+                            viewModel.clearCurrentSummary()
+                            focusRequester.requestFocus()
+                            isDocument = false
+                            singleLine = false
+                        },
+                        focusRequester = focusRequester,
+                        onLaunchFilePicker = {
+                            launcher.launch(MimeTypes.allSupported)
+                        },
+                        isDocument = isDocument,
+                        isExtracting = isExtracting,
+                        multiLine = multiLine,
+                        singleLine = singleLine,
+                        onSingleLineChange = { singleLine = it }
+                    )
+
+                    val currentResult = summaryResult
+                    if (showLength) {
+                        SummaryLengthSelector(
+                            selectedIndex = selectedIndex,
+                            onSelectedIndexChange = {
+                                selectedIndex = it
+                                viewModel.setShowLengthNumberValue(it)
+                            },
+                            options = options,
+                        )
+                    }
+
+                    // Loading-Animation
+                    if (isLoading) {
+                        LinearWavyProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 5.dp)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(height = 8.dp))
+                    }
+
+                    if (currentResult != null && !currentResult.isError && !currentResult.summary.isNullOrEmpty()) {
+                        SummaryResultSection(
+                            summaryResult = currentResult,
                             url = url,
-                            onUrlChange = { url = it },
-                            onSummarize = { summarize() },
-                            summaryResult = summaryResult,
-                            apiKey = apiKey,
-                            onClear = {
-                                url = ""
-                                viewModel.clearCurrentSummary()
-                                focusRequester.requestFocus()
-                                isDocument = false
-                                singleLine = false
-                            },
-                            focusRequester = focusRequester,
-                            onLaunchFilePicker = {
-                                launcher.launch(MimeTypes.allSupported)
-                            },
-                            isDocument = isDocument,
-                            isExtracting = isExtracting,
-                            multiLine = multiLine,
-                            singleLine = singleLine,
-                            onSingleLineChange = { singleLine = it }
+                            onRegenerate = { summarize() }
                         )
-
-                        val currentResult = summaryResult
-                        if (showLength) {
-                            SummaryLengthSelector(
-                                selectedIndex = selectedIndex,
-                                onSelectedIndexChange = {
-                                    selectedIndex = it
-                                    viewModel.setShowLengthNumberValue(it)
-                                },
-                                options = options,
-                                isError = currentResult?.isError ?: false
-                            )
-                        }
-
-                        // Loading-Animation
-                        if (isLoading) {
-                            LinearWavyProgressIndicator(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 5.dp)
-                            )
-                        } else {
-                            Spacer(modifier = Modifier.height(height = 8.dp))
-                        }
-
-                        if (currentResult != null && !currentResult.isError && !currentResult.summary.isNullOrEmpty()) {
-                            SummaryResultSection(
-                                summaryResult = currentResult,
-                                url = url,
-                                onRegenerate = { summarize() }
-                            )
-                        }
                     }
                 }
             }
         }
     }
-
-    HomeFloatingActionButtons(
-        modifier = modifier,
-        onPaste = {
-            scope.launch {
-                clipboard.getClipEntry()?.let {
-                    url = it.clipData.getItemAt(0).text.toString()
-                }
-            }
-        },
-        onSummarize = { summarize() },
-        isExtracting = isExtracting
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -385,32 +382,18 @@ private fun UrlInputSection(
                 val textLength = url.length
                 val lineBreaks = url.count { it == '\n' }
                 if (textLength >= 100 || lineBreaks >= 1) {
-                    if (singleLine) {
-                        Button(
-                            onClick = { onSingleLineChange(false) },
-                            modifier = Modifier
-                                .height(72.dp)
-                                .padding(top = 15.dp)
-                        ) {
-                            Icon(
-                                Icons.Outlined.KeyboardArrowDown,
-                                contentDescription = "Minimize",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    } else {
-                        Button(
-                            onClick = { onSingleLineChange(true) },
-                            modifier = Modifier
-                                .height(72.dp)
-                                .padding(top = 15.dp)
-                        ) {
-                            Icon(
-                                Icons.Outlined.KeyboardArrowUp,
-                                contentDescription = "Minimize",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+                    Button(
+                        onClick = { onSingleLineChange(!singleLine) },
+                        modifier = Modifier
+                            .height(72.dp)
+                            .padding(top = 15.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (singleLine) Icons.Outlined.KeyboardArrowDown
+                            else Icons.Outlined.KeyboardArrowUp,
+                            contentDescription = if (singleLine) "Minimize" else "Expand",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
             }
@@ -424,31 +407,26 @@ private fun SummaryLengthSelector(
     selectedIndex: Int,
     onSelectedIndexChange: (Int) -> Unit,
     options: List<String>,
-    isError: Boolean
 ) {
-    Box(
-        modifier = if (isError) Modifier.padding(top = 5.dp) else Modifier.padding(top = 10.dp)
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     ) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        ) {
-            options.forEachIndexed { index, label ->
-                ToggleButton(
-                    checked = selectedIndex == index,
-                    onCheckedChange = { onSelectedIndexChange(index) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { role = Role.RadioButton },
-                    shapes =
-                        when (index) {
-                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                        },
-                ) {
-                    Text(label)
-                }
+        options.forEachIndexed { index, label ->
+            ToggleButton(
+                checked = selectedIndex == index,
+                onCheckedChange = { onSelectedIndexChange(index) },
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { role = Role.RadioButton },
+                shapes =
+                    when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+            ) {
+                Text(label)
             }
         }
     }
@@ -508,46 +486,37 @@ private fun SummaryResultSection(
 }
 
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun HomeFloatingActionButtons(
-    modifier: Modifier,
     onPaste: () -> Unit,
     onSummarize: () -> Unit,
     isExtracting: Boolean
 ) {
     val context = LocalContext.current
     val stillLoading = stringResource(id = R.string.stillLoading)
-    Box(
-        modifier = Modifier
-            .imePadding()
-            .imeNestedScroll()
-            .fillMaxSize(),
-        contentAlignment = Alignment.BottomEnd
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.End
     ) {
-        Column {
-            FloatingActionButton(
-                onClick = onPaste,
-                modifier = modifier.padding(bottom = 20.dp, end = 15.dp)
-            ) {
-                Icon(
-                    Icons.Rounded.ContentPaste,
-                    contentDescription = "Paste",
-                    modifier = Modifier.size(24.dp)
-                )
+        FloatingActionButton(
+            onClick = onPaste
+        ) {
+            Icon(
+                Icons.Rounded.ContentPaste,
+                contentDescription = "Paste",
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        FloatingActionButton(
+            onClick = {
+                if (isExtracting) {
+                    Toast.makeText(context, stillLoading, Toast.LENGTH_SHORT).show()
+                } else {
+                    onSummarize()
+                }
             }
-            FloatingActionButton(
-                onClick = {
-                    if (isExtracting) {
-                        Toast.makeText(context, stillLoading, Toast.LENGTH_SHORT).show()
-                    } else {
-                        onSummarize()
-                    }
-                },
-                modifier = modifier.padding(bottom = 60.dp, end = 15.dp)
-            ) {
-                Icon(Icons.Filled.Check, "Check")
-            }
+        ) {
+            Icon(Icons.Filled.Check, "Check")
         }
     }
 }
