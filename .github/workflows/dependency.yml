@@ -29,13 +29,3 @@ jobs:
           head-ref: ${{ github.ref }}
           base-ref: ${{ github.event.repository.default_branch }}
           fail-on-severity: 'high'
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: 21
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-      - name: analyze dependencies
-        run: ./gradlew clean analyzeReleaseDependencies

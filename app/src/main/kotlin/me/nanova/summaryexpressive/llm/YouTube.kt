@@ -46,7 +46,7 @@ object YouTube {
 
     fun extractVideoId(url: String): String? {
         val pattern =
-            "(?<=watch\\?v=|/videos/|embed/|youtu.be/|/v/|/e/|watch\\?v%3D|watch\\?feature=player_embedded&v=|%2Fvideos%2F|embed%\u200C\u200B2F|youtu.be%2F|%2Fv%2F)[^#&?]*"
+            "(?<=watch\\?v=|/videos/|embed/|youtu.be/|/v/|/e/|watch\\?v%3D|watch\\?feature=player_embedded&v=|%2Fvideos%2F|embed%\u200C\u200B2F|youtu.be%2F|%2Fv%2F)[a-zA-Z0-9_-]+"
         val compiledPattern = Pattern.compile(pattern)
         val matcher = compiledPattern.matcher(url)
         return if (matcher.find()) matcher.group() else null
@@ -254,7 +254,20 @@ object YouTube {
     }
 
     fun isYouTubeLink(input: String): Boolean {
-        val youtubePattern = Regex("""^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.*$""")
-        return youtubePattern.matches(input)
+        try {
+            // Ktor's Url parser requires a scheme.
+            val urlString = if (!input.matches(Regex("^https?://.*"))) {
+                "https://$input"
+            } else {
+                input
+            }
+            val url = io.ktor.http.Url(urlString)
+            val host = url.host.lowercase()
+            // Valid hosts: youtu.be, youtube.com, or any subdomain of youtube.com (e.g., www.youtube.com, m.youtube.com)
+            return host == "youtu.be" || host == "youtube.com" || host.endsWith(".youtube.com")
+        } catch (e: Exception) {
+            // Malformed URL or other parsing errors
+            return false
+        }
     }
 }
