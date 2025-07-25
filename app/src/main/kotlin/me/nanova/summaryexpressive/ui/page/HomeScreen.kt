@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imeNestedScroll
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -116,7 +114,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     initialUrl: String? = null,
-    viewModel: SummaryViewModel = hiltViewModel()
+    viewModel: SummaryViewModel = hiltViewModel(),
 ) {
     var isExtracting by remember { mutableStateOf(false) } // For Loading-Animation
     var url by remember { mutableStateOf(initialUrl ?: "") }
@@ -270,7 +268,7 @@ fun HomeScreen(
 @Composable
 private fun HomeTopAppBar(
     navController: NavHostController,
-    scrollBehavior: TopAppBarScrollBehavior
+    scrollBehavior: TopAppBarScrollBehavior,
 ) {
     MediumFlexibleTopAppBar(
         modifier = Modifier.height(100.dp),
@@ -313,7 +311,7 @@ private fun UrlInputSection(
     isExtracting: Boolean,
     multiLine: Boolean,
     singleLine: Boolean,
-    onSingleLineChange: (Boolean) -> Unit
+    onSingleLineChange: (Boolean) -> Unit,
 ) {
     val showCancelIcon = remember(url) { url.isNotBlank() }
 
@@ -370,12 +368,13 @@ private fun UrlInputSection(
                                 .size(55.dp)
                                 .align(Alignment.Center)
                         )
+                    } else {
+                        Icon(
+                            if (isDocument) Icons.Filled.CheckCircle else Icons.Filled.AddCircle,
+                            contentDescription = "Floating action button",
+                            modifier = Modifier.align(Alignment.Center)
+                        )
                     }
-                    Icon(
-                        if (isDocument && !isExtracting) Icons.Filled.CheckCircle else Icons.Filled.AddCircle,
-                        contentDescription = "Floating action button",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
                 }
             }
             if (multiLine) {
@@ -436,7 +435,7 @@ private fun SummaryLengthSelector(
 private fun SummaryResultSection(
     summaryResult: SummaryResult,
     url: String,
-    onRegenerate: () -> Unit
+    onRegenerate: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
@@ -490,7 +489,7 @@ private fun SummaryResultSection(
 private fun HomeFloatingActionButtons(
     onPaste: () -> Unit,
     onSummarize: () -> Unit,
-    isExtracting: Boolean
+    isExtracting: Boolean,
 ) {
     val context = LocalContext.current
     val stillLoading = stringResource(id = R.string.stillLoading)

@@ -7,16 +7,23 @@
     <!-- TODO: android:roundIcon="@mipmap/summary_you_round" -->
     <application
         android:name=".SummaryExpressiveApplication"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/summary_you"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.SummaryExpressive"
-        tools:ignore="MissingApplicationIcon">
+        android:usesCleartextTraffic="true"
+        android:windowSoftInputMode="adjustResize"
+        tools:ignore="MissingApplicationIcon"
+        tools:targetApi="36">
+
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ocr" />
+
         <activity
             android:name=".MainActivity"
-            android:enableOnBackInvokedCallback="true"
-            android:exported="true"
-            android:windowSoftInputMode="adjustResize">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

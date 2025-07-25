@@ -16,8 +16,8 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.0.2"
+        versionCode = 3
+        versionName = "0.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -84,8 +84,10 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.7")
 
     // ml & llm
-    implementation("com.google.mlkit:text-recognition:16.0.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services")
+    // this will bundle model to apk which is huge, use play service one first
+    //    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
     implementation("io.ktor:ktor-client-android:3.2.2")
     implementation("ai.koog:koog-agents:0.3.0") {
         exclude(group = "io.ktor", module = "ktor-client-cio")
