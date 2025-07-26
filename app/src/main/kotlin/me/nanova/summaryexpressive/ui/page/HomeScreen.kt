@@ -170,6 +170,15 @@ fun HomeScreen(
         viewModel.summarize(urlOrText, selectedIndex, isDocOrImage, filename)
     }
 
+    fun clearInput() {
+        urlOrText = ""
+        viewModel.clearCurrentSummary()
+        focusRequester.requestFocus()
+        isDocOrImage = false
+        singleLine = false
+        filename = null
+    }
+
     Scaffold(
         modifier = modifier
             .fillMaxSize()
@@ -178,6 +187,7 @@ fun HomeScreen(
         floatingActionButton = {
             HomeFloatingActionButtons(
                 onPaste = {
+                    clearInput()
                     scope.launch {
                         clipboard.getClipEntry()?.let {
                             urlOrText = it.clipData.getItemAt(0).text.toString()
@@ -212,14 +222,7 @@ fun HomeScreen(
                         onSummarize = { summarize() },
                         summaryResult = summaryResult,
                         apiKey = apiKey,
-                        onClear = {
-                            urlOrText = ""
-                            viewModel.clearCurrentSummary()
-                            focusRequester.requestFocus()
-                            isDocOrImage = false
-                            singleLine = false
-                            filename = null
-                        },
+                        onClear = { clearInput() },
                         focusRequester = focusRequester,
                         onLaunchFilePicker = {
                             launcher.launch(MimeTypes.allSupported)
@@ -319,6 +322,8 @@ private fun InputSection(
     onSingleLineChange: (Boolean) -> Unit,
 ) {
     val showCancelIcon = remember(url) { url.isNotBlank() }
+    val isUrl =
+        !isDocOrImage && (url.startsWith("http") || url.startsWith("https"))
 
     Column {
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -347,7 +352,7 @@ private fun InputSection(
                                     style = MaterialTheme.typography.labelMedium,
                                 )
                             }
-                            if (url.isNotBlank()) {
+                            if (isUrl && url.isNotBlank()) {
                                 // Based on the rule of thumb that 100 tokens is about 75 words.
                                 // ref: https://platform.openai.com/tokenizer
                                 val wordCount = url.trim().split(Regex("\\s+")).size

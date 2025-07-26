@@ -28,6 +28,13 @@ fun AppNavigation(
     val startDestination = if (showOnboarding) "onboarding" else "home"
 
     NavHost(navController, startDestination = startDestination) {
+        composable("home") {
+            HomeScreen(
+                modifier = Modifier,
+                navController = navController,
+                initialUrl = initialUrl
+            )
+        }
         composable("onboarding") {
             OnboardingScreen(onDone = {
                 viewModel.setShowOnboardingScreenValue(false)
@@ -35,13 +42,6 @@ fun AppNavigation(
                     popUpTo("onboarding") { inclusive = true }
                 }
             })
-        }
-        composable("home") {
-            HomeScreen(
-                modifier = Modifier,
-                navController = navController,
-                initialUrl = initialUrl
-            )
         }
         composable(
             "settings",

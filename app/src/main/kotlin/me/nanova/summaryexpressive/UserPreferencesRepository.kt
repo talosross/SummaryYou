@@ -69,7 +69,7 @@ object UserPreferencesRepository {
         context.dataStore.edit { it[MODEL] = value }
 
     fun getShowOnboarding(context: Context): Flow<Boolean> =
-        context.dataStore.data.map { it[SHOW_ONBOARDING] ?: true }
+        context.dataStore.data.map { it[SHOW_ONBOARDING] ?: false }
 
     suspend fun setShowOnboarding(context: Context, value: Boolean) =
         context.dataStore.edit { it[SHOW_ONBOARDING] = value }

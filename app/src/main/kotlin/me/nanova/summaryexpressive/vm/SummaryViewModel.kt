@@ -71,7 +71,7 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
         savePreference(UserPreferencesRepository::setModel, newValue)
 
     // OnboardingScreen
-    private val _showOnboardingScreen = MutableStateFlow(true)
+    private val _showOnboardingScreen = MutableStateFlow(false)
     val showOnboardingScreen: StateFlow<Boolean> = _showOnboardingScreen.asStateFlow()
     fun setShowOnboardingScreenValue(newValue: Boolean) =
         savePreference(UserPreferencesRepository::setShowOnboarding, newValue)

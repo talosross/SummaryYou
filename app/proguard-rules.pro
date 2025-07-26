@@ -44,3 +44,7 @@
 -dontwarn reactor.blockhound.integration.BlockHoundIntegration
 -dontwarn java.lang.management.**
 
+# Keep data classes used by Gson for YouTube API parsing
+-keep class me.nanova.summaryexpressive.llm.VideoDetails { *; }
+-keep class me.nanova.summaryexpressive.llm.CaptionTrack { *; }
+-keep class me.nanova.summaryexpressive.llm.CaptionTrack$* { *; }
