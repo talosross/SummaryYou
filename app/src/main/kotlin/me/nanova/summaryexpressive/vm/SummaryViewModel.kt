@@ -190,12 +190,12 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
         _currentSummaryResult.value = null
     }
 
-    fun summarize(urlOrFilename: String, length: Int, isDocument: Boolean, documentText: String?) {
+    fun summarize(textOrUrl: String, length: Int, isDocOrImage: Boolean, filename: String?) {
         viewModelScope.launch {
             _isLoading.value = true
             _currentSummaryResult.value = null // Clear previous result
 
-            val result = summarizeInternal(urlOrFilename, length, isDocument, documentText)
+            val result = summarizeInternal(textOrUrl, length, isDocOrImage, filename)
 
             _currentSummaryResult.value = result
             _isLoading.value = false
@@ -203,32 +203,33 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private suspend fun summarizeInternal(
-        urlOrFilename: String,
+        textOrUrl: String,
         length: Int,
-        isDocument: Boolean,
-        documentText: String?
+        isDocOrImage: Boolean,
+        filename: String?
     ): SummaryResult {
-        if (urlOrFilename.isBlank() || (isDocument && documentText.isNullOrBlank())) {
+        if (textOrUrl.isBlank()) {
             return SummaryResult(null, null, "Exception: no content", isError = true)
         }
 
         val isUrl =
-            !isDocument && (urlOrFilename.startsWith("http") || urlOrFilename.startsWith("https"))
-        if (isUrl && runCatching { URL(urlOrFilename).host }.getOrNull().isNullOrEmpty()) {
-            return SummaryResult(urlOrFilename, null, "Error: invalid link", isError = true)
+            !isDocOrImage && (textOrUrl.startsWith("http") || textOrUrl.startsWith("https"))
+        if (isUrl && runCatching { URL(textOrUrl).host }.getOrNull().isNullOrEmpty()) {
+            return SummaryResult(textOrUrl, null, "Error: invalid link", isError = true)
         }
-
-        val isYouTube = YouTube.isYouTubeLink(urlOrFilename)
 
         // API key is required for all LLM calls, regardless of input type
         if (apiKey.value.isEmpty()) {
             return SummaryResult(null, null, "Exception: no key", isError = true)
         }
 
+        val isYouTube = YouTube.isYouTubeLink(textOrUrl)
+
         return when {
-            isYouTube -> summarizeYouTubeVideo(urlOrFilename, length)
-            isUrl -> summarizeArticle(urlOrFilename, length)
-            else -> summarizeTextOrDocument(urlOrFilename, length, isDocument, documentText)
+            isYouTube -> summarizeYouTubeVideo(textOrUrl, length)
+            isUrl -> summarizeArticle(textOrUrl, length)
+            isDocOrImage -> summarizeDocument(filename ?: "Document", textOrUrl, length)
+            else -> summarizeText(textOrUrl, length)
         }
     }
 
@@ -371,14 +372,12 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
             }
         }
 
-    private suspend fun summarizeTextOrDocument(
-        urlOrFilename: String,
-        length: Int,
-        isDocument: Boolean,
-        documentText: String?
+    private suspend fun summarizeDocument(
+        documentName: String,
+        text: String,
+        length: Int
     ): SummaryResult {
-        val textToSummarize = if (isDocument) documentText!! else urlOrFilename
-        if (isDocument && textToSummarize.length < 100) {
+        if (text.length < 100) {
             return SummaryResult(null, null, "Exception: too short", isError = true)
         }
 
@@ -390,8 +389,7 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
             )
         }
 
-        val contentType =
-            if (isDocument) Prompts.ContentType.DOCUMENT else Prompts.ContentType.TEXT
+        val contentType = Prompts.ContentType.DOCUMENT
         val systemPrompt = when (model.value) {
             AIProvider.OPENAI -> Prompts.openAIPrompt(contentType, null, length, language)
             AIProvider.GEMINI -> Prompts.geminiPrompt(contentType, null, length, language)
@@ -399,10 +397,38 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
         }
 
         return executeSummary(
-            textToSummarize,
+            text,
             systemPrompt,
-            title = if (isDocument) urlOrFilename else null,
-            author = if (isDocument) "Document" else null,
+            title = documentName,
+            author = "Document",
+            isYoutube = false
+        )
+    }
+
+    private suspend fun summarizeText(
+        text: String,
+        length: Int
+    ): SummaryResult {
+        val language: String = if (useOriginalLanguage.value) {
+            "the same language as the text"
+        } else {
+            getApplication<Application>().resources.configuration.locales[0].getDisplayLanguage(
+                Locale.ENGLISH
+            )
+        }
+
+        val contentType = Prompts.ContentType.TEXT
+        val systemPrompt = when (model.value) {
+            AIProvider.OPENAI -> Prompts.openAIPrompt(contentType, null, length, language)
+            AIProvider.GEMINI -> Prompts.geminiPrompt(contentType, null, length, language)
+            AIProvider.GROQ -> Prompts.groqPrompt(contentType, null, length, language)
+        }
+
+        return executeSummary(
+            text,
+            systemPrompt,
+            title = null,
+            author = null,
             isYoutube = false
         )
     }

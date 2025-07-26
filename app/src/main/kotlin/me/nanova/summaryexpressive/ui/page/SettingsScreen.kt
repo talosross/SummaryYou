@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,6 +27,8 @@ import androidx.compose.material.icons.automirrored.rounded.HelpCenter
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ModelTraining
+import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.FormatLineSpacing
 import androidx.compose.material.icons.rounded.InvertColors
@@ -56,14 +59,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,6 +79,7 @@ import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
@@ -109,6 +117,59 @@ fun SettingsScreen(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
+    val state = SettingsState(
+        design = viewModel.designNumber.collectAsState().value,
+        apiKey = viewModel.apiKey.collectAsState().value,
+        apiBaseUrl = viewModel.baseUrl.collectAsState().value,
+        model = viewModel.model.collectAsState().value,
+        useOriginalLanguage = viewModel.useOriginalLanguage.collectAsState().value,
+        ultraDark = viewModel.ultraDark.collectAsState().value,
+        multiLine = viewModel.multiLine.collectAsState().value,
+        showLength = viewModel.showLength.collectAsState().value
+    )
+    val actions = SettingsActions(
+        onDesignChange = viewModel::setDesignNumber,
+        onApiKeyChange = viewModel::setApiKeyValue,
+        onModelChange = viewModel::setModelValue,
+        onBaseUrlChange = viewModel::setBaseUrlValue,
+        onUseOriginalLanguageChange = viewModel::setUseOriginalLanguageValue,
+        onUltraDarkChange = viewModel::setUltraDarkValue,
+        onMultiLineChange = viewModel::setMultiLineValue,
+        onShowLengthChange = viewModel::setShowLengthValue
+    )
+
+    var showDialogDesign by remember { mutableStateOf(false) }
+    var showDialogKey by remember { mutableStateOf(false) }
+    var showDialogModel by remember { mutableStateOf(false) }
+
+    if (showDialogDesign) {
+        DesignSettingsDialog(
+            onDismissRequest = { showDialogDesign = false },
+            currentDesign = state.design,
+            onDesignChange = actions.onDesignChange,
+        )
+    }
+
+    if (showDialogKey) {
+        ApiKeySettingsDialog(
+            onDismissRequest = { showDialogKey = false },
+            currentApiKey = state.apiKey,
+            onApiKeyChange = actions.onApiKeyChange
+        )
+    }
+
+    if (showDialogModel) {
+        ModelSettingsDialog(
+            onDismissRequest = { showDialogModel = false },
+            initialModel = state.model,
+            initialApiBaseUrl = state.apiBaseUrl,
+            onConfirm = { model, baseUrl ->
+                actions.onModelChange(model.name)
+                actions.onBaseUrlChange(baseUrl)
+            }
+        )
+    }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -134,172 +195,30 @@ fun SettingsScreen(
             )
         },
     ) { innerPadding ->
-        val state = SettingsState(
-            design = viewModel.designNumber.collectAsState().value,
-            apiKey = viewModel.apiKey.collectAsState().value,
-            apiBaseUrl = viewModel.baseUrl.collectAsState().value,
-            model = viewModel.model.collectAsState().value,
-            useOriginalLanguage = viewModel.useOriginalLanguage.collectAsState().value,
-            ultraDark = viewModel.ultraDark.collectAsState().value,
-            multiLine = viewModel.multiLine.collectAsState().value,
-            showLength = viewModel.showLength.collectAsState().value
+        SettingsContent(
+            innerPadding,
+            navController,
+            state,
+            actions,
+            onShowDialogDesign = { showDialogDesign = true },
+            onShowDialogKey = { showDialogKey = true },
+            onShowDialogModel = { showDialogModel = true }
         )
-        val actions = SettingsActions(
-            onDesignChange = viewModel::setDesignNumber,
-            onApiKeyChange = viewModel::setApiKeyValue,
-            onModelChange = viewModel::setModelValue,
-            onBaseUrlChange = viewModel::setBaseUrlValue,
-            onUseOriginalLanguageChange = viewModel::setUseOriginalLanguageValue,
-            onUltraDarkChange = viewModel::setUltraDarkValue,
-            onMultiLineChange = viewModel::setMultiLineValue,
-            onShowLengthChange = viewModel::setShowLengthValue
-        )
-        ScrollContent(innerPadding, navController, state, actions)
     }
 }
 
 @Composable
-private fun ScrollContent(
+private fun SettingsContent(
     innerPadding: PaddingValues,
     navController: NavHostController,
     state: SettingsState,
     actions: SettingsActions,
+    onShowDialogDesign: () -> Unit,
+    onShowDialogKey: () -> Unit,
+    onShowDialogModel: () -> Unit,
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
-    var showDialogDesign by remember { mutableStateOf(false) }
-    var showDialogRestart by remember { mutableStateOf(false) }
-    var showDialogKey by remember { mutableStateOf(false) }
-    var showDialogModel by remember { mutableStateOf(false) }
-
-    if (showDialogDesign) {
-        AlertDialog(
-            onDismissRequest = { showDialogDesign = false },
-            title = { Text(stringResource(id = R.string.design)) },
-            text = {
-                Column {
-                    RadioButtonItem(
-                        stringResource(id = R.string.systemDesign),
-                        selected = state.design == 0
-                    ) {
-                        actions.onDesignChange(0)
-                        activity?.recreate()
-                    }
-                    RadioButtonItem(
-                        stringResource(id = R.string.lightDesign),
-                        selected = state.design == 2
-                    ) {
-                        actions.onDesignChange(2)
-                        activity?.recreate()
-                    }
-                    RadioButtonItem(
-                        stringResource(id = R.string.darkDesign),
-                        selected = state.design == 1
-                    ) {
-                        actions.onDesignChange(1)
-                        activity?.recreate()
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showDialogDesign = false }) {
-                    Text(stringResource(id = R.string.cancel))
-                }
-            },
-        )
-    }
-
-    if (showDialogRestart) {
-        AlertDialog(
-            onDismissRequest = { showDialogRestart = false },
-            title = { Text(stringResource(id = R.string.restartRequired)) },
-            text = { Text(stringResource(id = R.string.restartRequiredDescription)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    activity?.recreate()
-                }) {
-                    Text(stringResource(id = R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialogRestart = false }) {
-                    Text(stringResource(id = R.string.cancel))
-                }
-            }
-        )
-    }
-
-    if (showDialogKey) {
-        var apiTextFieldValue by remember { mutableStateOf(state.apiKey) }
-        AlertDialog(
-            onDismissRequest = { showDialogKey = false },
-            title = { Text(stringResource(id = R.string.setApiKey)) },
-            text = {
-                OutlinedTextField(
-                    value = apiTextFieldValue,
-                    onValueChange = { apiTextFieldValue = it }
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        actions.onApiKeyChange(apiTextFieldValue)
-                        showDialogKey = false
-                    }
-                ) {
-                    Text(stringResource(id = R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialogKey = false }) {
-                    Text(stringResource(id = R.string.cancel))
-                }
-            }
-        )
-    }
-
-    if (showDialogModel) {
-        var selectedModel by remember { mutableStateOf(state.model) }
-        var apiBaseUrlTextFieldValue by remember { mutableStateOf(state.apiBaseUrl) }
-
-        AlertDialog(
-            onDismissRequest = { showDialogModel = false },
-            title = { Text(stringResource(id = R.string.setModel)) },
-            text = {
-                Column {
-                    AIProvider.entries.filter { it != AIProvider.GROQ }.map {
-                        RadioButtonItem(it.displayName, selected = (selectedModel == it)) {
-                            selectedModel = it
-                        }
-                    }
-                    if (selectedModel.isBaseUrlCustomisable) {
-                        OutlinedTextField(
-                            value = apiBaseUrlTextFieldValue,
-                            onValueChange = { apiBaseUrlTextFieldValue = it },
-                            placeholder = { Text("Custom API Base URL for ${selectedModel}-Compatible Endpoints (Optional)") }
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        actions.onModelChange(selectedModel.name)
-                        actions.onBaseUrlChange(apiBaseUrlTextFieldValue)
-                        showDialogModel = false
-                    }
-                ) {
-                    Text(stringResource(id = R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialogModel = false }) {
-                    Text(stringResource(id = R.string.cancel))
-                }
-            },
-        )
-    }
 
     LazyColumn(
         modifier = Modifier
@@ -368,7 +287,7 @@ private fun ScrollContent(
             ) {
                 ListItem(
                     modifier = Modifier
-                        .clickable(onClick = { showDialogDesign = showDialogDesign.not() })
+                        .clickable(onClick = onShowDialogDesign)
                         .fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.design)) },
@@ -461,22 +380,7 @@ private fun ScrollContent(
             ) {
                 ListItem(
                     modifier = Modifier
-                        .clickable(onClick = { showDialogKey = showDialogKey.not() })
-                        .fillMaxWidth(),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.setApiKey)) },
-                    supportingContent = { Text(stringResource(id = R.string.setApiKeyDescription)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.VpnKey,
-                            contentDescription = "API Key",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                )
-                ListItem(
-                    modifier = Modifier
-                        .clickable(onClick = { showDialogModel = showDialogModel.not() })
+                        .clickable(onClick = onShowDialogModel)
                         .fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.setModel)) },
@@ -485,6 +389,21 @@ private fun ScrollContent(
                         Icon(
                             Icons.Default.ModelTraining,
                             contentDescription = "AI Model",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                )
+                ListItem(
+                    modifier = Modifier
+                        .clickable(onClick = onShowDialogKey)
+                        .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    headlineContent = { Text(stringResource(id = R.string.setApiKey)) },
+                    supportingContent = { Text(stringResource(id = R.string.setApiKeyDescription)) },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.VpnKey,
+                            contentDescription = "API Key",
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -580,7 +499,7 @@ private fun ScrollContent(
     }
 }
 
-fun getVersionName(context: Context): String? {
+private fun getVersionName(context: Context): String? {
     val packageInfo: PackageInfo = try {
         context.packageManager.getPackageInfo(context.packageName, 0)
     } catch (e: PackageManager.NameNotFoundException) {
@@ -589,7 +508,7 @@ fun getVersionName(context: Context): String? {
     return packageInfo.versionName
 }
 
-fun getVersionCode(context: Context): Long {
+private fun getVersionCode(context: Context): Long {
     val packageInfo: PackageInfo = try {
         context.packageManager.getPackageInfo(context.packageName, 0)
     } catch (e: PackageManager.NameNotFoundException) {
@@ -599,10 +518,210 @@ fun getVersionCode(context: Context): Long {
 }
 
 @Composable
+private fun DesignSettingsDialog(
+    onDismissRequest: () -> Unit,
+    currentDesign: Int,
+    onDesignChange: (Int) -> Unit,
+) {
+    val activity = LocalActivity.current
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(stringResource(id = R.string.design)) },
+        text = {
+            Column {
+                RadioButtonItem(
+                    selected = currentDesign == 0,
+                    onSelectionChange = {
+                        onDesignChange(0)
+                        activity?.recreate()
+                    }
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.systemDesign),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                RadioButtonItem(
+                    selected = currentDesign == 2,
+                    onSelectionChange = {
+                        onDesignChange(2)
+                        activity?.recreate()
+                    }
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.lightDesign),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                RadioButtonItem(
+                    selected = currentDesign == 1,
+                    onSelectionChange = {
+                        onDesignChange(1)
+                        activity?.recreate()
+                    }
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.darkDesign),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(id = R.string.cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun ApiKeySettingsDialog(
+    onDismissRequest: () -> Unit,
+    currentApiKey: String,
+    onApiKeyChange: (String) -> Unit,
+) {
+    var apiTextFieldValue by remember { mutableStateOf(currentApiKey) }
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(stringResource(id = R.string.setApiKey)) },
+        text = {
+            OutlinedTextField(
+                value = apiTextFieldValue,
+                onValueChange = { apiTextFieldValue = it },
+                label = { Text("API Key") },
+                shape = MaterialTheme.shapes.large,
+                trailingIcon = {
+                    if (apiTextFieldValue.isBlank()) {
+                        IconButton(onClick = {
+                            scope.launch {
+                                clipboard.getClipEntry()?.let {
+                                    apiTextFieldValue =
+                                        it.clipData.getItemAt(0).text.toString()
+                                }
+                            }
+                        }) {
+                            Icon(
+                                Icons.Outlined.ContentPaste,
+                                contentDescription = "Paste",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = { apiTextFieldValue = "" }) {
+                            Icon(
+                                Icons.Outlined.Clear,
+                                contentDescription = "Clear",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onApiKeyChange(apiTextFieldValue)
+                    onDismissRequest()
+                }
+            ) {
+                Text(stringResource(id = R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(id = R.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun ModelSettingsDialog(
+    onDismissRequest: () -> Unit,
+    initialModel: AIProvider,
+    initialApiBaseUrl: String,
+    onConfirm: (model: AIProvider, baseUrl: String) -> Unit,
+) {
+    var selectedModel by remember { mutableStateOf(initialModel) }
+    var apiBaseUrlTextFieldValue by remember { mutableStateOf(initialApiBaseUrl) }
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(stringResource(id = R.string.setModel)) },
+        text = {
+            Column {
+                AIProvider.entries.filter { it != AIProvider.GROQ }.map {
+                    AIProviderItem(it, selected = (selectedModel == it)) { selectedModel = it }
+                }
+                if (selectedModel.isBaseUrlCustomisable) {
+                    Spacer(modifier = Modifier.height(9.dp))
+                    OutlinedTextField(
+                        value = apiBaseUrlTextFieldValue,
+                        onValueChange = { apiBaseUrlTextFieldValue = it },
+                        label = { Text("Custom API Base URL") },
+                        shape = MaterialTheme.shapes.large,
+                        trailingIcon = {
+                            if (apiBaseUrlTextFieldValue.isBlank()) {
+                                IconButton(onClick = {
+                                    scope.launch {
+                                        clipboard.getClipEntry()?.let {
+                                            apiBaseUrlTextFieldValue =
+                                                it.clipData.getItemAt(0).text.toString()
+                                        }
+                                    }
+                                }) {
+                                    Icon(
+                                        Icons.Outlined.ContentPaste,
+                                        contentDescription = "Paste",
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            } else {
+                                IconButton(onClick = { apiBaseUrlTextFieldValue = "" }) {
+                                    Icon(
+                                        Icons.Outlined.Clear,
+                                        contentDescription = "Clear",
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirm(selectedModel, apiBaseUrlTextFieldValue)
+                    onDismissRequest()
+                }
+            ) {
+                Text(stringResource(id = R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(id = R.string.cancel))
+            }
+        },
+    )
+}
+
+@Composable
 private fun RadioButtonItem(
-    text: String,
     selected: Boolean,
     onSelectionChange: () -> Unit,
+    content: @Composable () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -613,14 +732,97 @@ private fun RadioButtonItem(
                 role = Role.RadioButton
             )
             .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(
             selected = selected,
             onClick = null
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = text, style = MaterialTheme.typography.bodyLarge)
+        content()
+    }
+}
+
+@Composable
+private fun AIProviderItem(
+    llm: AIProvider,
+    selected: Boolean,
+    onSelectionChange: () -> Unit,
+) {
+    RadioButtonItem(selected, onSelectionChange) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = llm.icon),
+                contentDescription = "${llm.displayName} icon",
+                Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = llm.displayName, style = MaterialTheme.typography.bodyLarge)
+
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun DesignSettingsDialogPreview() {
+    SummaryExpressiveTheme {
+        DesignSettingsDialog(
+            onDismissRequest = {},
+            currentDesign = 0,
+            onDesignChange = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ApiKeySettingsDialogPreview() {
+    SummaryExpressiveTheme {
+        ApiKeySettingsDialog(
+            onDismissRequest = {},
+            currentApiKey = "test_api_key",
+            onApiKeyChange = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ModelSettingsDialogPreview() {
+    SummaryExpressiveTheme {
+        ModelSettingsDialog(
+            onDismissRequest = {},
+            initialModel = AIProvider.OPENAI,
+            initialApiBaseUrl = "",
+            onConfirm = { _, _ -> }
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun RadioButtonItemPreview() {
+    SummaryExpressiveTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            RadioButtonItem(selected = true, onSelectionChange = {}) {
+                Text("Option 1")
+            }
+            RadioButtonItem(selected = false, onSelectionChange = {}) {
+                Text("Option 2")
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun AIProviderItemPreview() {
+    SummaryExpressiveTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            AIProviderItem(AIProvider.OPENAI, selected = true) {}
+            AIProviderItem(AIProvider.GEMINI, selected = false) {}
+        }
     }
 }
 
@@ -650,23 +852,15 @@ private fun ScrollContentPreview() {
             onShowLengthChange = {}
         )
         Scaffold { innerPadding ->
-            ScrollContent(
+            SettingsContent(
                 innerPadding = innerPadding,
                 navController = navController,
                 state = state,
-                actions = actions
+                actions = actions,
+                onShowDialogDesign = {},
+                onShowDialogKey = {},
+                onShowDialogModel = {}
             )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun RadioButtonItemPreview() {
-    SummaryExpressiveTheme {
-        Column(modifier = Modifier.padding(16.dp)) {
-            RadioButtonItem(text = "Option 1", selected = true) {}
-            RadioButtonItem(text = "Option 2", selected = false) {}
         }
     }
 }

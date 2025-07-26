@@ -16,3 +16,4 @@ local.properties
 *.ap_
 *.aab
 .repo_ignore
+.java-version

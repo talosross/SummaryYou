@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?><resources>
 
-    <string name="short_length">短的</string>
+    <string name="short_length">较短</string>
 
-    <string name="middle_length">中间</string>
+    <string name="middle_length">适中</string>
 
-    <string name="long_length">长的</string>
+    <string name="long_length">较长</string>
 
     <string name="settings">设置</string>
 
@@ -12,12 +12,13 @@
 
     <string name="regenerate">重新生成</string>
 
-    <string name="invalidURL">无效链接：无法进行摘要</string>
+    <string name="invalidURL">无效链接：无法进行总结</string>
 
-    <string name="noTranscript">未找到文字记录</string>
+    <string name="noTranscript">未找到字幕</string>
 
     <string name="noContent">无内容</string>
 
+    <string name="tooShort">提供内容过短。</string>
     <string name="noInternet">无网络连接</string>
 
     <string name="paywallDetected">检测到付费墙，无法进行总结。</string>
@@ -28,9 +29,10 @@
 
     <string name="noKey">OpenAI 出错，您必须提供 API 密钥。</string>
 
+    <string name="rateLimit">服务器忙，请稍后再试。</string>
     <string name="useOriginalLanguage">原始语言</string>
 
-    <string name="useOriginalLanguageDescription">使用原始语言而不是您的语言。</string>
+    <string name="useOriginalLanguageDescription">使用原始语言而非系统语言。</string>
 
     <string name="chooseLanguage">语言</string>
 
@@ -38,22 +40,23 @@
 
     <string name="repository">开源代码</string>
 
-    <string name="githubDescription">我们的 Github 存储库</string>
+    <string name="githubDescription">我们的 Github 代码库</string>
 
     <string name="madeBy">由 NanoNova 用 ❤ 制作</string>
 
-    <string name="useUltraDark">使用超暗</string>
+    <string name="useUltraDark">使用极暗模式</string>
 
-    <string name="useUltraDarkDescription">使用超暗模式和纯黑色</string>
+    <string name="useUltraDarkDescription">使用极暗模式和纯黑</string>
 
     <string name="useMultiLines">使用多行 URL</string>
 
-    <string name="useMultiLinesDescription">在 网址 字段中使用更多行</string>
+    <string name="useMultiLinesDescription">在 URL 输入框中使用多行</string>
 
     <string name="setApiKey">设置 API 密钥</string>
 
     <string name="setApiKeyDescription">设置您的 OpenAI API 密钥</string>
 
+    <string name="setModelDescription">设置 AI 模型进行总结</string>
     <string name="design">设计</string>
 
     <string name="cancel">取消</string>
@@ -80,8 +83,15 @@
     <string name="finishButton">完成</string>
     <string name="continueButton">继续</string>
     <string name="skip">跳过</string>
+    <string name="googlePlay">Google Play 应用商城</string>
     <string name="googlePlayDescription">评分</string>
     <string name="tutorial">教程</string>
     <string name="tutorialDescription">重看教程</string>
+    <string name="noHistory">无历史记录</string>
     <string name="copied">已粘贴</string>
+    <string name="setModel">AI 模型</string>
+    <string name="stillLoading">文本正在处理中…</string>
+    <string name="useLengthOptions">使用总结长度</string>
+    <string name="tooLong">提供内容过长。</string>
+    <string name="useLengthOptionsDescription">设置总结结果的长度</string>
 </resources>

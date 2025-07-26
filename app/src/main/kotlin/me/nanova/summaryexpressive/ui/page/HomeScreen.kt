@@ -38,6 +38,7 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
@@ -76,6 +77,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -117,7 +120,7 @@ fun HomeScreen(
     viewModel: SummaryViewModel = hiltViewModel(),
 ) {
     var isExtracting by remember { mutableStateOf(false) } // For Loading-Animation
-    var url by remember { mutableStateOf(initialUrl ?: "") }
+    var urlOrText by remember { mutableStateOf(initialUrl ?: "") }
     val scope = rememberCoroutineScope() // Coroutine scope for async calls
     val context = LocalContext.current
     val clipboard = LocalClipboard.current // Clipboard
@@ -132,8 +135,9 @@ fun HomeScreen(
     val summaryResult by viewModel.currentSummaryResult.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val apiKey by viewModel.apiKey.collectAsState()
-    var isDocument by remember { mutableStateOf(false) }
-    var textDocument by remember { mutableStateOf<String?>(null) }
+    var isDocOrImage by remember { mutableStateOf(false) }
+    // for document or image
+    var filename by remember { mutableStateOf<String?>(null) }
     var singleLine by remember { mutableStateOf(false) }
     val showLength by viewModel.showLength.collectAsState()
     val showLengthNumber by viewModel.lengthNumber.collectAsState()
@@ -144,41 +148,39 @@ fun HomeScreen(
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             result.value = uri
-            if (uri != null) {
-                val mimeType = context.contentResolver.getType(uri)
+            if (uri == null) return@rememberLauncherForActivityResult
 
-                scope.launch {
-                    isExtracting = true
-                    isDocument = true
-                    url = getFileName(context, uri)
-                    textDocument = when (mimeType) {
-                        MimeTypes.PDF -> extractTextFromPdf(context, uri)
-                        MimeTypes.DOCX -> extractTextFromDocx(context, uri)
-                        else -> extractTextFromImage(context, uri)
-                    }
-                    isExtracting = false
+            val mimeType = context.contentResolver.getType(uri)
+            scope.launch {
+                isExtracting = true
+                isDocOrImage = true
+                filename = getFileName(context, uri)
+                val extractedText = when (mimeType) {
+                    MimeTypes.PDF -> extractTextFromPdf(context, uri)
+                    MimeTypes.DOCX -> extractTextFromDocx(context, uri)
+                    else -> extractTextFromImage(context, uri)
                 }
+                urlOrText = extractedText
+                isExtracting = false
             }
         }
 
     fun summarize() {
         focusManager.clearFocus()
-        viewModel.summarize(url, selectedIndex, isDocument, textDocument)
+        viewModel.summarize(urlOrText, selectedIndex, isDocOrImage, filename)
     }
 
     Scaffold(
         modifier = modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            HomeTopAppBar(navController, scrollBehavior)
-        },
+        topBar = { HomeTopAppBar(navController, scrollBehavior) },
         floatingActionButton = {
             HomeFloatingActionButtons(
                 onPaste = {
                     scope.launch {
                         clipboard.getClipEntry()?.let {
-                            url = it.clipData.getItemAt(0).text.toString()
+                            urlOrText = it.clipData.getItemAt(0).text.toString()
                         }
                     }
                 },
@@ -204,24 +206,26 @@ fun HomeScreen(
                         style = MaterialTheme.typography.headlineMedium
                     )
 
-                    UrlInputSection(
-                        url = url,
-                        onUrlChange = { url = it },
+                    InputSection(
+                        url = urlOrText,
+                        onUrlChange = { urlOrText = it },
                         onSummarize = { summarize() },
                         summaryResult = summaryResult,
                         apiKey = apiKey,
                         onClear = {
-                            url = ""
+                            urlOrText = ""
                             viewModel.clearCurrentSummary()
                             focusRequester.requestFocus()
-                            isDocument = false
+                            isDocOrImage = false
                             singleLine = false
+                            filename = null
                         },
                         focusRequester = focusRequester,
                         onLaunchFilePicker = {
                             launcher.launch(MimeTypes.allSupported)
                         },
-                        isDocument = isDocument,
+                        isDocOrImage = isDocOrImage,
+                        filename = filename,
                         isExtracting = isExtracting,
                         multiLine = multiLine,
                         singleLine = singleLine,
@@ -254,7 +258,7 @@ fun HomeScreen(
                     if (currentResult != null && !currentResult.isError && !currentResult.summary.isNullOrEmpty()) {
                         SummaryResultSection(
                             summaryResult = currentResult,
-                            url = url,
+                            url = urlOrText,
                             onRegenerate = { summarize() }
                         )
                     }
@@ -298,7 +302,7 @@ private fun HomeTopAppBar(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun UrlInputSection(
+private fun InputSection(
     url: String,
     onUrlChange: (String) -> Unit,
     onSummarize: () -> Unit,
@@ -307,7 +311,8 @@ private fun UrlInputSection(
     onClear: () -> Unit,
     focusRequester: FocusRequester,
     onLaunchFilePicker: () -> Unit,
-    isDocument: Boolean,
+    isDocOrImage: Boolean,
+    filename: String?,
     isExtracting: Boolean,
     multiLine: Boolean,
     singleLine: Boolean,
@@ -315,84 +320,110 @@ private fun UrlInputSection(
 ) {
     val showCancelIcon = remember(url) { url.isNotBlank() }
 
-    Row(modifier = Modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = url,
-            onValueChange = onUrlChange,
-            label = { Text("URL/Text") },
-            isError = summaryResult?.isError == true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { onSummarize() }),
-            supportingText = {
-                if (summaryResult?.isError == true) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = getErrorMessage(summaryResult.errorMessage, apiKey),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            trailingIcon = {
-                if (showCancelIcon) {
-                    IconButton(onClick = onClear) {
-                        Icon(
-                            Icons.Outlined.Cancel,
-                            contentDescription = "Cancel",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-            },
-            maxLines = 15,
-            singleLine = if (multiLine) singleLine else true,
-            shape = MaterialTheme.shapes.medium,
-            modifier = Modifier
-                .weight(1f)
-                .padding(top = 20.dp)
-                .focusRequester(focusRequester)
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column {
-            OutlinedButton(
-                onClick = onLaunchFilePicker,
-                modifier = Modifier
-                    .padding(top = 27.dp)
-                    .height(58.dp)
-            ) {
-                Box {
-                    if (isExtracting) {
-                        LoadingIndicator(
-                            modifier = Modifier
-                                .size(55.dp)
-                                .align(Alignment.Center)
+    Column {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = url,
+                onValueChange = onUrlChange,
+                label = { Text("URL/Text") },
+                isError = summaryResult?.isError == true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { onSummarize() }),
+                supportingText = {
+                    if (summaryResult?.isError == true) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = getErrorMessage(summaryResult.errorMessage, apiKey),
+                            color = MaterialTheme.colorScheme.error
                         )
                     } else {
-                        Icon(
-                            if (isDocument) Icons.Filled.CheckCircle else Icons.Filled.AddCircle,
-                            contentDescription = "Floating action button",
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                        Column {
+                            if (isDocOrImage && !filename.isNullOrBlank()) {
+                                Text(
+                                    text = "File: $filename",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.End,
+                                    color = MaterialTheme.colorScheme.secondaryFixedDim,
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
+                            }
+                            if (url.isNotBlank()) {
+                                // Based on the rule of thumb that 100 tokens is about 75 words.
+                                // ref: https://platform.openai.com/tokenizer
+                                val wordCount = url.trim().split(Regex("\\s+")).size
+                                val tokenCount = (wordCount * 4) / 3
+                                Text(
+                                    text = "Approximate tokens: $tokenCount",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.End,
+                                    color = MaterialTheme.colorScheme.tertiaryFixedDim
+                                )
+                            }
+                        }
+                    }
+                },
+                trailingIcon = {
+                    if (showCancelIcon) {
+                        IconButton(onClick = onClear) {
+                            Icon(
+                                Icons.Outlined.Cancel,
+                                contentDescription = "Cancel",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                },
+                maxLines = 15,
+                singleLine = if (multiLine) singleLine else true,
+                shape = MaterialTheme.shapes.extraLarge,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 20.dp)
+                    .focusRequester(focusRequester)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
+                OutlinedButton(
+                    onClick = onLaunchFilePicker,
+                    modifier = Modifier
+                        .padding(top = 27.dp)
+                        .height(58.dp)
+                ) {
+                    Box {
+                        if (isExtracting) {
+                            LoadingIndicator(
+                                modifier = Modifier
+                                    .size(55.dp)
+                                    .align(Alignment.Center)
+                            )
+                        } else {
+                            Icon(
+                                if (isDocOrImage) Icons.Filled.CheckCircle else Icons.Filled.AddCircle,
+                                contentDescription = "Floating action button",
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
                     }
                 }
-            }
-            if (multiLine) {
-                val textLength = url.length
-                val lineBreaks = url.count { it == '\n' }
-                if (textLength >= 100 || lineBreaks >= 1) {
-                    Button(
-                        onClick = { onSingleLineChange(!singleLine) },
-                        modifier = Modifier
-                            .height(72.dp)
-                            .padding(top = 15.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (singleLine) Icons.Outlined.KeyboardArrowDown
-                            else Icons.Outlined.KeyboardArrowUp,
-                            contentDescription = if (singleLine) "Minimize" else "Expand",
-                            modifier = Modifier.size(24.dp)
-                        )
+                if (multiLine) {
+                    val textLength = url.length
+                    val lineBreaks = url.count { it == '\n' }
+                    if (textLength >= 100 || lineBreaks >= 1) {
+                        Button(
+                            onClick = { onSingleLineChange(!singleLine) },
+                            modifier = Modifier
+                                .height(72.dp)
+                                .padding(top = 15.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (singleLine) Icons.Outlined.KeyboardArrowDown
+                                else Icons.Outlined.KeyboardArrowUp,
+                                contentDescription = if (singleLine) "Minimize" else "Expand",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -543,3 +574,66 @@ private fun getErrorMessage(errorMessage: String?, apiKey: String): String {
         else -> errorMessage ?: "unknown error"
     }
 }
+
+@Preview
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun UrlInputSectionPreview() {
+    val url by remember { mutableStateOf("https://example.com") }
+    val summaryResult by remember { mutableStateOf<SummaryResult?>(null) }
+    val focusRequester = remember { FocusRequester() }
+
+    Column {
+        InputSection(
+            url = url,
+            onUrlChange = {},
+            onSummarize = {},
+            summaryResult = summaryResult,
+            apiKey = "test_api_key",
+            onClear = {},
+            focusRequester = focusRequester,
+            onLaunchFilePicker = {},
+            isDocOrImage = false,
+            filename = null,
+            isExtracting = false,
+            multiLine = true,
+            singleLine = false,
+            onSingleLineChange = {}
+        )
+
+        HorizontalDivider()
+
+        InputSection(
+            url = url,
+            onUrlChange = {},
+            onSummarize = {},
+            summaryResult = summaryResult,
+            apiKey = "test_api_key",
+            onClear = {},
+            focusRequester = focusRequester,
+            onLaunchFilePicker = {},
+            isDocOrImage = true,
+            filename = "some image or documentations",
+            isExtracting = false,
+            multiLine = true,
+            singleLine = false,
+            onSingleLineChange = {}
+        )
+    }
+}
+
+
+@Preview
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SummaryLengthSelectorPreview() {
+    val selectedIndex by remember { mutableIntStateOf(0) }
+    val options = listOf("Short", "Medium", "Long")
+
+    SummaryLengthSelector(
+        selectedIndex = selectedIndex,
+        onSelectedIndexChange = {},
+        options = options
+    )
+}
+
