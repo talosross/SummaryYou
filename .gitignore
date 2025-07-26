@@ -17,3 +17,5 @@ local.properties
 *.aab
 .repo_ignore
 .java-version
+*.jks
+keystore.*

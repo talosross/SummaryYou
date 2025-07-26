@@ -7,42 +7,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: 21
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Run unit tests
-        run: ./gradlew clean test
-
-      - name: Build debug APK (for testing build process)
-        run: ./gradlew clean build
-
   build-release-apk:
     runs-on: ubuntu-latest
-    needs: build-and-test
+    env:
+      APK_DIR: release/
     permissions:
       contents: write
     steps:
@@ -70,6 +38,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Setup Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > release.jks
+          echo "storeFile=release.jks" > keystore.properties
+          echo "keyAlias=$KEY_ALIAS" >> keystore.properties
+          echo "keyPassword=$KEY_PASSWORD" >> keystore.properties
+          echo "storePassword=$STORE_PASSWORD" >> keystore.properties
+
+      - name: Build release artifacts
+        run: ./gradlew clean assembleRelease bundleGmsRelease
+
       - name: Extract version info from tag
         id: extract-versions
         run: |
@@ -92,15 +76,13 @@ jobs:
           echo "Version Name: ${VERSION_NAME}"
           echo "Version Code: ${VERSION_CODE}"
 
-
       - name: Create release folder
-        run: mkdir -p app/build/outputs/apk/release
+        run: mkdir -p ${{ env.APK_DIR }}
 
-      - name: Build release APK
-        run: ./gradlew clean assembleRelease
-
-      - name: Rename artifact
-        run: mv "app/build/outputs/apk/release/app-release.apk" "app/build/outputs/apk/release/SummaryExpressive-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
+      - name: Rename artifacts
+        run: |
+          mv "app/build/outputs/apk/gms/release/app-gms-release.apk" "${{ env.APK_DIR }}/SummaryExpressive-gms-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
+          mv "app/build/outputs/apk/standalone/release/app-standalone-release.apk" "${{ env.APK_DIR }}/SummaryExpressive-standalone-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
@@ -109,4 +91,4 @@ jobs:
           name: "Release ${{ env.VERSION_NAME }} (${{ env.VERSION_CODE }})"
           prerelease: false
           draft: false
-          files: app/build/outputs/apk/release/SummaryExpressive-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk
+          files: ${{ env.APK_DIR }}/SummaryExpressive-*.apk

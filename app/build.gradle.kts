@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -9,6 +12,7 @@ plugins {
 android {
     namespace = "me.nanova.summaryexpressive"
     compileSdk = 36
+    flavorDimensions += "distribution"
     androidResources {
         generateLocaleConfig = true
     }
@@ -16,12 +20,38 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.0.3"
+        versionCode = 4
+        versionName = "0.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
     }
+
+    productFlavors {
+        create("gms") {
+            dimension = "distribution"
+        }
+        create("standalone") {
+            dimension = "distribution"
+            applicationIdSuffix = ".standalone"
+            versionNameSuffix = "-standalone"
+        }
+    }
+
+    signingConfigs {
+        val keyPropertiesFile = rootProject.file("keystore.properties")
+        val keyProperties = Properties()
+        if (keyPropertiesFile.exists()) {
+            keyProperties.load(FileInputStream(keyPropertiesFile))
+        }
+
+        create("release") {
+            keyAlias = keyProperties.getProperty("keyAlias")
+            keyPassword = keyProperties.getProperty("keyPassword")
+            storeFile = if (keyProperties.getProperty("storeFile") != null) rootProject.file(keyProperties.getProperty("storeFile")) else null
+            storePassword = keyProperties.getProperty("storePassword")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -30,7 +60,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
         getByName("debug") {
             signingConfig = signingConfigs.getByName("debug")
@@ -84,9 +114,9 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.7")
 
     // ml & llm
-    // this will bundle model to apk which is huge, use play service one first
-    //    implementation("com.google.mlkit:text-recognition:16.0.1")
-    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+    // this will bundle model to apk which is huge
+    "standaloneImplementation"("com.google.mlkit:text-recognition:16.0.1")
+    "gmsImplementation"("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
     implementation("io.ktor:ktor-client-android:3.2.2")
     implementation("ai.koog:koog-agents:0.3.0") {
