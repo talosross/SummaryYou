@@ -3,11 +3,19 @@ package me.nanova.summaryexpressive.llm
 object Prompts {
 
     enum class ContentType {
-        VIDEO_TRANSCRIPT, ARTICLE, TEXT, DOCUMENT
+        VIDEO_TRANSCRIPT,
+
+        // url based article
+        ARTICLE,
+        TEXT,
+
+        // document or image
+        DOCUMENT;
     }
 
     // --- Template components ---
-    private const val CONCLUSION_TAKEAWAY = "If it includes a conclusion or key takeaway, make sure to include that in the end."
+    private const val CONCLUSION_TAKEAWAY =
+        "If it includes a conclusion or key takeaway, make sure to include that in the end."
 
     private fun getOpenAIContentSource(type: ContentType, title: String?): String {
         val titlePart = if (!title.isNullOrBlank()) " '$title'" else ""
@@ -31,7 +39,7 @@ object Prompts {
 
         val summarySpec = when (length) {
             0 -> "a very short, concise summary with a maximum of 20 words of the $contentTypeString using only 3 bullet points"
-            1 -> "a very short, concise summary with a maximum of 60 words of the $contentTypeString. $CONCLUSION_TAKEAWAY"
+            1 -> "a very short, concise summary with a maximum of 70 words of the $contentTypeString. $CONCLUSION_TAKEAWAY"
             else -> "a summary of the $contentTypeString. $CONCLUSION_TAKEAWAY"
         }
 
@@ -40,7 +48,11 @@ object Prompts {
 
     // --- Gemini/Groq Prompts ---
 
-    private fun getGeneralContentSource(type: ContentType, title: String?, forVideo: String): String {
+    private fun getGeneralContentSource(
+        type: ContentType,
+        title: String?,
+        forVideo: String,
+    ): String {
         val titlePart = if (!title.isNullOrBlank()) " '$title'" else ""
         return when (type) {
             ContentType.VIDEO_TRANSCRIPT -> "$forVideo$titlePart"
@@ -60,7 +72,12 @@ object Prompts {
         return buildGeminiGroqPrompt(contentSource, type, length, language)
     }
 
-    private fun buildGeminiGroqPrompt(contentSource: String, type: ContentType, length: Int, language: String): String {
+    private fun buildGeminiGroqPrompt(
+        contentSource: String,
+        type: ContentType,
+        length: Int,
+        language: String,
+    ): String {
         return when (length) {
             0 -> "Act as an expert content summarizer. Extract exactly 3 key points from $contentSource. Format as 3 bullet points only, each starting with a dash, each containing 3-5 words maximum, and not forming complete sentences. Do not include any introductory text, conclusion, or explanations. No markdown formatting. Deliver only the 3 bullet points in $language."
             1 -> "Act as a professional summarizer. Condense $contentSource into a single paragraph of exactly 70 words. Include the main point and any conclusion if relevant. Do not use any headings, introductions, or metacommentary. No markdown formatting or special characters. Deliver only the 70-word summary in $language."

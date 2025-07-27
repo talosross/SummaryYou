@@ -55,6 +55,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -92,6 +93,7 @@ import me.nanova.summaryexpressive.util.extractTextFromDocx
 import me.nanova.summaryexpressive.util.extractTextFromImage
 import me.nanova.summaryexpressive.util.extractTextFromPdf
 import me.nanova.summaryexpressive.util.getFileName
+import me.nanova.summaryexpressive.vm.SummarySource
 import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 
@@ -133,11 +135,24 @@ fun HomeScreen(
     ) // Lengths
     val isLoading by viewModel.isLoading.collectAsState()
     val summaryResult by viewModel.currentSummaryResult.collectAsState()
+    val error by viewModel.error.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val apiKey by viewModel.apiKey.collectAsState()
-    var isDocOrImage by remember { mutableStateOf(false) }
-    // for document or image
-    var filename by remember { mutableStateOf<String?>(null) }
+    var documentFilename by remember { mutableStateOf<String?>(null) }
+    val inputSource by remember {
+        derivedStateOf {
+            when {
+                documentFilename != null -> SummarySource.Document(documentFilename, urlOrText)
+                urlOrText.startsWith("http", ignoreCase = true)
+                        || urlOrText.startsWith("https", ignoreCase = true) ->
+                    if (isYouTubeLink(urlOrText)) SummarySource.Video(urlOrText)
+                    else SummarySource.Article(urlOrText)
+
+                urlOrText.isNotBlank() -> SummarySource.Text(urlOrText)
+                else -> SummarySource.None
+            }
+        }
+    }
     var singleLine by remember { mutableStateOf(false) }
     val showLength by viewModel.showLength.collectAsState()
     val showLengthNumber by viewModel.lengthNumber.collectAsState()
@@ -152,9 +167,9 @@ fun HomeScreen(
 
             val mimeType = context.contentResolver.getType(uri)
             scope.launch {
+                viewModel.clearCurrentSummary()
                 isExtracting = true
-                isDocOrImage = true
-                filename = getFileName(context, uri)
+                documentFilename = getFileName(context, uri)
                 val extractedText = when (mimeType) {
                     MimeTypes.PDF -> extractTextFromPdf(context, uri)
                     MimeTypes.DOCX -> extractTextFromDocx(context, uri)
@@ -167,16 +182,15 @@ fun HomeScreen(
 
     fun summarize() {
         focusManager.clearFocus()
-        viewModel.summarize(urlOrText, selectedIndex, isDocOrImage, filename)
+        viewModel.summarize(inputSource)
     }
 
     fun clearInput() {
         urlOrText = ""
         viewModel.clearCurrentSummary()
         focusRequester.requestFocus()
-        isDocOrImage = false
+        documentFilename = null
         singleLine = false
-        filename = null
     }
 
     Scaffold(
@@ -217,18 +231,23 @@ fun HomeScreen(
                     )
 
                     InputSection(
-                        url = urlOrText,
-                        onUrlChange = { urlOrText = it },
+                        urlOrText = urlOrText,
+                        onUrlChange = { newText ->
+                            urlOrText = newText
+                            // If user edits text that came from a document, treat it as plain text from now on
+                            if (documentFilename != null) {
+                                documentFilename = null
+                            }
+                        },
                         onSummarize = { summarize() },
-                        summaryResult = summaryResult,
+                        error = error,
                         apiKey = apiKey,
                         onClear = { clearInput() },
                         focusRequester = focusRequester,
                         onLaunchFilePicker = {
                             launcher.launch(MimeTypes.allSupported)
                         },
-                        isDocOrImage = isDocOrImage,
-                        filename = filename,
+                        inputSource = inputSource,
                         isExtracting = isExtracting,
                         multiLine = multiLine,
                         singleLine = singleLine,
@@ -258,10 +277,9 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(height = 8.dp))
                     }
 
-                    if (currentResult != null && !currentResult.isError && !currentResult.summary.isNullOrEmpty()) {
+                    if (currentResult != null && !currentResult.summary.isNullOrEmpty()) {
                         SummaryResultSection(
                             summaryResult = currentResult,
-                            url = urlOrText,
                             onRegenerate = { summarize() }
                         )
                     }
@@ -306,56 +324,55 @@ private fun HomeTopAppBar(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun InputSection(
-    url: String,
+    urlOrText: String,
     onUrlChange: (String) -> Unit,
     onSummarize: () -> Unit,
-    summaryResult: SummaryResult?,
+    inputSource: SummarySource,
+    error: Throwable?,
     apiKey: String,
     onClear: () -> Unit,
     focusRequester: FocusRequester,
     onLaunchFilePicker: () -> Unit,
-    isDocOrImage: Boolean,
-    filename: String?,
     isExtracting: Boolean,
     multiLine: Boolean,
     singleLine: Boolean,
     onSingleLineChange: (Boolean) -> Unit,
 ) {
-    val showCancelIcon = remember(url) { url.isNotBlank() }
-    val isUrl =
-        !isDocOrImage && (url.startsWith("http") || url.startsWith("https"))
+    val showCancelIcon = remember(urlOrText) { urlOrText.isNotBlank() }
 
     Column {
         Row(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
-                value = url,
+                value = urlOrText,
                 onValueChange = onUrlChange,
                 label = { Text("URL/Text") },
-                isError = summaryResult?.isError == true,
+                isError = error != null,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onSummarize() }),
                 supportingText = {
-                    if (summaryResult?.isError == true) {
+                    if (error != null) {
                         Text(
                             modifier = Modifier.fillMaxWidth(),
-                            text = getErrorMessage(summaryResult.errorMessage, apiKey),
+                            text = getErrorMessage(error.message, apiKey),
                             color = MaterialTheme.colorScheme.error
                         )
                     } else {
                         Column {
-                            if (isDocOrImage && !filename.isNullOrBlank()) {
-                                Text(
-                                    text = "File: $filename",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.End,
-                                    color = MaterialTheme.colorScheme.secondaryFixedDim,
-                                    style = MaterialTheme.typography.labelMedium,
-                                )
+                            if (inputSource is SummarySource.Document) {
+                                inputSource.filename?.let {
+                                    Text(
+                                        text = "File: $it",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.End,
+                                        color = MaterialTheme.colorScheme.secondaryFixedDim,
+                                        style = MaterialTheme.typography.labelMedium,
+                                    )
+                                }
                             }
-                            if (isUrl && url.isNotBlank()) {
+                            if (inputSource is SummarySource.Text && urlOrText.isNotBlank()) {
                                 // Based on the rule of thumb that 100 tokens is about 75 words.
                                 // ref: https://platform.openai.com/tokenizer
-                                val wordCount = url.trim().split(Regex("\\s+")).size
+                                val wordCount = urlOrText.trim().split(Regex("\\s+")).size
                                 val tokenCount = (wordCount * 4) / 3
                                 Text(
                                     text = "Approximate tokens: $tokenCount",
@@ -405,7 +422,8 @@ private fun InputSection(
                             )
                         } else {
                             Icon(
-                                if (isDocOrImage) Icons.Filled.CheckCircle else Icons.Filled.AddCircle,
+                                if (inputSource is SummarySource.Document) Icons.Filled.CheckCircle
+                                else Icons.Filled.AddCircle,
                                 contentDescription = "Floating action button",
                                 modifier = Modifier.align(Alignment.Center)
                             )
@@ -413,8 +431,8 @@ private fun InputSection(
                     }
                 }
                 if (multiLine) {
-                    val textLength = url.length
-                    val lineBreaks = url.count { it == '\n' }
+                    val textLength = urlOrText.length
+                    val lineBreaks = urlOrText.count { it == '\n' }
                     if (textLength >= 100 || lineBreaks >= 1) {
                         Button(
                             onClick = { onSingleLineChange(!singleLine) },
@@ -470,19 +488,19 @@ private fun SummaryLengthSelector(
 @Composable
 private fun SummaryResultSection(
     summaryResult: SummaryResult,
-    url: String,
     onRegenerate: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
     val haptics = LocalHapticFeedback.current
+    val isYoutube = summaryResult.isYoutubeLink
 
     SummaryCard(
         modifier = Modifier.padding(top = 15.dp, bottom = 15.dp),
         title = summaryResult.title,
         author = summaryResult.author,
         summary = summaryResult.summary,
-        isYouTube = isYouTubeLink(url),
+        isYouTube = isYoutube,
         onLongClick = {
             scope.launch {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -585,21 +603,19 @@ private fun getErrorMessage(errorMessage: String?, apiKey: String): String {
 @Composable
 private fun UrlInputSectionPreview() {
     val url by remember { mutableStateOf("https://example.com") }
-    val summaryResult by remember { mutableStateOf<SummaryResult?>(null) }
     val focusRequester = remember { FocusRequester() }
 
     Column {
         InputSection(
-            url = url,
+            urlOrText = url,
             onUrlChange = {},
             onSummarize = {},
-            summaryResult = summaryResult,
+            error = null,
             apiKey = "test_api_key",
             onClear = {},
             focusRequester = focusRequester,
             onLaunchFilePicker = {},
-            isDocOrImage = false,
-            filename = null,
+            inputSource = SummarySource.Article(url),
             isExtracting = false,
             multiLine = true,
             singleLine = false,
@@ -609,16 +625,18 @@ private fun UrlInputSectionPreview() {
         HorizontalDivider()
 
         InputSection(
-            url = url,
+            urlOrText = "",
             onUrlChange = {},
             onSummarize = {},
-            summaryResult = summaryResult,
+            error = SummaryException.InvalidLinkException,
             apiKey = "test_api_key",
             onClear = {},
             focusRequester = focusRequester,
             onLaunchFilePicker = {},
-            isDocOrImage = true,
-            filename = "some image or documentations",
+            inputSource = SummarySource.Document(
+                filename = "some image or documentations",
+                content = ""
+            ),
             isExtracting = false,
             multiLine = true,
             singleLine = false,
@@ -641,4 +659,3 @@ private fun SummaryLengthSelectorPreview() {
         options = options
     )
 }
-

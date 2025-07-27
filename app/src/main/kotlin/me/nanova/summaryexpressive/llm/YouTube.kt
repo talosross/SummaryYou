@@ -136,7 +136,6 @@ object YouTube {
                 }
             } catch (e: Exception) {
                 Log.e("YouTube", "Exception in getVideoDetails for video $videoId", e)
-                e.printStackTrace()
                 return@withContext null
             }
         }
@@ -221,7 +220,6 @@ object YouTube {
             }
         } catch (e: Exception) {
             Log.e("YouTube", "Exception in getTranscript for video $videoId", e)
-            e.printStackTrace()
             return@withContext null
         }
     }

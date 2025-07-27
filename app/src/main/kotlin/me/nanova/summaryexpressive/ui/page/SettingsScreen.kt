@@ -667,7 +667,7 @@ private fun ModelSettingsDialog(
                     OutlinedTextField(
                         value = apiBaseUrlTextFieldValue,
                         onValueChange = { apiBaseUrlTextFieldValue = it },
-                        label = { Text("Custom API Base URL") },
+                        label = { Text("(Optional) Custom URL") },
                         shape = MaterialTheme.shapes.large,
                         trailingIcon = {
                             if (apiBaseUrlTextFieldValue.isBlank()) {
