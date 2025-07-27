@@ -35,7 +35,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -58,11 +57,11 @@ import me.nanova.summaryexpressive.vm.SummaryViewModel
 @Composable
 fun HistoryScreen(
     navController: NavHostController,
-    viewModel: SummaryViewModel = hiltViewModel()
+    viewModel: SummaryViewModel = hiltViewModel(),
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    var searchMode by remember { mutableStateOf(false) } // Active state for SearchBar
+    var searchMode by remember { mutableStateOf(false) }
     val haptics = LocalHapticFeedback.current
     val context = LocalContext.current
 
@@ -171,100 +170,100 @@ private fun SearchView(onExitSearch: () -> Unit, viewModel: SummaryViewModel = h
         focusRequester.requestFocus()
     }
 
-    SearchBar(
-        inputField = {
-            SearchBarDefaults.InputField(
-                query = searchText,
-                onQueryChange = {
-                    searchText = it
-                    searchResults.clear()
-                    val resultIds = viewModel.searchTextSummary(searchText).reversed()
-                    val summariesMap =
-                        viewModel.textSummaries.associateBy { summary -> summary.id }
-                    searchResults.addAll(resultIds.mapNotNull { id -> summariesMap[id] })
-                },
-                onSearch = { focusManager.clearFocus() },
-                expanded = true,
-                onExpandedChange = { active -> if (!active) onExitSearch() },
-                placeholder = {
-                    Text(text = stringResource(id = R.string.search))
-                },
-                leadingIcon = {
-                    IconButton(onClick = onExitSearch) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                trailingIcon = {
-                    IconButton(
-                        onClick = {
-                            if (searchText.isBlank()) {
-                                onExitSearch()
-                            } else {
-                                searchText = ""
-                                focusRequester.requestFocus()
-                            }
+    Box(modifier = Modifier.fillMaxSize()) {
+        SearchBar(
+            inputField = {
+                SearchBarDefaults.InputField(
+                    query = searchText,
+                    onQueryChange = {
+                        searchText = it
+                        searchResults.clear()
+                        val resultIds = viewModel.searchTextSummary(searchText).reversed()
+                        val summariesMap =
+                            viewModel.textSummaries.associateBy { summary -> summary.id }
+                        searchResults.addAll(resultIds.mapNotNull { id -> summariesMap[id] })
+                    },
+                    onSearch = { focusManager.clearFocus() },
+                    expanded = true,
+                    onExpandedChange = { active -> if (!active) onExitSearch() },
+                    placeholder = {
+                        Text(text = stringResource(id = R.string.search))
+                    },
+                    leadingIcon = {
+                        IconButton(onClick = onExitSearch) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
                         }
-                    ) {
-                        Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
-                    }
-                },
-            )
-        },
-        expanded = true,
-        onExpandedChange = { active -> if (!active) onExitSearch() },
-        modifier = Modifier
-            .focusRequester(focusRequester)
-            .fillMaxSize(),
-        shape = SearchBarDefaults.inputFieldShape,
-        colors = SearchBarDefaults.colors(),
-        tonalElevation = SearchBarDefaults.TonalElevation,
-        shadowElevation = SearchBarDefaults.ShadowElevation,
-        windowInsets = SearchBarDefaults.windowInsets,
-        content = {
-            if (searchText.isNotEmpty() && searchResults.isEmpty()) {
-                Text(
-                    text = stringResource(id = R.string.nothingFound),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(start = 20.dp, end = 20.dp)
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(items = searchResults, key = { it.id }) { textSummary ->
-                        SummaryCard(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 15.dp),
-                            title = textSummary.title,
-                            author = textSummary.author,
-                            summary = textSummary.text,
-                            isYouTube = textSummary.youtubeLink,
-                            cardColors = CardDefaults.elevatedCardColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                            ),
-                            onLongClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                Toast
-                                    .makeText(
-                                        context,
-                                        context.getString(R.string.deleted),
-                                        Toast.LENGTH_SHORT
-                                    )
-                                    .show()
-                                viewModel.removeTextSummary(textSummary.id)
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                if (searchText.isBlank()) {
+                                    onExitSearch()
+                                } else {
+                                    searchText = ""
+                                    focusRequester.requestFocus()
+                                }
                             }
-                        )
+                        ) {
+                            Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
+                        }
+                    },
+                )
+            },
+            expanded = true,
+            onExpandedChange = { active -> if (!active) onExitSearch() },
+            modifier = Modifier
+                .focusRequester(focusRequester),
+            shape = SearchBarDefaults.inputFieldShape,
+            colors = SearchBarDefaults.colors(),
+            tonalElevation = SearchBarDefaults.TonalElevation,
+            shadowElevation = SearchBarDefaults.ShadowElevation,
+            content = {
+                if (searchText.isNotEmpty() && searchResults.isEmpty()) {
+                    Text(
+                        text = stringResource(id = R.string.nothingFound),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(start = 20.dp, end = 20.dp)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(items = searchResults, key = { it.id }) { textSummary ->
+                            SummaryCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 15.dp),
+                                title = textSummary.title,
+                                author = textSummary.author,
+                                summary = textSummary.text,
+                                isYouTube = textSummary.youtubeLink,
+                                cardColors = CardDefaults.elevatedCardColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                                ),
+                                onLongClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            context.getString(R.string.deleted),
+                                            Toast.LENGTH_SHORT
+                                        )
+                                        .show()
+                                    viewModel.removeTextSummary(textSummary.id)
+                                }
+                            )
+                        }
                     }
                 }
-            }
-        },
-    )
+            },
+        )
+    }
 }

@@ -1,5 +1,6 @@
 package me.nanova.summaryexpressive.ui.page
 
+import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -66,6 +67,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
@@ -217,6 +219,8 @@ private fun SettingsContent(
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
 
     LazyColumn(
         modifier = Modifier
@@ -480,7 +484,18 @@ private fun SettingsContent(
                     .padding(vertical = 8.dp),
                 horizontalAlignment = CenterHorizontally
             ) {
-                Text(text = "Version ${BuildConfig.VERSION_NAME} - ${BuildConfig.VERSION_CODE} (${BuildConfig.FLAVOR})")
+                val appInfo =
+                    "${BuildConfig.VERSION_NAME} - ${BuildConfig.VERSION_CODE} (${BuildConfig.FLAVOR})"
+                Text(
+                    text = "Version ${appInfo}",
+                    modifier = Modifier
+                        .clickable {
+                            scope.launch {
+                                clipboard.setClipEntry(
+                                    ClipData.newPlainText("App info", appInfo).toClipEntry()
+                                )
+                            }
+                        })
                 Text(
                     text = stringResource(id = R.string.madeBy),
                     modifier = Modifier

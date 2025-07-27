@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,9 +23,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,7 +41,7 @@ import me.nanova.summaryexpressive.R
 @Composable
 fun OnboardingScreen(
     onDone: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var step by remember { mutableIntStateOf(1) }
     val context = LocalContext.current
@@ -57,11 +60,11 @@ fun OnboardingScreen(
         item {
             when (step) {
                 1 -> {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.logo),
                         contentDescription = "Logo",
-                        modifier = Modifier
-                            .size(width = 150.dp, height = 150.dp)
+                        modifier = Modifier.size(150.dp),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                     Text(
                         text = stringResource(id = R.string.welcome),
