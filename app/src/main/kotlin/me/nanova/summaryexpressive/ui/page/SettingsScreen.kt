@@ -1,9 +1,6 @@
 package me.nanova.summaryexpressive.ui.page
 
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
@@ -80,6 +77,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
+import me.nanova.summaryexpressive.BuildConfig
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
@@ -482,9 +480,7 @@ private fun SettingsContent(
                     .padding(vertical = 8.dp),
                 horizontalAlignment = CenterHorizontally
             ) {
-                Text(
-                    text = "Version ${getVersionName(context)} - ${getVersionCode(context)}"
-                )
+                Text(text = "Version ${BuildConfig.VERSION_NAME} - ${BuildConfig.VERSION_CODE} (${BuildConfig.FLAVOR})")
                 Text(
                     text = stringResource(id = R.string.madeBy),
                     modifier = Modifier
@@ -497,24 +493,6 @@ private fun SettingsContent(
             }
         }
     }
-}
-
-private fun getVersionName(context: Context): String? {
-    val packageInfo: PackageInfo = try {
-        context.packageManager.getPackageInfo(context.packageName, 0)
-    } catch (e: PackageManager.NameNotFoundException) {
-        throw RuntimeException(e)
-    }
-    return packageInfo.versionName
-}
-
-private fun getVersionCode(context: Context): Long {
-    val packageInfo: PackageInfo = try {
-        context.packageManager.getPackageInfo(context.packageName, 0)
-    } catch (e: PackageManager.NameNotFoundException) {
-        throw RuntimeException(e)
-    }
-    return packageInfo.longVersionCode
 }
 
 @Composable
