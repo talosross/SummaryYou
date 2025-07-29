@@ -48,7 +48,7 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
     val textSummaries = mutableStateListOf<TextSummary>()
 
     // Original Language in summary
-    private val _useOriginalLanguage = MutableStateFlow(false)
+    private val _useOriginalLanguage = MutableStateFlow(true)
     val useOriginalLanguage: StateFlow<Boolean> = _useOriginalLanguage.asStateFlow()
     fun setUseOriginalLanguageValue(newValue: Boolean) =
         savePreference(UserPreferencesRepository::setUseOriginalLanguage, newValue)

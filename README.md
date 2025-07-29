@@ -1,6 +1,6 @@
 <div align="center">
 
-<img width="" src=".github/logo.png"  width=160 height=160  align="center">
+<img width="" src=".github/logo.webp"  width=160 height=160  align="center">
 
 # Summary Expressive
 

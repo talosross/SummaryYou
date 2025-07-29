@@ -8,7 +8,7 @@
     <application
         android:name=".SummaryExpressiveApplication"
         android:enableOnBackInvokedCallback="true"
-        android:icon="@mipmap/summary_you"
+        android:icon="@mipmap/logo"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.SummaryExpressive"
