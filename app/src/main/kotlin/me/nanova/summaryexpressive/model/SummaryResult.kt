@@ -4,5 +4,5 @@ data class SummaryResult(
     val title: String?,
     val author: String?,
     val summary: String?,
-    val isYoutubeLink: Boolean
+    val isYoutubeLink: Boolean,
 )

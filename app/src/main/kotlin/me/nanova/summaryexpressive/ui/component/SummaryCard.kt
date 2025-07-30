@@ -153,7 +153,7 @@ private fun SummaryActionButtons(summary: String?, onShowSnackbar: (String) -> U
                 }
 
                 override fun onError(utteranceId: String) {
-                   onShowSnackbar("Failed to play")
+                    onShowSnackbar("Failed to play")
                 }
 
                 override fun onRangeStart(

@@ -376,7 +376,13 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
                     )
                 }
 
-                return@withContext executeSummary(transcript, systemPrompt, title, author, isYoutube = false)
+                return@withContext executeSummary(
+                    transcript,
+                    systemPrompt,
+                    title,
+                    author,
+                    isYoutube = false
+                )
 
             } catch (e: SummaryException) {
                 throw e

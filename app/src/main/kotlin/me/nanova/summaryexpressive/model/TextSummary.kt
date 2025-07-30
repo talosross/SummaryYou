@@ -5,5 +5,5 @@ data class TextSummary(
     val title: String,
     val author: String,
     val text: String,
-    val youtubeLink: Boolean
+    val youtubeLink: Boolean,
 )

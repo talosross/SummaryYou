@@ -22,7 +22,7 @@ import me.nanova.summaryexpressive.vm.SummaryViewModel
 fun AppNavigation(
     navController: NavHostController,
     initialUrl: String? = null,
-    showOnboarding: Boolean
+    showOnboarding: Boolean,
 ) {
     val viewModel: SummaryViewModel = hiltViewModel()
     val startDestination = if (showOnboarding) "onboarding" else "home"
@@ -85,9 +85,7 @@ fun AppNavigation(
                 )
             }
         ) {
-            HistoryScreen(
-                navController = navController
-            )
+            HistoryScreen()
         }
     }
 }

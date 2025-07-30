@@ -18,7 +18,7 @@ class LLMHandler {
             instructions: String,
             text: String,
             baseUrl: String? = null,
-            modelName: String? = null
+            modelName: String? = null,
         ): String {
             return try {
                 val agent = createAgent(provider, apiKey, instructions, baseUrl, modelName)
@@ -33,7 +33,7 @@ class LLMHandler {
             apiKey: String,
             instructions: String,
             baseUrl: String?,
-            modelName: String?
+            modelName: String?,
         ): AIAgent<String, String> {
             return when (provider) {
                 AIProvider.OPENAI -> createOpenAIAgent(apiKey, baseUrl, instructions)
@@ -42,7 +42,11 @@ class LLMHandler {
             }
         }
 
-        private fun createOpenAIAgent(apiKey: String, baseUrl: String?, instructions: String): AIAgent<String, String> {
+        private fun createOpenAIAgent(
+            apiKey: String,
+            baseUrl: String?,
+            instructions: String,
+        ): AIAgent<String, String> {
             val executor = if (baseUrl.isNullOrBlank()) {
                 simpleOpenAIExecutor(apiKey)
             } else {
@@ -59,7 +63,10 @@ class LLMHandler {
             )
         }
 
-        private fun createGeminiAgent(apiKey: String, instructions: String): AIAgent<String, String> {
+        private fun createGeminiAgent(
+            apiKey: String,
+            instructions: String,
+        ): AIAgent<String, String> {
             return AIAgent(
                 executor = simpleGoogleAIExecutor(apiKey),
                 llmModel = GoogleModels.Gemini2_5Flash,
