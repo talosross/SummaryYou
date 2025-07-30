@@ -12,12 +12,9 @@
 
 <div align="center">
 <div>
-<img src=".github/Screenshots/1.jpg" width="30%" />
-<img src=".github/Screenshots/2.jpg" width="30%" />
-<img src=".github/Screenshots/3.jpg" width="30%" />
-<img src=".github/Screenshots/4.jpg" width="30%" />
-<img src=".github/Screenshots/5.jpg" width="30%" />
-<img src=".github/Screenshots/6.jpg" width="30%" />
+<img src="app/src/main/res/drawable/screen1.webp" width="30%" />
+<img src="app/src/main/res/drawable/screen2.webp" width="30%" />
+<img src="app/src/main/res/drawable/screen3.webp" width="30%" />
 
 </div>
 </div>

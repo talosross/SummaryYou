@@ -1,6 +1,5 @@
 package me.nanova.summaryexpressive.ui.page
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +24,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -34,13 +35,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -48,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.model.TextSummary
 import me.nanova.summaryexpressive.ui.component.SummaryCard
@@ -63,7 +66,9 @@ fun HistoryScreen(
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     var searchMode by remember { mutableStateOf(false) }
     val haptics = LocalHapticFeedback.current
-    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val deletedMessage = stringResource(id = R.string.deleted)
 
     if (searchMode) {
         SearchView(onExitSearch = { searchMode = false })
@@ -74,6 +79,7 @@ fun HistoryScreen(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             LargeTopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(),
@@ -131,14 +137,15 @@ fun HistoryScreen(
                         ),
                         onLongClick = {
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            Toast
-                                .makeText(
-                                    context,
-                                    context.getString(R.string.deleted),
-                                    Toast.LENGTH_SHORT
-                                )
-                                .show()
                             viewModel.removeTextSummary(it.id)
+                            scope.launch {
+                                snackbarHostState.showSnackbar(deletedMessage)
+                            }
+                        },
+                        onShowSnackbar = { message ->
+                            scope.launch {
+                                snackbarHostState.showSnackbar(message)
+                            }
                         }
                     )
                 }
@@ -164,7 +171,9 @@ private fun SearchView(onExitSearch: () -> Unit, viewModel: SummaryViewModel = h
     val focusManager = LocalFocusManager.current // Hide cursor
     val focusRequester = remember { FocusRequester() } // Show cursor after removing
     val haptics = LocalHapticFeedback.current
-    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val deletedMessage = stringResource(id = R.string.deleted)
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -250,14 +259,15 @@ private fun SearchView(onExitSearch: () -> Unit, viewModel: SummaryViewModel = h
                                 ),
                                 onLongClick = {
                                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    Toast
-                                        .makeText(
-                                            context,
-                                            context.getString(R.string.deleted),
-                                            Toast.LENGTH_SHORT
-                                        )
-                                        .show()
                                     viewModel.removeTextSummary(textSummary.id)
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(deletedMessage)
+                                    }
+                                },
+                                onShowSnackbar = { message ->
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(message)
+                                    }
                                 }
                             )
                         }
@@ -265,5 +275,6 @@ private fun SearchView(onExitSearch: () -> Unit, viewModel: SummaryViewModel = h
                 }
             },
         )
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
     }
 }

@@ -2,7 +2,6 @@ package me.nanova.summaryexpressive.ui.page
 
 import android.content.ClipData
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -48,6 +47,8 @@ import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -137,6 +138,7 @@ fun HomeScreen(
     val summaryResult by viewModel.currentSummaryResult.collectAsState()
     val error by viewModel.error.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val snackbarHostState = remember { SnackbarHostState() }
     val apiKey by viewModel.apiKey.collectAsState()
     var documentFilename by remember { mutableStateOf<String?>(null) }
     val inputSource by remember {
@@ -198,6 +200,7 @@ fun HomeScreen(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = { HomeTopAppBar(navController, scrollBehavior) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             HomeFloatingActionButtons(
                 onPaste = {
@@ -209,7 +212,12 @@ fun HomeScreen(
                     }
                 },
                 onSummarize = { summarize() },
-                isExtracting = isExtracting
+                isExtracting = isExtracting,
+                onShowSnackbar = { message ->
+                    scope.launch {
+                        snackbarHostState.showSnackbar(message)
+                    }
+                }
             )
         }
     ) { innerPadding ->
@@ -280,7 +288,12 @@ fun HomeScreen(
                     if (currentResult != null && !currentResult.summary.isNullOrEmpty()) {
                         SummaryResultSection(
                             summaryResult = currentResult,
-                            onRegenerate = { summarize() }
+                            onRegenerate = { summarize() },
+                            onShowSnackbar = { message ->
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(message)
+                                }
+                            }
                         )
                     }
                 }
@@ -473,11 +486,11 @@ private fun SummaryLengthSelector(
                     .weight(1f)
                     .semantics { role = Role.RadioButton },
                 shapes =
-                    when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    },
+                when (index) {
+                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                },
             ) {
                 Text(label)
             }
@@ -489,6 +502,7 @@ private fun SummaryLengthSelector(
 private fun SummaryResultSection(
     summaryResult: SummaryResult,
     onRegenerate: () -> Unit,
+    onShowSnackbar: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
@@ -511,7 +525,8 @@ private fun SummaryResultSection(
                     ).toClipEntry()
                 )
             }
-        }
+        },
+        onShowSnackbar = onShowSnackbar
     )
 
     Column(
@@ -544,8 +559,8 @@ private fun HomeFloatingActionButtons(
     onPaste: () -> Unit,
     onSummarize: () -> Unit,
     isExtracting: Boolean,
+    onShowSnackbar: (String) -> Unit,
 ) {
-    val context = LocalContext.current
     val stillLoading = stringResource(id = R.string.stillLoading)
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -563,7 +578,7 @@ private fun HomeFloatingActionButtons(
         FloatingActionButton(
             onClick = {
                 if (isExtracting) {
-                    Toast.makeText(context, stillLoading, Toast.LENGTH_SHORT).show()
+                    onShowSnackbar(stillLoading)
                 } else {
                     onSummarize()
                 }

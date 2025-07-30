@@ -5,7 +5,6 @@ import android.content.Intent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -59,6 +58,7 @@ fun SummaryCard(
     isYouTube: Boolean,
     cardColors: CardColors = CardDefaults.cardColors(),
     onLongClick: (() -> Unit)? = null,
+    onShowSnackbar: (String) -> Unit,
 ) {
     Card(
         modifier = modifier
@@ -108,7 +108,7 @@ fun SummaryCard(
                     )
             )
         }
-        SummaryActionButtons(summary = summary)
+        SummaryActionButtons(summary = summary, onShowSnackbar = onShowSnackbar)
     }
 }
 
@@ -120,12 +120,13 @@ fun SummaryCardPreview() {
         author = "Sample Author",
         summary = "This is a sample summary for preview purposes. It should be long enough to test the TTS functionality and also the layout of the card.",
         isYouTube = true,
+        onShowSnackbar = {}
     )
 }
 
 
 @Composable
-private fun SummaryActionButtons(summary: String?) {
+private fun SummaryActionButtons(summary: String?, onShowSnackbar: (String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
@@ -152,7 +153,7 @@ private fun SummaryActionButtons(summary: String?) {
                 }
 
                 override fun onError(utteranceId: String) {
-                    // Is called when an error occurs
+                   onShowSnackbar("Failed to play")
                 }
 
                 override fun onRangeStart(
@@ -179,8 +180,8 @@ private fun SummaryActionButtons(summary: String?) {
         }
         tts = textToSpeech
         onDispose {
-            textToSpeech.stop()
-            textToSpeech.shutdown()
+            textToSpeech?.stop()
+            textToSpeech?.shutdown()
         }
     }
 
@@ -251,11 +252,7 @@ private fun SummaryActionButtons(summary: String?) {
                             summary
                         ).toClipEntry()
                     )
-                    Toast.makeText(
-                        context,
-                        copied,
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    onShowSnackbar(copied)
                 }
             }
         ) {
@@ -293,5 +290,5 @@ private fun SummaryActionButtons(summary: String?) {
 @Composable
 fun SummaryActionButtonsPreview() {
     val summary = "This is a sample summary for preview purposes."
-    SummaryActionButtons(summary = summary)
+    SummaryActionButtons(summary = summary, onShowSnackbar = {})
 }
