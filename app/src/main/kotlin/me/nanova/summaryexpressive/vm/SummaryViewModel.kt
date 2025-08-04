@@ -1,5 +1,6 @@
 package me.nanova.summaryexpressive.vm
 
+import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
@@ -22,6 +23,7 @@ import me.nanova.summaryexpressive.model.SummaryException
 import me.nanova.summaryexpressive.model.SummaryResult
 import me.nanova.summaryexpressive.model.TextSummary
 import java.net.URL
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
@@ -37,6 +39,7 @@ sealed class SummarySource {
 class SummaryViewModel @Inject constructor(
     private val llmHandler: LLMHandler,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val application: Application,
 ) : ViewModel() {
     val textSummaries = mutableStateListOf<TextSummary>()
 
@@ -52,17 +55,17 @@ class SummaryViewModel @Inject constructor(
     fun setMultiLineValue(newValue: Boolean) =
         savePreference(userPreferencesRepository::setMultiLine, newValue)
 
-    // UltraDark - Mode
-    private val _ultraDark = MutableStateFlow(false)
-    val ultraDark: StateFlow<Boolean> = _ultraDark.asStateFlow()
-    fun setUltraDarkValue(newValue: Boolean) =
-        savePreference(userPreferencesRepository::setUltraDark, newValue)
+    // Dynamic color
+    private val _dynamicColor = MutableStateFlow(true)
+    val dynamicColor: StateFlow<Boolean> = _dynamicColor.asStateFlow()
+    fun setDynamicColorValue(newValue: Boolean) =
+        savePreference(userPreferencesRepository::setDynamicColor, newValue)
 
-    // DesignNumber for Dark, Light or System
-    private val _designNumber = MutableStateFlow(0)
-    val designNumber: StateFlow<Int> = _designNumber.asStateFlow()
-    fun setDesignNumber(newValue: Int) =
-        savePreference(userPreferencesRepository::setDesignNumber, newValue)
+    // Theme for Dark, Light or System
+    private val _theme = MutableStateFlow(0)
+    val theme: StateFlow<Int> = _theme.asStateFlow()
+    fun setTheme(newValue: Int) =
+        savePreference(userPreferencesRepository::setTheme, newValue)
 
     // API Key
     private val _apiKey = MutableStateFlow("")
@@ -121,8 +124,8 @@ class SummaryViewModel @Inject constructor(
     private fun loadPreferences() {
         userPreferencesRepository.getUseOriginalLanguage().collectInto(_useOriginalLanguage)
         userPreferencesRepository.getMultiLine().collectInto(_multiLine)
-        userPreferencesRepository.getUltraDark().collectInto(_ultraDark)
-        userPreferencesRepository.getDesignNumber().collectInto(_designNumber)
+        userPreferencesRepository.getDynamicColor().collectInto(_dynamicColor)
+        userPreferencesRepository.getTheme().collectInto(_theme)
         userPreferencesRepository.getApiKey().collectInto(_apiKey)
         userPreferencesRepository.getBaseUrl().collectInto(_baseUrl)
         userPreferencesRepository.getModel()
@@ -207,15 +210,19 @@ class SummaryViewModel @Inject constructor(
                     throw SummaryException.NoKeyException
                 }
 
-                val inputString = prepareSummarizationInput(source)
+                val language = if (useOriginalLanguage.value) "the same language as the content"
+                else application.resources.configuration.locales[0].getDisplayLanguage(Locale.ENGLISH)
 
                 val agent = llmHandler.createSummarizationAgent(
                     provider = model.value,
                     apiKey = apiKey.value,
                     baseUrl = if (model.value == AIProvider.OPENAI) baseUrl.value else null,
                     modelName = null, // TODO: user custom model selection
-                    summaryLength = summaryLength.value
+                    summaryLength = summaryLength.value,
+                    language = language
                 )
+
+                val inputString = prepareSummarizationInput(source)
 
                 val summary = withContext(Dispatchers.IO) {
                     agent.run(inputString)

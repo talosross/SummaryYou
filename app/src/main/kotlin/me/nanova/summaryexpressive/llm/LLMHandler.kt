@@ -35,6 +35,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         baseUrl: String? = null,
         modelName: String? = null,
         summaryLength: SummaryLength = SummaryLength.MEDIUM,
+        language: String,
     ): AIAgent<String, String> {
         val executor = createExecutor(provider, apiKey, baseUrl)
 
@@ -43,7 +44,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         val fileToolRegistry = ToolRegistry { tool(fileExtractorTool) }
         val tools = articleToolRegistry + videoToolRegistry + fileToolRegistry
 
-        val agentConfig = createAgentConfig(provider, modelName, summaryLength)
+        val agentConfig = createAgentConfig(provider, modelName, summaryLength, language)
 
         return AIAgent(
             promptExecutor = executor,
@@ -73,6 +74,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         provider: AIProvider,
         modelName: String?,
         summaryLength: SummaryLength,
+        language: String,
     ): AIAgentConfig {
         val llmModel = when (provider) {
             // FIXME
@@ -89,7 +91,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         }
 
         return AIAgentConfig(
-            prompt = createSummarizationPrompt(summaryLength),
+            prompt = createSummarizationPrompt(summaryLength, language),
             model = llmModel,
             maxAgentIterations = 10,
         )
@@ -155,23 +157,23 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
             val nodeExtractAndPrepareArticle by node<String, String>("extract_and_prepare_article") { url ->
                 val extractedText = articleExtractorTool.doExecute(Article(url))
                 if (extractedText.startsWith("Error:")) extractedText
-                else "Please summarize the following article text:\n\n$extractedText"
+                else "Summarize the following article text:\n\n$extractedText"
             }
 
             val nodeExtractAndPrepareVideo by node<String, String>("extract_and_prepare_video") { url ->
                 val extractedCaptions = youTubeTranscriptTool.doExecute(YouTubeTranscript(url))
                 if (extractedCaptions.startsWith("Error:")) extractedCaptions
-                else "Please summarize the following video transcript:\n\n$extractedCaptions"
+                else "Summarize the following video transcript:\n\n$extractedCaptions"
             }
 
             val nodeExtractAndPrepareFile by node<String, String>("extract_and_prepare_file") { uriString ->
                 val extractedText = fileExtractorTool.doExecute(File(uriString))
                 if (extractedText.startsWith("Error:")) extractedText
-                else "Please summarize the following text extracted from the document:\n\n$extractedText"
+                else "Summarize the following text extracted from the document:\n\n$extractedText"
             }
 
             val nodePrepareSummarizationInput by node<String, String>("prepare_summarization_input") { text ->
-                "Please summarize the following text:\n\n$text"
+                "Summarize the following text:\n\n$text"
             }
 
             val nodeSummarizeText by nodeLLMRequest(

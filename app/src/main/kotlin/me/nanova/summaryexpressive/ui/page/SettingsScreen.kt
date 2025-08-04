@@ -29,8 +29,8 @@ import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.FormatLineSpacing
-import androidx.compose.material.icons.rounded.InvertColors
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.VpnKey
@@ -88,23 +88,23 @@ import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 
 data class SettingsState(
-    val design: Int,
+    val theme: Int,
     val apiKey: String,
     val apiBaseUrl: String,
     val model: AIProvider,
     val useOriginalLanguage: Boolean,
-    val ultraDark: Boolean,
+    val dynamicColor: Boolean,
     val multiLine: Boolean,
     val showLength: Boolean,
 )
 
 data class SettingsActions(
-    val onDesignChange: (Int) -> Unit,
+    val onThemeChange: (Int) -> Unit,
     val onApiKeyChange: (String) -> Unit,
     val onModelChange: (String) -> Unit,
     val onBaseUrlChange: (String) -> Unit,
     val onUseOriginalLanguageChange: (Boolean) -> Unit,
-    val onUltraDarkChange: (Boolean) -> Unit,
+    val onDynamicColorChange: (Boolean) -> Unit,
     val onMultiLineChange: (Boolean) -> Unit,
     val onShowLengthChange: (Boolean) -> Unit,
 )
@@ -119,35 +119,35 @@ fun SettingsScreen(
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     val state = SettingsState(
-        design = viewModel.designNumber.collectAsState().value,
+        theme = viewModel.theme.collectAsState().value,
         apiKey = viewModel.apiKey.collectAsState().value,
         apiBaseUrl = viewModel.baseUrl.collectAsState().value,
         model = viewModel.model.collectAsState().value,
         useOriginalLanguage = viewModel.useOriginalLanguage.collectAsState().value,
-        ultraDark = viewModel.ultraDark.collectAsState().value,
+        dynamicColor = viewModel.dynamicColor.collectAsState().value,
         multiLine = viewModel.multiLine.collectAsState().value,
         showLength = viewModel.showLength.collectAsState().value
     )
     val actions = SettingsActions(
-        onDesignChange = viewModel::setDesignNumber,
+        onThemeChange = viewModel::setTheme,
         onApiKeyChange = viewModel::setApiKeyValue,
         onModelChange = viewModel::setModelValue,
         onBaseUrlChange = viewModel::setBaseUrlValue,
         onUseOriginalLanguageChange = viewModel::setUseOriginalLanguageValue,
-        onUltraDarkChange = viewModel::setUltraDarkValue,
+        onDynamicColorChange = viewModel::setDynamicColorValue,
         onMultiLineChange = viewModel::setMultiLineValue,
         onShowLengthChange = viewModel::setShowLengthValue
     )
 
-    var showDialogDesign by remember { mutableStateOf(false) }
+    var showDialogTheme by remember { mutableStateOf(false) }
     var showDialogKey by remember { mutableStateOf(false) }
     var showDialogModel by remember { mutableStateOf(false) }
 
-    if (showDialogDesign) {
-        DesignSettingsDialog(
-            onDismissRequest = { showDialogDesign = false },
-            currentDesign = state.design,
-            onDesignChange = actions.onDesignChange,
+    if (showDialogTheme) {
+        ThemeSettingsDialog(
+            onDismissRequest = { showDialogTheme = false },
+            currentTheme = state.theme,
+            onThemeChange = actions.onThemeChange,
         )
     }
 
@@ -201,7 +201,7 @@ fun SettingsScreen(
             navController,
             state,
             actions,
-            onShowDialogDesign = { showDialogDesign = true },
+            onShowDialogTheme = { showDialogTheme = true },
             onShowDialogKey = { showDialogKey = true },
             onShowDialogModel = { showDialogModel = true }
         )
@@ -214,7 +214,7 @@ private fun SettingsContent(
     navController: NavHostController,
     state: SettingsState,
     actions: SettingsActions,
-    onShowDialogDesign: () -> Unit,
+    onShowDialogTheme: () -> Unit,
     onShowDialogKey: () -> Unit,
     onShowDialogModel: () -> Unit,
 ) {
@@ -290,10 +290,10 @@ private fun SettingsContent(
             ) {
                 ListItem(
                     modifier = Modifier
-                        .clickable(onClick = onShowDialogDesign)
+                        .clickable(onClick = onShowDialogTheme)
                         .fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.design)) },
+                    headlineContent = { Text(stringResource(id = R.string.theme)) },
                     leadingContent = {
                         Icon(
                             Icons.Rounded.DarkMode,
@@ -303,10 +303,10 @@ private fun SettingsContent(
                     },
                     supportingContent = {
                         Text(
-                            when (state.design) {
-                                1 -> stringResource(id = R.string.darkDesign)
-                                2 -> stringResource(id = R.string.lightDesign)
-                                else -> stringResource(id = R.string.systemDesign)
+                            when (state.theme) {
+                                1 -> stringResource(id = R.string.darkTheme)
+                                2 -> stringResource(id = R.string.lightTheme)
+                                else -> stringResource(id = R.string.systemTheme)
                             }
                         )
                     }
@@ -314,20 +314,20 @@ private fun SettingsContent(
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.useUltraDark)) },
-                    supportingContent = { Text(stringResource(id = R.string.useUltraDarkDescription)) },
+                    headlineContent = { Text(stringResource(id = R.string.useDynamicColor)) },
+                    supportingContent = { Text(stringResource(id = R.string.useDynamicColorDescription)) },
                     leadingContent = {
                         Icon(
-                            Icons.Rounded.InvertColors,
-                            contentDescription = "Ultra Dark mode",
+                            Icons.Rounded.Palette,
+                            contentDescription = "Dynamic Color",
                             modifier = Modifier.size(24.dp)
                         )
                     },
                     trailingContent = {
                         Switch(
-                            checked = state.ultraDark,
+                            checked = state.dynamicColor,
                             onCheckedChange = {
-                                actions.onUltraDarkChange(it)
+                                actions.onDynamicColorChange(it)
                                 activity?.recreate()
                             }
                         )
@@ -512,50 +512,50 @@ private fun SettingsContent(
 }
 
 @Composable
-private fun DesignSettingsDialog(
+private fun ThemeSettingsDialog(
     onDismissRequest: () -> Unit,
-    currentDesign: Int,
-    onDesignChange: (Int) -> Unit,
+    currentTheme: Int,
+    onThemeChange: (Int) -> Unit,
 ) {
     val activity = LocalActivity.current
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(id = R.string.design)) },
+        title = { Text(stringResource(id = R.string.theme)) },
         text = {
             Column {
                 RadioButtonItem(
-                    selected = currentDesign == 0,
+                    selected = currentTheme == 0,
                     onSelectionChange = {
-                        onDesignChange(0)
+                        onThemeChange(0)
                         activity?.recreate()
                     }
                 ) {
                     Text(
-                        text = stringResource(id = R.string.systemDesign),
+                        text = stringResource(id = R.string.systemTheme),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
                 RadioButtonItem(
-                    selected = currentDesign == 2,
+                    selected = currentTheme == 2,
                     onSelectionChange = {
-                        onDesignChange(2)
+                        onThemeChange(2)
                         activity?.recreate()
                     }
                 ) {
                     Text(
-                        text = stringResource(id = R.string.lightDesign),
+                        text = stringResource(id = R.string.lightTheme),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
                 RadioButtonItem(
-                    selected = currentDesign == 1,
+                    selected = currentTheme == 1,
                     onSelectionChange = {
-                        onDesignChange(1)
+                        onThemeChange(1)
                         activity?.recreate()
                     }
                 ) {
                     Text(
-                        text = stringResource(id = R.string.darkDesign),
+                        text = stringResource(id = R.string.darkTheme),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -759,12 +759,12 @@ private fun AIProviderItem(
 
 @Preview
 @Composable
-private fun DesignSettingsDialogPreview() {
+private fun ThemeSettingsDialogPreview() {
     SummaryExpressiveTheme {
-        DesignSettingsDialog(
+        ThemeSettingsDialog(
             onDismissRequest = {},
-            currentDesign = 0,
-            onDesignChange = {}
+            currentTheme = 0,
+            onThemeChange = {}
         )
     }
 }
@@ -826,22 +826,22 @@ private fun ScrollContentPreview() {
     SummaryExpressiveTheme {
         val navController = rememberNavController()
         val state = SettingsState(
-            design = 0,
+            theme = 0,
             apiKey = "test_key",
             apiBaseUrl = "",
             model = AIProvider.OPENAI,
             useOriginalLanguage = false,
-            ultraDark = false,
+            dynamicColor = true,
             multiLine = true,
             showLength = true
         )
         val actions = SettingsActions(
-            onDesignChange = {},
+            onThemeChange = {},
             onApiKeyChange = {},
             onModelChange = {},
             onBaseUrlChange = {},
             onUseOriginalLanguageChange = {},
-            onUltraDarkChange = {},
+            onDynamicColorChange = {},
             onMultiLineChange = {},
             onShowLengthChange = {}
         )
@@ -851,7 +851,7 @@ private fun ScrollContentPreview() {
                 navController = navController,
                 state = state,
                 actions = actions,
-                onShowDialogDesign = {},
+                onShowDialogTheme = {},
                 onShowDialogKey = {},
                 onShowDialogModel = {}
             )

@@ -42,9 +42,9 @@
 
     <string name="madeBy">タロスロスの❤で作りました</string>
 
-    <string name="useUltraDark">ウルトラダークを使用する</string>
+    <string name="useDynamicColor">ダイナミックカラー</string>
 
-    <string name="useUltraDarkDescription">リアルブラックでウルトラダークモードを使用する</string>
+    <string name="useDynamicColorDescription">壁紙から色を使用する</string>
 
     <string name="useMultiLines">URL の行数を増やす</string>
 
@@ -54,7 +54,7 @@
 
     <string name="setApiKeyDescription">OpenAI API キーを設定する</string>
 
-    <string name="design">デザイン</string>
+    <string name="theme">テーマ</string>
 
     <string name="cancel">キャンセル</string>
 
@@ -64,11 +64,11 @@
 
     <string name="restartRequired">アプリの再起動が必要です</string>
 
-    <string name="systemDesign">システム</string>
+    <string name="systemTheme">システム</string>
 
-    <string name="lightDesign">ライト</string>
+    <string name="lightTheme">ライト</string>
 
-    <string name="darkDesign">暗い</string>
+    <string name="darkTheme">ダーク</string>
     <string name="deleted">要約が削除されました</string>
     <string name="search">検索</string>
     <string name="nothingFound">何も見つかりませんでした</string>

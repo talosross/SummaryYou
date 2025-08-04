@@ -18,8 +18,8 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class UserPreferencesRepository(private val context: Context) {
     private val useOriginalLanguage = booleanPreferencesKey("use_original_language")
     private val multiLine = booleanPreferencesKey("multi_line")
-    private val ultraDark = booleanPreferencesKey("ultra_dark")
-    private val designNum = intPreferencesKey("design_number")
+    private val dynamicColor = booleanPreferencesKey("dynamic_color")
+    private val theme = intPreferencesKey("theme")
     private val baseUrl = stringPreferencesKey("base_url")
     private val apiKey = stringPreferencesKey("api_key")
     private val model = stringPreferencesKey("model")
@@ -40,17 +40,17 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun setMultiLine(value: Boolean) =
         context.dataStore.edit { it[multiLine] = value }
 
-    fun getUltraDark(): Flow<Boolean> =
-        context.dataStore.data.map { it[ultraDark] ?: false }
+    fun getDynamicColor(): Flow<Boolean> =
+        context.dataStore.data.map { it[dynamicColor] ?: true }
 
-    suspend fun setUltraDark(value: Boolean) =
-        context.dataStore.edit { it[ultraDark] = value }
+    suspend fun setDynamicColor(value: Boolean) =
+        context.dataStore.edit { it[dynamicColor] = value }
 
-    fun getDesignNumber(): Flow<Int> =
-        context.dataStore.data.map { it[designNum] ?: 0 }
+    fun getTheme(): Flow<Int> =
+        context.dataStore.data.map { it[theme] ?: 0 }
 
-    suspend fun setDesignNumber(value: Int) =
-        context.dataStore.edit { it[designNum] = value }
+    suspend fun setTheme(value: Int) =
+        context.dataStore.edit { it[theme] = value }
 
     fun getBaseUrl(): Flow<String> =
         context.dataStore.data.map { it[baseUrl] ?: "" }

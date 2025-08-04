@@ -6,9 +6,9 @@ enum class SummaryLength {
     SHORT, MEDIUM, LONG
 }
 
-fun createSummarizationPrompt(length: SummaryLength): Prompt {
+fun createSummarizationPrompt(length: SummaryLength, language: String): Prompt {
     val lengthInstruction = when (length) {
-        SummaryLength.SHORT -> "a few sentences(better within 100 characters)"
+        SummaryLength.SHORT -> "a few sentences(better within 300 characters)"
         SummaryLength.MEDIUM -> "two to three paragraphs"
         SummaryLength.LONG -> "a detailed, multi-paragraph summary"
     }
@@ -17,6 +17,7 @@ fun createSummarizationPrompt(length: SummaryLength): Prompt {
         system(
             """
             You are an expert summarization assistant. Your task is to produce a clear, concise, and accurate summary of the provided text.
+            The summary should be written in $language.
             The summary should be about $lengthInstruction long.
 
             - If the text is an article, focus on the main arguments, key points, and conclusions.

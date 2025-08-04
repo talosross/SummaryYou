@@ -42,9 +42,9 @@
 
     <string name="madeBy">Hecho con ❤ de NanoNova</string>
 
-    <string name="useUltraDark">Usar ultra oscuro</string>
+    <string name="useDynamicColor">Color dinámico</string>
 
-    <string name="useUltraDarkDescription">Usa el modo ultra oscuro con negro real</string>
+    <string name="useDynamicColorDescription">Usa colores de tu fondo de pantalla</string>
 
     <string name="useMultiLines">Más líneas para URL</string>
 
@@ -54,7 +54,7 @@
 
     <string name="setApiKeyDescription">Configure su clave API de OpenAI</string>
 
-    <string name="design">Diseño</string>
+    <string name="theme">Tema</string>
 
     <string name="cancel">Cancelar</string>
 
@@ -64,11 +64,11 @@
 
     <string name="restartRequired">Es necesario reiniciar la aplicación</string>
 
-    <string name="systemDesign">Sistema</string>
+    <string name="systemTheme">Sistema</string>
 
-    <string name="lightDesign">Luz</string>
+    <string name="lightTheme">Claro</string>
 
-    <string name="darkDesign">Oscuro</string>
+    <string name="darkTheme">Oscuro</string>
     <string name="deleted">Resumen eliminado</string>
     <string name="search">Buscar</string>
     <string name="nothingFound">Nada encontrado</string>

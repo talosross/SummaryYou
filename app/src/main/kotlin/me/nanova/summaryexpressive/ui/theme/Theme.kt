@@ -9,7 +9,6 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -17,18 +16,17 @@ import androidx.core.view.WindowCompat
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SummaryExpressiveTheme(
-    design: Int = 0,
+    theme: Int = 0,
     dynamicColor: Boolean = true,
-    oLedModeEnabled: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val darkTheme = when (design) {
+    val darkTheme = when (theme) {
         1 -> true
         2 -> false
         else -> isSystemInDarkTheme()
     }
 
-    val baseColorScheme = when {
+    val colorScheme = when {
         dynamicColor -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -36,15 +34,6 @@ fun SummaryExpressiveTheme(
 
         darkTheme -> DarkColors
         else -> LightColors
-    }
-
-    val colorScheme = if (darkTheme && oLedModeEnabled) {
-        baseColorScheme.copy(
-            surface = Color.Black,
-            background = Color.Black
-        )
-    } else {
-        baseColorScheme
     }
 
     val view = LocalView.current

@@ -37,11 +37,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val viewModel: SummaryViewModel = hiltViewModel()
-            val design by viewModel.designNumber.collectAsState()
-            val oLedMode by viewModel.ultraDark.collectAsState()
+            val theme by viewModel.theme.collectAsState()
+            val dynamicColor by viewModel.dynamicColor.collectAsState()
             val showOnboarding by viewModel.showOnboardingScreen.collectAsState()
 
-            SummaryExpressiveTheme(design = design, oLedModeEnabled = oLedMode) {
+            SummaryExpressiveTheme(theme = theme, dynamicColor = dynamicColor) {
                 val navController = rememberNavController()
                 Surface(
                     modifier = Modifier.fillMaxSize(),

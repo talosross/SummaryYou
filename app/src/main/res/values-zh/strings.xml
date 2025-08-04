@@ -44,9 +44,9 @@
 
     <string name="madeBy">由 NanoNova 用 ❤ 制作</string>
 
-    <string name="useUltraDark">使用极暗模式</string>
+    <string name="useDynamicColor">动态色彩</string>
 
-    <string name="useUltraDarkDescription">使用极暗模式和纯黑</string>
+    <string name="useDynamicColorDescription">从壁纸中提取颜色</string>
 
     <string name="useMultiLines">使用多行 URL</string>
 
@@ -57,7 +57,7 @@
     <string name="setApiKeyDescription">设置您的 OpenAI API 密钥</string>
 
     <string name="setModelDescription">设置 AI 模型进行总结</string>
-    <string name="design">设计</string>
+    <string name="theme">主题</string>
 
     <string name="cancel">取消</string>
 
@@ -67,11 +67,11 @@
 
     <string name="restartRequired">需要重新启动应用程序</string>
 
-    <string name="systemDesign">系统</string>
+    <string name="systemTheme">跟随系统</string>
 
-    <string name="lightDesign">亮色</string>
+    <string name="lightTheme">浅色主题</string>
 
-    <string name="darkDesign">暗色</string>
+    <string name="darkTheme">深色主题</string>
     <string name="deleted">总结已删除</string>
     <string name="search">搜索</string>
     <string name="nothingFound">未找到任何内容</string>
