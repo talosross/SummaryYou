@@ -1,37 +1,107 @@
-# Privacy Policy
-NanoNova built the "Summary Expressive" app as an Open Source app. This SERVICE is provided by NanoNova and is intended for use as described below.
+# Privacy Policy for Summary Expressive
 
-This page is used to inform visitors regarding my policies with the collection, use, and disclosure of Personal Information if anyone decides to use my Service.
+**Effective Date:** August 6, 2025
 
-If you choose to use my Service, then you agree to the collection and use of information in relation to this policy. The Personal Information that I collect is used solely for providing and improving the Service. I will not use or share your information with anyone except as described in this Privacy Policy.
+Thank you for using Summary Expressive ("the App"), a service provided by NanoNova ("we," "us," or "
+our"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information
+when you use our mobile application.
 
-The terms used in this Privacy Policy have the same meanings as in our Terms and Conditions, which are accessible within the "Summary Expressive" app unless otherwise defined in this Privacy Policy.
+Please read this privacy policy carefully. If you do not agree with the terms of this privacy
+policy, please do not access the application.
 
-## Information Collection and Use
-To provide you with the functionality of generating video summaries and article summaries, the "Summary Expressive" app may need to send the text content of the respective media (videos and articles) to the servers of OpenAI. However, please be assured that we do not store any personal data from this process. We solely use this data for generating summaries and do not share it with any third parties.
+### 1. Information We Collect
 
-## Log Data
-The "Summary Expressive" app may collect data and information for the purpose of improving the service and identifying and fixing errors. This may include technical information such as your device's Internet Protocol ("IP") address, device name, operating system version, configuration of the app when using the Service, the time and date of your use of the Service, and other statistics. However, we do not collect personally identifiable information.
+We may collect information about you in a variety of ways. The information we may collect via the
+Application depends on the content and materials you use.
 
-## Cookies
-The "Summary Expressive" app does not use cookies explicitly. We do not use cookies to collect information or improve our services.
+#### A. Data You Provide to Us
 
-## Service Providers
-We may employ third-party companies or individuals to facilitate and improve our Service or to assist in analyzing how the Service is used. These third parties have access to the text content of the media you provide for the purpose of generating summaries. They are obligated not to disclose or use this information for any other purpose.
+We collect the content you provide to the App for the purpose of summarization. This includes:
 
-## Security
-We take commercially acceptable measures to protect the data you provide for generating summaries. However, please be aware that no method of transmission over the internet or electronic storage is 100% secure, and we cannot guarantee absolute security.
+* **Text and URLs:** Any text or article URLs you paste or share into the app.
+* **Documents:** Documents (e.g., PDF, DOCX) that you upload to the app for summarization.
+* **Images:** Images (e.g., JPG, PNG, WEBP) that you upload for analysis or summarization.
+* **YouTube Video Links:** URLs to YouTube videos that you provide for summarization.
 
-## Links to Other Sites
-The "Summary Expressive" app may contain links to other websites. Please note that these external sites are not operated by us. We strongly advise you to review the Privacy Policy of these websites, as we have no control over and assume no responsibility for the content, privacy policies, or practices of any third-party sites or services.
+#### B. Data Collected Automatically
 
-## Children's Privacy
-The "Summary Expressive" app does not address anyone under the age of 13. We do not knowingly collect personally identifiable information from children under 13. If we discover that a child under 13 has provided us with personal information, we will immediately delete it from our servers. If you are a parent or guardian and you are aware that your child has provided us with personal information, please contact us so that we can take the necessary actions.
+* **Usage Data:** We may automatically collect information about how you access and use the App,
+  such as your device's IP address, operating system version, device type, crash logs, and a unique
+  device identifier. This data is used for analytics and to improve the stability and functionality
+  of our app.
 
-## Changes to This Privacy Policy
-We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page. These changes are effective immediately after they are posted.
+### 2. How We Use Your Information
 
-## Contact Us
-If you have any questions or suggestions about our Privacy Policy, please do not hesitate to contact us at kid1412621@gmail.com.
+Having accurate information permits us to provide you with a smooth, efficient, and customized
+experience. Specifically, we use information collected about you via the Application to:
 
-This privacy policy page was created and modified by NanoNova.
+* **Provide Core Services:** To process and summarize the content (articles, documents, images,
+  videos) you provide.
+* **Improve Our Application:** To analyze usage and trends to improve the App's functionality, user
+  experience, and AI model performance.
+* **Ensure Security and Stability:** To monitor for and prevent security issues, fraud, and to
+  diagnose and fix technical problems (crashes).
+
+### 3. Sharing and Disclosure of Information
+
+We do not sell your personal data. However, we may share the information we have collected about you
+in certain situations.
+
+#### A. Third-Party AI/LLM Providers
+
+To provide the summarization feature, the content you submit (text, document content, image data, or
+transcripts from YouTube videos) is sent to a third-party Large Language Model (LLM) service for
+processing.
+
+The current AI providers includes (not limited to): OpenAI, Google (Gemini API), Anthropic, etc..
+
+We only send the data required for the summarization task.
+
+We encourage you to review the privacy policy of our AI providers to understand how they handle
+data.
+You can find it
+here:
+
+- [OpenAI Privacy Policy](https://openai.com/policies/privacy-policy)
+- [Google's Privacy Policy](https://policies.google.com/privacy)
+- [Anthropic Privacy Policy](https://www.anthropics.com/privacy/)
+
+#### B. Third-Party Analytics
+
+We may use third-party service providers, such as Google Analytics for Firebase, to monitor and
+analyze the use of our Application. These services may use cookies or other tracking technologies to
+collect information about your use of the app.
+
+#### C. By Law or to Protect Rights
+
+We may disclose your information if required to do so by law or in the good faith belief that such
+action is necessary to (i) comply with a legal obligation, (ii) protect and defend our rights or
+property, or (iii) protect the personal safety of users of the Application or the public.
+
+### 4. Data Retention and Security
+
+* **Retention:** The content you submit for summarization (text, documents, etc.) is retained on our
+  servers only for the duration necessary to perform the summarization and is deleted shortly after.
+  We may retain anonymized usage and analytics data for a longer period to improve our service.
+* **Security:** We use administrative, technical, and physical security measures to help protect
+  your information. While we have taken reasonable steps to secure the information you provide to
+  us, please be aware that despite our efforts, no security measures are perfect or impenetrable.
+
+### 5. Children's Privacy
+
+Our service is not intended for or directed at children under the age of 13. We do not knowingly
+collect personally identifiable information from children under 13. If we become aware that we have
+collected personal information from a child under 13, we will take steps to delete such information
+from our files as soon as possible.
+
+### 6. Changes to This Privacy Policy
+
+We may update this Privacy Policy from time to time. We will notify you of any changes by posting
+the new Privacy Policy on this page and updating the "Effective Date" at the top. You are advised to
+review this Privacy Policy periodically for any changes.
+
+### 7. Contact Us
+
+If you have questions or comments about this Privacy Policy, please contact us at:
+
+kid1412621@gmail.com
