@@ -117,7 +117,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     initialUrl: String? = null,
-    viewModel: SummaryViewModel = hiltViewModel(),
+    viewModel: SummaryViewModel,
 ) {
     var urlOrText by remember { mutableStateOf(initialUrl ?: "") }
     val scope = rememberCoroutineScope() // Coroutine scope for async calls

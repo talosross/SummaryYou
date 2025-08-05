@@ -32,7 +32,8 @@ fun AppNavigation(
             HomeScreen(
                 modifier = Modifier,
                 navController = navController,
-                initialUrl = initialUrl
+                initialUrl = initialUrl,
+                viewModel = viewModel
             )
         }
         composable("onboarding") {
