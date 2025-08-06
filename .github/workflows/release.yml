@@ -102,4 +102,3 @@ jobs:
           packageName: me.nanova.summaryexpressive
           releaseFiles: ${{ env.APK_DIR }}/*.aab
           track: internal
-          status: draft

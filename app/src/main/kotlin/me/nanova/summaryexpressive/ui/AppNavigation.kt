@@ -21,7 +21,7 @@ import me.nanova.summaryexpressive.vm.SummaryViewModel
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    initialUrl: String? = null,
+    sharedUrl: String? = null,
     showOnboarding: Boolean,
 ) {
     val viewModel: SummaryViewModel = hiltViewModel()
@@ -32,7 +32,7 @@ fun AppNavigation(
             HomeScreen(
                 modifier = Modifier,
                 navController = navController,
-                initialUrl = initialUrl,
+                sharedUrl = sharedUrl,
                 viewModel = viewModel
             )
         }

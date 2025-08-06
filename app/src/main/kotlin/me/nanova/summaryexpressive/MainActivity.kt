@@ -15,6 +15,7 @@ import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
 import me.nanova.summaryexpressive.ui.AppNavigation
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.SummaryViewModel
@@ -22,7 +23,7 @@ import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private var sharedUrl: String? = null
+    private val sharedUrlFlow = MutableStateFlow<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,16 +31,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         // Check if a link has been shared
-        val intent: Intent? = intent
-        if (Intent.ACTION_SEND == intent?.action && intent.type == "text/plain") {
-            sharedUrl = intent.getStringExtra(Intent.EXTRA_TEXT)
-        }
+        handleIntent(intent)
 
         setContent {
             val viewModel: SummaryViewModel = hiltViewModel()
             val theme by viewModel.theme.collectAsState()
             val dynamicColor by viewModel.dynamicColor.collectAsState()
             val showOnboarding by viewModel.showOnboardingScreen.collectAsState()
+            val sharedUrl by sharedUrlFlow.collectAsState()
 
             SummaryExpressiveTheme(theme = theme, dynamicColor = dynamicColor) {
                 val navController = rememberNavController()
@@ -50,6 +49,12 @@ class MainActivity : ComponentActivity() {
                     AppNavigation(navController, sharedUrl, showOnboarding)
                 }
             }
+        }
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (Intent.ACTION_SEND == intent?.action && intent.type == "text/plain") {
+            sharedUrlFlow.value = intent.getStringExtra(Intent.EXTRA_TEXT)
         }
     }
 }
