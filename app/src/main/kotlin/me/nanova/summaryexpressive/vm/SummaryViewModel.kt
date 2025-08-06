@@ -18,9 +18,9 @@ import me.nanova.summaryexpressive.UserPreferencesRepository
 import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.llm.LLMHandler
 import me.nanova.summaryexpressive.llm.SummaryLength
+import me.nanova.summaryexpressive.llm.SummaryOutput
+import me.nanova.summaryexpressive.model.HistorySummary
 import me.nanova.summaryexpressive.model.SummaryException
-import me.nanova.summaryexpressive.model.SummaryResult
-import me.nanova.summaryexpressive.model.TextSummary
 import java.net.URL
 import java.util.Locale
 import java.util.UUID
@@ -40,7 +40,7 @@ class SummaryViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val application: Application,
 ) : ViewModel() {
-    val textSummaries = mutableStateListOf<TextSummary>()
+    val historySummaries = mutableStateListOf<HistorySummary>()
 
     // Original Language in summary
     private val _useOriginalLanguage = MutableStateFlow(true)
@@ -112,12 +112,12 @@ class SummaryViewModel @Inject constructor(
             userPreferencesRepository.getTextSummaries().collect { summariesJson ->
                 if (summariesJson.isNotEmpty()) {
                     val summaries =
-                        kotlin.runCatching { Json.decodeFromString<List<TextSummary>>(summariesJson) }
+                        kotlin.runCatching { Json.decodeFromString<List<HistorySummary>>(summariesJson) }
                             .getOrNull()
-                    textSummaries.clear()
-                    summaries?.let { textSummaries.addAll(it) }
+                    historySummaries.clear()
+                    summaries?.let { historySummaries.addAll(it) }
                 } else {
-                    textSummaries.clear()
+                    historySummaries.clear()
                 }
             }
         }
@@ -139,47 +139,41 @@ class SummaryViewModel @Inject constructor(
             .collectInto(_summaryLength) { SummaryLength.valueOf(it) }
     }
 
-    fun addTextSummary(title: String?, author: String?, text: String?, youtubeLink: Boolean) {
-        val nonNullTitle = title ?: ""
-        val nonNullAuthor = author ?: ""
-
-        if (!text.isNullOrBlank() && text != "invalid link") {
-            val uniqueId = UUID.randomUUID().toString()
-            val newTextSummary =
-                TextSummary(uniqueId, nonNullTitle, nonNullAuthor, text, youtubeLink)
-            textSummaries.add(newTextSummary)
+    private fun addHistorySummary(summary: HistorySummary) {
+        if (summary.summary.isNotBlank() && summary.summary != "invalid link") {
+            historySummaries.add(0, summary)
             // Save text data in SharedPreferences
-            saveTextSummaries()
+            saveHistorySummaries()
         }
     }
 
-    private fun saveTextSummaries() {
+    private fun saveHistorySummaries() {
         viewModelScope.launch {
-            val textSummariesJson = Json.encodeToString(textSummaries.toList())
-            userPreferencesRepository.setTextSummaries(textSummariesJson)
+            val historySummariesJson = Json.encodeToString(historySummaries.toList())
+            userPreferencesRepository.setTextSummaries(historySummariesJson)
         }
     }
 
-    fun removeTextSummary(id: String) {
+    fun removeHistorySummary(id: String) {
         // Find the TextSummary object to remove based on id
-        val textSummaryToRemove = textSummaries.firstOrNull { it.id == id }
+        val summaryToRemove = historySummaries.firstOrNull { it.id == id }
 
         // Check whether a matching TextSummary object was found and remove it
-        textSummaryToRemove?.let {
-            textSummaries.remove(it)
+        summaryToRemove?.let {
+            historySummaries.remove(it)
 
             // After removing, save the updated ViewModel (if necessary)
-            saveTextSummaries()
+            saveHistorySummaries()
         }
     }
 
-    fun searchTextSummary(searchText: String): List<String> {
-        return textSummaries
+    fun searchHistorySummary(searchText: String): List<String> {
+        return historySummaries
             .filter {
-                it.title.contains(searchText, ignoreCase = true) or it.author.contains(
+                it.title.contains(searchText, ignoreCase = true) || it.author.contains(
                     searchText,
                     ignoreCase = true
-                ) or it.text.contains(searchText, ignoreCase = true)
+                ) || it.summary.contains(searchText, ignoreCase = true)
             }
             .map { it.id }
             .takeIf { it.isNotEmpty() }
@@ -191,8 +185,8 @@ class SummaryViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _currentSummaryResult = MutableStateFlow<SummaryResult?>(null)
-    val currentSummaryResult: StateFlow<SummaryResult?> = _currentSummaryResult.asStateFlow()
+    private val _currentSummaryResult = MutableStateFlow<SummaryOutput?>(null)
+    val currentSummaryResult: StateFlow<SummaryOutput?> = _currentSummaryResult.asStateFlow()
 
     private val _error = MutableStateFlow<Throwable?>(null)
     val error: StateFlow<Throwable?> = _error.asStateFlow()
@@ -226,21 +220,29 @@ class SummaryViewModel @Inject constructor(
 
                 val inputString = prepareSummarizationInput(source)
 
-                val summary = withContext(Dispatchers.IO) {
+                val summaryOutput = withContext(Dispatchers.IO) {
                     agent.run(inputString)
                 }
 
-                if (summary.startsWith("Error:")) {
-                    if (summary.contains("API key", ignoreCase = true))
+                if (summaryOutput.summary.startsWith("Error:")) {
+                    val errorMsg = summaryOutput.summary
+                    if (errorMsg.contains("API key", ignoreCase = true))
                         throw SummaryException.IncorrectKeyException
-                    if (summary.contains("rate limit", ignoreCase = true))
+                    if (errorMsg.contains("rate limit", ignoreCase = true))
                         throw SummaryException.RateLimitException
-                    throw SummaryException.UnknownException(summary)
+                    throw SummaryException.UnknownException(errorMsg)
                 }
 
-                val result = createSummaryResult(source, summary)
-                _currentSummaryResult.value = result
-                addTextSummary(result.title, result.author, result.summary, result.isYoutubeLink)
+                _currentSummaryResult.value = summaryOutput
+                addHistorySummary(
+                    HistorySummary(
+                        id = UUID.randomUUID().toString(),
+                        title = summaryOutput.title,
+                        author = summaryOutput.author,
+                        summary = summaryOutput.summary.trim(),
+                        isYoutubeLink = summaryOutput.isYoutubeLink
+                    )
+                )
 
             } catch (e: Exception) {
                 Log.e("SummaryViewModel", "Failed to summarize", e)
@@ -275,28 +277,6 @@ class SummaryViewModel @Inject constructor(
         }
         return inputString
     }
-
-    private fun createSummaryResult(source: SummarySource, summary: String): SummaryResult {
-        val isYoutube = source is SummarySource.Video
-        val title = when (source) {
-            is SummarySource.Article -> runCatching { URL(source.url).host }.getOrNull()
-                ?: "Article"
-
-            is SummarySource.Document -> source.filename ?: "Document"
-            is SummarySource.Text -> "Text"
-            is SummarySource.Video -> "YouTube Video"
-            is SummarySource.None -> ""
-        }
-        val author = when (source) {
-            is SummarySource.Article -> "Web"
-            is SummarySource.Document -> "File"
-            is SummarySource.Text -> "User Input"
-            is SummarySource.Video -> "YouTube"
-            is SummarySource.None -> ""
-        }
-        return SummaryResult(title, author, summary.trim(), isYoutube)
-    }
-
 
     // --- Preference Handling Helpers ---
     private fun <T, R> Flow<T>.collectInto(

@@ -1,6 +1,6 @@
 package me.nanova.summaryexpressive.llm.tools
 
-import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
@@ -28,12 +28,13 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.serializer
+import me.nanova.summaryexpressive.model.ExtractedContent
 import java.util.regex.Pattern
 
 @Serializable
 data class YouTubeTranscript(val url: String) : ToolArgs
 
-class YouTubeTranscriptTool(client: HttpClient) : SimpleTool<YouTubeTranscript>() {
+class YouTubeTranscriptTool(client: HttpClient) : Tool<YouTubeTranscript, ExtractedContent>() {
     private val youtubeExtractor = YouTubeExtractor(client)
 
     override val argsSerializer = serializer<YouTubeTranscript>()
@@ -49,21 +50,20 @@ class YouTubeTranscriptTool(client: HttpClient) : SimpleTool<YouTubeTranscript>(
         )
     )
 
-    override suspend fun doExecute(args: YouTubeTranscript): String {
+    public override suspend fun execute(args: YouTubeTranscript): ExtractedContent {
         return try {
             val videoId = YouTubeExtractor.extractVideoId(args.url)
-                ?: return "Error: Could not extract video ID from URL."
+                ?: throw Exception("Could not extract video ID from URL.")
             val detailsResult = youtubeExtractor.getVideoDetails(videoId)
-                ?: return "Error: Could not get video details."
+                ?: throw Exception("Could not get video details.")
             val details = detailsResult.first
             val playerResponse = detailsResult.second
             val transcriptResult = youtubeExtractor.getTranscript(videoId, playerResponse)
-                ?: return "Error: Could not get transcript."
+                ?: throw Exception("Could not get transcript.")
             val transcript = transcriptResult.first
-            val lang = transcriptResult.second
-            "Title: ${details.title}\nAuthor: ${details.author}\nLanguage: $lang\n\n$transcript"
+            ExtractedContent(details.title, details.author, transcript)
         } catch (e: Exception) {
-            "Error getting YouTube transcript: ${e.message}"
+            ExtractedContent("Error", "System", "Error getting YouTube transcript: ${e.message}")
         }
     }
 

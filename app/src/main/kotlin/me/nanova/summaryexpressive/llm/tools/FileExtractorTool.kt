@@ -1,6 +1,6 @@
 package me.nanova.summaryexpressive.llm.tools
 
-import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
@@ -20,6 +20,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
+import me.nanova.summaryexpressive.model.ExtractedContent
 import org.xmlpull.v1.XmlPullParser
 import java.io.FileNotFoundException
 import java.io.InputStream
@@ -135,7 +136,7 @@ private object ImageTextExtractor : TextExtractor {
 @Serializable
 data class File(val fileUriString: String) : ToolArgs
 
-class FileExtractorTool(private val context: Context) : SimpleTool<File>() {
+class FileExtractorTool(private val context: Context) : Tool<File, ExtractedContent>() {
     override val argsSerializer = serializer<File>()
     override val descriptor = ToolDescriptor(
         name = "extract_text_from_file_uri",
@@ -149,7 +150,7 @@ class FileExtractorTool(private val context: Context) : SimpleTool<File>() {
         )
     )
 
-    override suspend fun doExecute(args: File): String {
+    public override suspend fun execute(args: File): ExtractedContent {
         return try {
             val uri = args.fileUriString.toUri()
             val filename = getFileName(context, uri)
@@ -163,14 +164,19 @@ class FileExtractorTool(private val context: Context) : SimpleTool<File>() {
                         filename.endsWith(".jpeg", ignoreCase = true) ||
                         filename.endsWith(".png", ignoreCase = true)
                     -> ImageTextExtractor
-
                 else -> null
             }
 
-            extractor?.extract(context, uri)
-                ?: "Error: Unsupported file type for URI: $uri. Mime type: $mimeType, Filename: $filename"
+            val content = extractor?.extract(context, uri)
+                ?: throw Exception("Unsupported file type for URI: $uri. Mime type: $mimeType, Filename: $filename")
+
+            if (content.isBlank()) {
+                throw Exception("Extracted text from file is empty.")
+            }
+
+            ExtractedContent(filename, "File System", content)
         } catch (e: Exception) {
-            "Error extracting text from file: ${e.message}"
+            ExtractedContent("Error", "System", "Error extracting text from file: ${e.message}")
         }
     }
 }

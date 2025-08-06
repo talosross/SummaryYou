@@ -1,6 +1,6 @@
 package me.nanova.summaryexpressive.llm.tools
 
-import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
@@ -10,12 +10,13 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import me.nanova.summaryexpressive.model.ExtractedContent
 import org.jsoup.Jsoup
 
 @Serializable
 data class Article(val url: String) : ToolArgs
 
-class ArticleExtractorTool(private val client: HttpClient) : SimpleTool<Article>() {
+class ArticleExtractorTool(private val client: HttpClient) : Tool<Article, ExtractedContent>() {
     override val argsSerializer: KSerializer<Article>
         get() = Article.serializer()
 
@@ -31,12 +32,11 @@ class ArticleExtractorTool(private val client: HttpClient) : SimpleTool<Article>
         )
     )
 
-    override suspend fun doExecute(args: Article): String {
+    public override suspend fun execute(args: Article): ExtractedContent {
         return try {
-            val article = extractTextFromArticleUrl(args.url)
-            "Title: ${article.title}\nAuthor: ${article.author}\n\n${article.text}"
+            extractTextFromArticleUrl(args.url)
         } catch (e: Exception) {
-            "Error extracting article: ${e.message}"
+            ExtractedContent("Error", "System", "Error extracting article: ${e.message}")
         }
     }
 
@@ -44,19 +44,13 @@ class ArticleExtractorTool(private val client: HttpClient) : SimpleTool<Article>
         return client.get(url).bodyAsText()
     }
 
-    private suspend fun extractTextFromArticleUrl(url: String): ExtractedArticle {
+    private suspend fun extractTextFromArticleUrl(url: String): ExtractedContent {
         val htmlContent = fetchUrlContent(url)
         return extractArticleContent(htmlContent, url)
     }
 }
 
-private data class ExtractedArticle(
-    val text: String,
-    val title: String,
-    val author: String,
-)
-
-private fun extractArticleContent(htmlContent: String, sourceUrl: String): ExtractedArticle {
+private fun extractArticleContent(htmlContent: String, sourceUrl: String): ExtractedContent {
     // Paywall detection
     val paywallPattern =
         "\"(is|isAccessibleFor)Free\"\\s*:\\s*\"?false\"?".toRegex(RegexOption.IGNORE_CASE)
@@ -89,5 +83,5 @@ private fun extractArticleContent(htmlContent: String, sourceUrl: String): Extra
         throw Exception("Could not extract text from URL.")
     }
 
-    return ExtractedArticle(text, title, author)
+    return ExtractedContent(title, author, text)
 }

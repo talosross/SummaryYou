@@ -17,14 +17,25 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import android.content.Context
 import io.ktor.client.HttpClient
+import kotlinx.serialization.Serializable
 import me.nanova.summaryexpressive.llm.tools.Article
 import me.nanova.summaryexpressive.llm.tools.ArticleExtractorTool
 import me.nanova.summaryexpressive.llm.tools.File
 import me.nanova.summaryexpressive.llm.tools.FileExtractorTool
 import me.nanova.summaryexpressive.llm.tools.YouTubeTranscript
 import me.nanova.summaryexpressive.llm.tools.YouTubeTranscriptTool
+import me.nanova.summaryexpressive.model.ExtractedContent
+import me.nanova.summaryexpressive.model.SummaryData
 
-class LLMHandler(context: Context, httpClient: HttpClient) {
+@Serializable
+data class SummaryOutput(
+    override val title: String,
+    override val author: String,
+    override val summary: String,
+    val isYoutubeLink: Boolean
+) : SummaryData
+
+class LLMHandler(private val context: Context, httpClient: HttpClient) {
     private val fileExtractorTool: FileExtractorTool = FileExtractorTool(context)
     private val articleExtractorTool = ArticleExtractorTool(httpClient)
     private val youTubeTranscriptTool = YouTubeTranscriptTool(httpClient)
@@ -36,7 +47,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         modelName: String? = null,
         summaryLength: SummaryLength = SummaryLength.MEDIUM,
         language: String,
-    ): AIAgent<String, String> {
+    ): AIAgent<String, SummaryOutput> {
         val executor = createExecutor(provider, apiKey, baseUrl)
 
         val articleToolRegistry = ToolRegistry { tool(articleExtractorTool) }
@@ -124,56 +135,45 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
     private val isPlainText =
         { input: String -> !isWebUrl(input) && !isYouTubeUrl(input) && !isFileUri(input) && input.isNotBlank() }
 
-    /**
-     * Creates an AI agent strategy for summarizing text from various sources.
-     *
-     * This strategy takes an input string (URL, URI, or plain text),
-     * extracts text if necessary, and then uses an LLM to generate a summary.
-     *
-     * **Strategy Graph:**
-     * ```
-     * [Start] --> [Analyze Input] --+--> [Extract & Prepare Article] -----+--> [Summarize Text] --> [Extract Summary] --> [Finish]
-     *                             |                                        |
-     *                             +--> [Extract & Prepare Video] ------+
-     *                             |                                        |
-     *                             +--> [Extract & Prepare File] -------+
-     *                             |                                        |
-     *                             +--> [Prepare Plain Text] ----------+
-     * ```
-     *
-     * @return An `AIAgentStrategy` that takes a String input and returns a String summary.
-     */
     private fun createSummarizationStrategy(
         articleExtractorTool: ArticleExtractorTool,
         youTubeTranscriptTool: YouTubeTranscriptTool,
         fileExtractorTool: FileExtractorTool,
-    ): AIAgentStrategy<String, String> =
+    ): AIAgentStrategy<String, SummaryOutput> =
         strategy("summarization_router_strategy")
         {
+            var preparedContentHolder: ExtractedContent? = null
+            var isYoutube = false
+
             val nodeAnalyzeInput by node<String, String>("analyze_input") { input ->
+                isYoutube = isYouTubeUrl(input)
                 input
             }
 
-            val nodeExtractAndPrepareArticle by node<String, String>("extract_and_prepare_article") { url ->
-                val extractedText = articleExtractorTool.doExecute(Article(url))
-                if (extractedText.startsWith("Error:")) extractedText
-                else "Summarize the following article text:\n\n$extractedText"
+            // FIXME: the declaration of tool node should run execute manually
+            val nodeExtractArticle by node<String, ExtractedContent>("extract_article") { url ->
+                articleExtractorTool.execute(Article(url))
             }
 
-            val nodeExtractAndPrepareVideo by node<String, String>("extract_and_prepare_video") { url ->
-                val extractedCaptions = youTubeTranscriptTool.doExecute(YouTubeTranscript(url))
-                if (extractedCaptions.startsWith("Error:")) extractedCaptions
-                else "Summarize the following video transcript:\n\n$extractedCaptions"
+            val nodeExtractVideo by node<String, ExtractedContent>("extract_video") { url ->
+                youTubeTranscriptTool.execute(YouTubeTranscript(url))
             }
 
-            val nodeExtractAndPrepareFile by node<String, String>("extract_and_prepare_file") { uriString ->
-                val extractedText = fileExtractorTool.doExecute(File(uriString))
-                if (extractedText.startsWith("Error:")) extractedText
-                else "Summarize the following text extracted from the document:\n\n$extractedText"
+            val nodeExtractFile by node<String, ExtractedContent>("extract_file") { uriString ->
+                fileExtractorTool.execute(File(uriString))
             }
 
-            val nodePrepareSummarizationInput by node<String, String>("prepare_summarization_input") { text ->
-                "Summarize the following text:\n\n$text"
+            val nodePreparePlainText by node<String, ExtractedContent>("prepare_plain_text") { text ->
+                ExtractedContent("Text Input", "Unknown", text)
+            }
+
+            val nodePrepareForLLM by node<ExtractedContent, String>("prepare_for_llm") { ec ->
+                if (ec.title == "Error") {
+                    ec.content // This is the error message
+                } else {
+                    preparedContentHolder = ec
+                    ec.content
+                }
             }
 
             val nodeSummarizeText by nodeLLMRequest(
@@ -181,31 +181,52 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
                 allowToolCalls = false
             )
 
-            val nodeExtractSummaryContent by node<Message.Response, String>("extract_summary_content") { response ->
-                response.content
+            val nodeCombineResult by node<Message.Response, SummaryOutput>("combine_result") { response ->
+                val pc = preparedContentHolder!!
+                SummaryOutput(
+                    title = pc.title,
+                    author = pc.author,
+                    summary = response.content,
+                    isYoutubeLink = isYoutube
+                )
+            }
+
+            // FIXME: the error should not show as result
+            val nodeHandleError by node<String, SummaryOutput>("handle_error") { errorContent ->
+                SummaryOutput(
+                    title = "Error",
+                    author = "System",
+                    summary = errorContent,
+                    isYoutubeLink = isYoutube
+                )
             }
 
             edge(nodeStart forwardTo nodeAnalyzeInput)
 
             edge(
-                nodeAnalyzeInput forwardTo nodeExtractAndPrepareArticle
+                nodeAnalyzeInput forwardTo nodeExtractArticle
                         onCondition { isWebUrl(it) })
             edge(
-                nodeAnalyzeInput forwardTo nodeExtractAndPrepareVideo
+                nodeAnalyzeInput forwardTo nodeExtractVideo
                         onCondition { isYouTubeUrl(it) })
             edge(
-                nodeAnalyzeInput forwardTo nodeExtractAndPrepareFile
+                nodeAnalyzeInput forwardTo nodeExtractFile
                         onCondition { isFileUri(it) })
             edge(
-                nodeAnalyzeInput forwardTo nodePrepareSummarizationInput
+                nodeAnalyzeInput forwardTo nodePreparePlainText
                         onCondition { isPlainText(it) })
 
-            edge(nodeExtractAndPrepareArticle forwardTo nodeSummarizeText)
-            edge(nodeExtractAndPrepareVideo forwardTo nodeSummarizeText)
-            edge(nodeExtractAndPrepareFile forwardTo nodeSummarizeText)
-            edge(nodePrepareSummarizationInput forwardTo nodeSummarizeText)
+            edge(nodeExtractArticle forwardTo nodePrepareForLLM)
+            edge(nodeExtractVideo forwardTo nodePrepareForLLM)
+            edge(nodeExtractFile forwardTo nodePrepareForLLM)
+            edge(nodePreparePlainText forwardTo nodePrepareForLLM)
 
-            edge(nodeSummarizeText forwardTo nodeExtractSummaryContent)
-            edge(nodeExtractSummaryContent forwardTo nodeFinish)
+            edge(nodePrepareForLLM forwardTo nodeSummarizeText onCondition { preparedContentHolder != null })
+            edge(nodePrepareForLLM forwardTo nodeHandleError onCondition { preparedContentHolder == null })
+
+            edge(nodeSummarizeText forwardTo nodeCombineResult)
+
+            edge(nodeCombineResult forwardTo nodeFinish)
+            edge(nodeHandleError forwardTo nodeFinish)
         }
 }

@@ -87,10 +87,10 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.SummaryLength
+import me.nanova.summaryexpressive.llm.SummaryOutput
 import me.nanova.summaryexpressive.llm.tools.YouTubeTranscriptTool.Companion.isYouTubeLink
 import me.nanova.summaryexpressive.llm.tools.getFileName
 import me.nanova.summaryexpressive.model.SummaryException
-import me.nanova.summaryexpressive.model.SummaryResult
 import me.nanova.summaryexpressive.ui.component.SummaryCard
 import me.nanova.summaryexpressive.vm.SummarySource
 import me.nanova.summaryexpressive.vm.SummaryViewModel
@@ -277,9 +277,9 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(height = 8.dp))
                     }
 
-                    if (currentResult != null && !currentResult.summary.isNullOrEmpty()) {
+                    if (currentResult != null && currentResult.summary.isNotEmpty()) {
                         SummaryResultSection(
-                            summaryResult = currentResult,
+                            summaryOutput = currentResult,
                             onRegenerate = { summarize() },
                             onShowSnackbar = { message ->
                                 scope.launch {
@@ -473,20 +473,20 @@ private fun SummaryLengthSelector(
 
 @Composable
 private fun SummaryResultSection(
-    summaryResult: SummaryResult,
+    summaryOutput: SummaryOutput,
     onRegenerate: () -> Unit,
     onShowSnackbar: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
     val haptics = LocalHapticFeedback.current
-    val isYoutube = summaryResult.isYoutubeLink
+    val isYoutube = summaryOutput.isYoutubeLink
 
     SummaryCard(
         modifier = Modifier.padding(top = 15.dp, bottom = 15.dp),
-        title = summaryResult.title,
-        author = summaryResult.author,
-        summary = summaryResult.summary,
+        title = summaryOutput.title,
+        author = summaryOutput.author,
+        summary = summaryOutput.summary,
         isYouTube = isYoutube,
         onLongClick = {
             scope.launch {
@@ -494,7 +494,7 @@ private fun SummaryResultSection(
                 clipboard.setClipEntry(
                     ClipData.newPlainText(
                         "User Input",
-                        summaryResult.summary
+                        summaryOutput.summary
                     ).toClipEntry()
                 )
             }

@@ -65,11 +65,11 @@ fun HistoryScreen(
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { innerPadding ->
-            val allSummaries = viewModel.textSummaries
+            val allSummaries = viewModel.historySummaries
             val summariesToShow = if (searchText.isBlank()) {
                 allSummaries.reversed()
             } else {
-                val resultIds = viewModel.searchTextSummary(searchText).reversed()
+                val resultIds = viewModel.searchHistorySummary(searchText).reversed()
                 val summariesMap = allSummaries.associateBy { summary -> summary.id }
                 resultIds.mapNotNull { id -> summariesMap[id] }
             }
@@ -116,14 +116,14 @@ fun HistoryScreen(
                                 .animateItem(),
                             title = it.title,
                             author = it.author,
-                            summary = it.text,
-                            isYouTube = it.youtubeLink,
+                            summary = it.summary,
+                            isYouTube = it.isYoutubeLink,
                             cardColors = CardDefaults.elevatedCardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant
                             ),
                             onLongClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                viewModel.removeTextSummary(it.id)
+                                viewModel.removeHistorySummary(it.id)
                                 scope.launch {
                                     snackbarHostState.showSnackbar(deletedMessage)
                                 }
