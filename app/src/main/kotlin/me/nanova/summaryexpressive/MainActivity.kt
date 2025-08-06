@@ -52,6 +52,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
     private fun handleIntent(intent: Intent?) {
         if (Intent.ACTION_SEND == intent?.action && intent.type == "text/plain") {
             sharedUrlFlow.value = intent.getStringExtra(Intent.EXTRA_TEXT)

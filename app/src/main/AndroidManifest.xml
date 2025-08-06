@@ -23,7 +23,6 @@
 
         <activity
             android:name=".MainActivity"
-            android:documentLaunchMode="always"
             android:exported="true"
             android:launchMode="standard">
             <intent-filter>
