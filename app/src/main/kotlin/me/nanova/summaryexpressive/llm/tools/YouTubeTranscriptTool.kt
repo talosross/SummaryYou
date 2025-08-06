@@ -6,9 +6,6 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import android.util.Log
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.reflect.TypeToken
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
@@ -21,6 +18,15 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import kotlinx.serialization.serializer
 import java.util.regex.Pattern
 
@@ -70,13 +76,15 @@ class YouTubeTranscriptTool(client: HttpClient) : SimpleTool<YouTubeTranscript>(
 
 private data class VideoDetails(val title: String, val author: String)
 
+@Serializable
 private data class CaptionTrack(
     val baseUrl: String,
     val name: Name,
     val languageCode: String,
-    val kind: String?, // "asr" for auto-generated
+    val kind: String? = null, // "asr" for auto-generated
 ) {
-    data class Name(val simpleText: String)
+    @Serializable
+    data class Name(val simpleText: String = "")
 }
 
 
@@ -84,7 +92,7 @@ private data class CaptionTrack(
  * ref: https://github.com/jdepoix/youtube-transcript-api/blob/d2a409d0ce7a7bd35fe6b911ac698038ebf599cc/youtube_transcript_api/_transcripts.py#L359
  */
 private class YouTubeExtractor(private val client: HttpClient) {
-    private val gson = Gson()
+    private val json = Json { ignoreUnknownKeys = true }
 
     companion object {
         private const val INNERTUBE_CONTEXT_JSON =
@@ -145,21 +153,21 @@ private class YouTubeExtractor(private val client: HttpClient) {
                 return@withContext null
             }
 
-            val context = gson.fromJson(INNERTUBE_CONTEXT_JSON, JsonObject::class.java)
+            val context = json.parseToJsonElement(INNERTUBE_CONTEXT_JSON)
 
             val apiUrl = "https://www.youtube.com/youtubei/v1/player?key=$apiKey"
-            val requestBody = JsonObject().apply {
-                add("context", context)
-                addProperty("videoId", videoId)
+            val requestBody = buildJsonObject {
+                put("context", context)
+                put("videoId", videoId)
             }
 
             try {
                 val response = client.post(apiUrl) {
                     contentType(ContentType.Application.Json)
-                    setBody(gson.toJson(requestBody))
+                    setBody(requestBody.toString())
                 }
                 if (response.status.isSuccess()) {
-                    return@withContext gson.fromJson(response.bodyAsText(), JsonObject::class.java)
+                    return@withContext json.parseToJsonElement(response.bodyAsText()).jsonObject
                 } else {
                     Log.e(
                         "YouTube",
@@ -185,9 +193,9 @@ private class YouTubeExtractor(private val client: HttpClient) {
         withContext(Dispatchers.IO) {
             try {
                 val playerResponse = getPlayerResponse(videoId) ?: return@withContext null
-                val details = playerResponse.getAsJsonObject("videoDetails")
-                val title = details?.get("title")?.asString
-                val author = details?.get("author")?.asString
+                val details = playerResponse["videoDetails"]?.jsonObject
+                val title = details?.get("title")?.jsonPrimitive?.contentOrNull
+                val author = details?.get("author")?.jsonPrimitive?.contentOrNull
 
                 if (title != null && author != null) {
                     return@withContext Pair(VideoDetails(title, author), playerResponse)
@@ -210,11 +218,12 @@ private class YouTubeExtractor(private val client: HttpClient) {
         preferredLanguage: String = "en",
     ): Pair<String, String>? = withContext(Dispatchers.IO) {
         try {
-            val playabilityStatus = playerResponse.getAsJsonObject("playabilityStatus")
+            val playabilityStatus = playerResponse["playabilityStatus"]?.jsonObject
             if (playabilityStatus != null) {
-                val status = playabilityStatus.get("status")?.asString
+                val status = playabilityStatus["status"]?.jsonPrimitive?.contentOrNull
                 if (status == "LOGIN_REQUIRED" || status == "UNPLAYABLE") {
-                    val reason = playabilityStatus.get("reason")?.asString ?: status
+                    val reason =
+                        playabilityStatus["reason"]?.jsonPrimitive?.contentOrNull ?: status
                     Log.e(
                         "YouTube",
                         "Cannot get transcript for $videoId. Status: $status, Reason: $reason"
@@ -223,18 +232,16 @@ private class YouTubeExtractor(private val client: HttpClient) {
                 }
             }
 
-            val captionTracksJson = playerResponse
-                .getAsJsonObject("captions")
-                ?.getAsJsonObject("playerCaptionsTracklistRenderer")
-                ?.getAsJsonArray("captionTracks")
+            val captionTracksJson = playerResponse["captions"]?.jsonObject
+                ?.get("playerCaptionsTracklistRenderer")?.jsonObject
+                ?.get("captionTracks")?.jsonArray
 
             if (captionTracksJson == null) {
                 Log.w("YouTube", "No caption tracks found for video $videoId.")
                 return@withContext null
             }
 
-            val captionTrackListType = object : TypeToken<List<CaptionTrack>>() {}.type
-            val tracks = gson.fromJson<List<CaptionTrack>>(captionTracksJson, captionTrackListType)
+            val tracks = json.decodeFromJsonElement<List<CaptionTrack>>(captionTracksJson)
 
             if (tracks.isEmpty()) {
                 Log.w("YouTube", "No caption tracks found for video $videoId.")
@@ -249,59 +256,59 @@ private class YouTubeExtractor(private val client: HttpClient) {
                     ?: tracks.firstOrNull { it.languageCode.startsWith("en") } // Auto, English
                     ?: tracks.firstOrNull() // Any available track
 
-            if (track != null) {
-                val transcriptUrl = if (track.baseUrl.contains("fmt=srv3")) {
-                    track.baseUrl.replace("fmt=srv3", "fmt=json3")
-                } else if (track.baseUrl.contains("?")) {
-                    "${track.baseUrl}&fmt=json3"
-                } else {
-                    "${track.baseUrl}?fmt=json3"
-                }
-                val transcriptResponse = client.get(transcriptUrl) {
-                    headers {
-                        // Mimic browser behavior; this is required for the request to succeed
-                        append("Accept-Language", "$preferredLanguage,en;q=0.9")
-                    }
-                }
-                if (transcriptResponse.status.isSuccess()) {
-                    val transcriptJson = transcriptResponse.bodyAsText()
-                    if (transcriptJson.isEmpty()) {
-                        Log.e("YouTube", "Transcript response body is empty for $transcriptUrl")
-                        return@withContext null
-                    }
-                    val transcriptText = parseJsonTranscript(transcriptJson)
-                    return@withContext Pair(transcriptText, track.languageCode)
-                } else {
-                    Log.e(
-                        "YouTube",
-                        "Failed to download transcript from $transcriptUrl: ${transcriptResponse.status}"
-                    )
-                    return@withContext null
-                }
-            } else {
+            if (track == null) {
                 Log.w("YouTube", "Could not select a suitable caption track for video $videoId.")
                 return@withContext null
             }
+
+            val transcriptUrl = if (track.baseUrl.contains("fmt=srv3")) {
+                track.baseUrl.replace("fmt=srv3", "fmt=json3")
+            } else if (track.baseUrl.contains("?")) {
+                "${track.baseUrl}&fmt=json3"
+            } else {
+                "${track.baseUrl}?fmt=json3"
+            }
+            val transcriptResponse = client.get(transcriptUrl) {
+                // Mimic browser behavior; this is required for the request to succeed
+                headers { append("Accept-Language", "$preferredLanguage,en;q=0.9") }
+            }
+
+            if (!transcriptResponse.status.isSuccess()) {
+                Log.e(
+                    "YouTube",
+                    "Failed to download transcript from $transcriptUrl: ${transcriptResponse.status}"
+                )
+                return@withContext null
+            }
+
+            val transcriptJson = transcriptResponse.bodyAsText()
+            if (transcriptJson.isEmpty()) {
+                Log.e("YouTube", "Transcript response body is empty for $transcriptUrl")
+                return@withContext null
+            }
+
+            val transcriptText = parseJsonTranscript(transcriptJson)
+            return@withContext Pair(transcriptText, track.languageCode)
         } catch (e: Exception) {
             Log.e("YouTube", "Exception in getTranscript for video $videoId", e)
             return@withContext null
         }
     }
 
-    private fun parseJsonTranscript(json: String): String {
+    private fun parseJsonTranscript(jsonString: String): String {
         return try {
-            val jsonObject = gson.fromJson(json, JsonObject::class.java)
-            val events = jsonObject.getAsJsonArray("events") ?: return ""
+            val jsonObject = json.parseToJsonElement(jsonString).jsonObject
+            val events = jsonObject["events"]?.jsonArray ?: return ""
             val texts = mutableListOf<String>()
 
             for (event in events) {
-                val eventObj = event.asJsonObject
-                if (eventObj.has("segs")) {
-                    val segs = eventObj.getAsJsonArray("segs")
+                val eventObj = event.jsonObject
+                if ("segs" in eventObj) {
+                    val segs = eventObj["segs"]!!.jsonArray
                     for (seg in segs) {
-                        val segObj = seg.asJsonObject
-                        if (segObj.has("utf8")) {
-                            texts.add(segObj.get("utf8").asString)
+                        val segObj = seg.jsonObject
+                        if ("utf8" in segObj) {
+                            texts.add(segObj["utf8"]!!.jsonPrimitive.content)
                         }
                     }
                 }

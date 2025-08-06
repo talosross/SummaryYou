@@ -21,8 +21,8 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.1.1"
+        versionCode = 12
+        versionName = "0.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -95,51 +95,65 @@ android {
 }
 
 dependencies {
+    // https://developer.android.com/develop/ui/compose/bom/bom-mapping
+    val composeBomVersion = "2025.07.00"
+
+    // Core & Lifecycle
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    // di
+
+    // DI (Hilt)
     implementation("com.google.dagger:hilt-android:2.57")
     ksp("com.google.dagger:hilt-compiler:2.57")
-    // nav
+
+    // Navigation
     implementation("androidx.navigation:navigation-compose:2.9.3")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    // jetpack
-    implementation(platform("androidx.compose:compose-bom:2025.07.00"))
+
+    // Jetpack Compose
+    implementation(platform("androidx.compose:compose-bom:$composeBomVersion"))
     implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material:material-icons-extended")
-    // use alpha version for material expressive
+    // Keep alpha override for material expressive features, as intended
     // https://developer.android.com/jetpack/androidx/releases/compose-material3#compose_material3_version_15_2
     implementation("androidx.compose.material3:material3:1.5.0-alpha01")
 
-    // store
+    // Data Persistence
     implementation("androidx.datastore:datastore-preferences:1.1.7")
 
-    // ml & llm
-    // this will bundle model to apk which is huge
+    // ML & AI
+    // Custom configurations for build flavors to manage ML model packaging
+    // Bundles model in APK
     "standaloneImplementation"("com.google.mlkit:text-recognition:16.0.1")
+    // Uses Google Play Services
     "gmsImplementation"("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-    implementation("io.ktor:ktor-client-android:3.2.3")
     implementation("ai.koog:koog-agents:0.3.0") {
+        // Exclude CIO engine to use the Android engine provided below
         exclude(group = "io.ktor", module = "ktor-client-cio")
     }
 
-    // util, ui
-    implementation("com.google.code.gson:gson:2.13.1")
+    // Networking
+    implementation("io.ktor:ktor-client-android:3.2.3")
+
+    // Serialization & Utilities
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    // Consider consolidating on one JSON parser if possible
     implementation("org.jsoup:jsoup:1.21.1")
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("io.coil-kt:coil-gif:2.7.0")
 
-    implementation("androidx.compose.ui:ui-tooling-preview")
+    // Debug & Tooling
     debugImplementation("androidx.compose.ui:ui-tooling")
-//    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    // debugImplementation("androidx.compose.ui:ui-test-manifest")
 
+    // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.07.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:$composeBomVersion"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 }

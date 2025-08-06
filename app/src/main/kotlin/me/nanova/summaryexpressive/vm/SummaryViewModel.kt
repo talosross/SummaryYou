@@ -5,8 +5,6 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import me.nanova.summaryexpressive.UserPreferencesRepository
 import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.llm.LLMHandler
@@ -111,12 +110,15 @@ class SummaryViewModel @Inject constructor(
     private fun loadSummaries() {
         viewModelScope.launch {
             userPreferencesRepository.getTextSummaries().collect { summariesJson ->
-                val type = object : TypeToken<List<TextSummary>>() {}.type
-                val summaries =
-                    kotlin.runCatching { Gson().fromJson<List<TextSummary>>(summariesJson, type) }
-                        .getOrNull()
-                textSummaries.clear()
-                summaries?.let { textSummaries.addAll(it) }
+                if (summariesJson.isNotEmpty()) {
+                    val summaries =
+                        kotlin.runCatching { Json.decodeFromString<List<TextSummary>>(summariesJson) }
+                            .getOrNull()
+                    textSummaries.clear()
+                    summaries?.let { textSummaries.addAll(it) }
+                } else {
+                    textSummaries.clear()
+                }
             }
         }
     }
@@ -153,7 +155,7 @@ class SummaryViewModel @Inject constructor(
 
     private fun saveTextSummaries() {
         viewModelScope.launch {
-            val textSummariesJson = Gson().toJson(textSummaries)
+            val textSummariesJson = Json.encodeToString(textSummaries.toList())
             userPreferencesRepository.setTextSummaries(textSummariesJson)
         }
     }
@@ -229,16 +231,10 @@ class SummaryViewModel @Inject constructor(
                 }
 
                 if (summary.startsWith("Error:")) {
-                    if (summary.contains(
-                            "API key",
-                            ignoreCase = true
-                        )
-                    ) throw SummaryException.IncorrectKeyException
-                    if (summary.contains(
-                            "rate limit",
-                            ignoreCase = true
-                        )
-                    ) throw SummaryException.RateLimitException
+                    if (summary.contains("API key", ignoreCase = true))
+                        throw SummaryException.IncorrectKeyException
+                    if (summary.contains("rate limit", ignoreCase = true))
+                        throw SummaryException.RateLimitException
                     throw SummaryException.UnknownException(summary)
                 }
 
@@ -249,9 +245,10 @@ class SummaryViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("SummaryViewModel", "Failed to summarize", e)
                 _error.value =
-                    if (e is SummaryException) e else SummaryException.UnknownException(
-                        e.message ?: "An unknown error occurred."
-                    )
+                    e as? SummaryException
+                        ?: SummaryException.UnknownException(
+                            e.message ?: "An unknown error occurred."
+                        )
             } finally {
                 _isLoading.value = false
             }
