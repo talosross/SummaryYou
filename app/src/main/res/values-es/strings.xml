@@ -79,4 +79,6 @@
     <string name="instructionsHistory">Accede a tus resúmenes anteriores en la sección Historial.</string>
     <string name="finishButton">Finalizar</string>
     <string name="continueButton">Continuar</string>
+    <string name="shortcut_summarize_clipboard_short">Portapapeles</string>
+    <string name="shortcut_summarize_clipboard_long">Resumir del portapapeles</string>
 </resources>

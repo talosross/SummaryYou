@@ -53,4 +53,6 @@
     <string name="tutorial">الدليل</string>
     <string name="tutorialDescription">أعد مشاهدة الدليل</string>
     <string name="noHistory">لم تقم بتلخيص أي شيء بعد.</string>
+    <string name="shortcut_summarize_clipboard_short">الحافظة</string>
+    <string name="shortcut_summarize_clipboard_long">تلخيص من الحافظة</string>
 </resources>

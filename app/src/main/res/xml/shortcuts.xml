@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="summarize_clipboard"
+        android:enabled="true"
+        android:icon="@drawable/content_paste"
+        android:shortcutShortLabel="@string/shortcut_summarize_clipboard_short"
+        android:shortcutLongLabel="@string/shortcut_summarize_clipboard_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="summaryexpressive://clipboard"
+            android:targetClass="me.nanova.summaryexpressive.MainActivity" />
+    </shortcut>
+</shortcuts>

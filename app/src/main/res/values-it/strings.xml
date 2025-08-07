@@ -76,4 +76,6 @@
     <string name="instructionsHistory">Accedi ai tuoi riassunti passati nella sezione Cronologia.</string>
     <string name="finishButton">Fine</string>
     <string name="continueButton">Continua</string>
+    <string name="shortcut_summarize_clipboard_short">Appunti</string>
+    <string name="shortcut_summarize_clipboard_long">Sintetizza dagli appunti</string>
 </resources>

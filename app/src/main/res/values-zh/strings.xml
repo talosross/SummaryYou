@@ -94,4 +94,6 @@
     <string name="useLengthOptions">使用总结长度</string>
     <string name="tooLong">提供内容过长。</string>
     <string name="useLengthOptionsDescription">设置总结结果的长度</string>
+    <string name="shortcut_summarize_clipboard_short">剪贴板</string>
+    <string name="shortcut_summarize_clipboard_long">总结剪贴板内容</string>
 </resources>

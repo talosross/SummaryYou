@@ -58,4 +58,6 @@
     <string name="stillLoading">Das Dokument wird noch verarbeitet…</string>
     <string name="useLengthOptions">Zeige die Längenoptionen</string>
     <string name="useLengthOptionsDescription">Zeige die verschiedenen Zusammenfassungslängen</string>
+    <string name="shortcut_summarize_clipboard_short">Zwischenablage</string>
+    <string name="shortcut_summarize_clipboard_long">Aus Zwischenablage zusammenfassen</string>
 </resources>

@@ -1,5 +1,7 @@
 package me.nanova.summaryexpressive
 
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -59,8 +61,22 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        if (Intent.ACTION_SEND == intent?.action && intent.type == "text/plain") {
-            sharedUrlFlow.value = intent.getStringExtra(Intent.EXTRA_TEXT)
+        when {
+            intent?.action == Intent.ACTION_SEND && intent.type == "text/plain" -> {
+                sharedUrlFlow.value = intent.getStringExtra(Intent.EXTRA_TEXT)
+            }
+
+            intent?.action == Intent.ACTION_VIEW && intent.data?.host == "clipboard" -> {
+                // To avoid re-triggering on configuration change, we clear the data.
+                intent.data = null
+                // Postpone clipboard access until the window has focus.
+                window.decorView.post {
+                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.primaryClip?.getItemAt(0)?.text?.let {
+                        sharedUrlFlow.value = it.toString()
+                    }
+                }
+            }
         }
     }
 }
