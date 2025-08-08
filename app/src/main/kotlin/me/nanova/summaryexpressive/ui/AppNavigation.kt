@@ -1,11 +1,12 @@
 package me.nanova.summaryexpressive.ui
 
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -25,7 +26,19 @@ fun AppNavigation(
 ) {
     val viewModel: SummaryViewModel = hiltViewModel()
     val startDestination = if (showOnboarding) "onboarding" else "home"
+    fun slideIn(dir: SlideDirection): AnimatedContentTransitionScope<*>.() -> EnterTransition = {
+        slideIntoContainer(
+            animationSpec = tween(300, easing = EaseIn),
+            towards = dir
+        )
+    }
 
+    fun slideOut(dir: SlideDirection): AnimatedContentTransitionScope<*>.() -> ExitTransition = {
+        slideOutOfContainer(
+            animationSpec = tween(300, easing = EaseOut),
+            towards = dir
+        )
+    }
     NavHost(navController, startDestination = startDestination) {
         composable("home") {
             HomeScreen(
@@ -44,22 +57,8 @@ fun AppNavigation(
         }
         composable(
             "settings",
-            enterTransition = {
-                fadeIn(
-                    animationSpec = tween(
-                        300, easing = LinearEasing
-                    )
-                ) + slideIntoContainer(
-                    animationSpec = tween(300, easing = EaseIn),
-                    towards = AnimatedContentTransitionScope.SlideDirection.Start
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    animationSpec = tween(300, easing = EaseOut),
-                    towards = AnimatedContentTransitionScope.SlideDirection.End
-                )
-            }
+            enterTransition = slideIn(SlideDirection.End),
+            exitTransition = slideOut(SlideDirection.Start)
         ) {
             SettingsScreen(
                 navController = navController
@@ -67,22 +66,8 @@ fun AppNavigation(
         }
         composable(
             "history",
-            enterTransition = {
-                fadeIn(
-                    animationSpec = tween(
-                        300, easing = LinearEasing
-                    )
-                ) + slideIntoContainer(
-                    animationSpec = tween(300, easing = EaseIn),
-                    towards = AnimatedContentTransitionScope.SlideDirection.Start
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    animationSpec = tween(300, easing = EaseOut),
-                    towards = AnimatedContentTransitionScope.SlideDirection.End
-                )
-            }
+            enterTransition = slideIn(SlideDirection.Start),
+            exitTransition = slideOut(SlideDirection.End)
         ) {
             HistoryScreen()
         }

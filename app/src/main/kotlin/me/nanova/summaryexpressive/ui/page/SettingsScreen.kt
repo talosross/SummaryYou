@@ -231,12 +231,7 @@ private fun SettingsContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
-            ) {
+            SettingsGroup {
                 ListItem(
                     modifier = Modifier
                         .clickable {
@@ -282,12 +277,7 @@ private fun SettingsContent(
         }
 
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
-            ) {
+            SettingsGroup {
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = onShowDialogTheme)
@@ -375,12 +365,7 @@ private fun SettingsContent(
         }
 
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
-            ) {
+            SettingsGroup {
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = onShowDialogModel)
@@ -415,12 +400,7 @@ private fun SettingsContent(
         }
 
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
-            ) {
+            SettingsGroup {
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = { navController.navigate("onboarding") })
@@ -508,6 +488,20 @@ private fun SettingsContent(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SettingsGroup(
+    content: @Composable () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        )
+    ) {
+        content()
     }
 }
 
