@@ -89,8 +89,8 @@ import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 data class SettingsState(
     val theme: Int,
-    val apiKey: String,
-    val apiBaseUrl: String,
+    val apiKey: String?,
+    val apiBaseUrl: String?,
     val model: AIProvider,
     val useOriginalLanguage: Boolean,
     val dynamicColor: Boolean,
@@ -573,10 +573,10 @@ private fun ThemeSettingsDialog(
 @Composable
 private fun ApiKeySettingsDialog(
     onDismissRequest: () -> Unit,
-    currentApiKey: String,
+    currentApiKey: String?,
     onApiKeyChange: (String) -> Unit,
 ) {
-    var apiTextFieldValue by remember { mutableStateOf(currentApiKey) }
+    var apiTextFieldValue by remember { mutableStateOf(currentApiKey ?: "") }
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
 
@@ -640,11 +640,11 @@ private fun ApiKeySettingsDialog(
 private fun ModelSettingsDialog(
     onDismissRequest: () -> Unit,
     initialModel: AIProvider,
-    initialApiBaseUrl: String,
+    initialApiBaseUrl: String?,
     onConfirm: (model: AIProvider, baseUrl: String) -> Unit,
 ) {
     var selectedModel by remember { mutableStateOf(initialModel) }
-    var apiBaseUrlTextFieldValue by remember { mutableStateOf(initialApiBaseUrl) }
+    var apiBaseUrlTextFieldValue by remember { mutableStateOf(initialApiBaseUrl ?: "") }
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
 

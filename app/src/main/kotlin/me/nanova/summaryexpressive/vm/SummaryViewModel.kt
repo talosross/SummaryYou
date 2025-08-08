@@ -1,6 +1,7 @@
 package me.nanova.summaryexpressive.vm
 
 import android.app.Application
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -19,6 +21,8 @@ import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.llm.LLMHandler
 import me.nanova.summaryexpressive.llm.SummaryLength
 import me.nanova.summaryexpressive.llm.SummaryOutput
+import me.nanova.summaryexpressive.llm.tools.YouTubeTranscriptTool.Companion.isYouTubeLink
+import me.nanova.summaryexpressive.llm.tools.getFileName
 import me.nanova.summaryexpressive.model.HistorySummary
 import me.nanova.summaryexpressive.model.SummaryException
 import java.net.URL
@@ -33,6 +37,8 @@ sealed class SummarySource {
     data class Text(val content: String) : SummarySource()
     data object None : SummarySource()
 }
+
+data class AppStartAction(val content: String? = null, val autoTrigger: Boolean = false)
 
 @HiltViewModel
 class SummaryViewModel @Inject constructor(
@@ -67,14 +73,14 @@ class SummaryViewModel @Inject constructor(
         savePreference(userPreferencesRepository::setTheme, newValue)
 
     // API Key
-    private val _apiKey = MutableStateFlow("")
-    val apiKey: StateFlow<String> = _apiKey.asStateFlow()
+    private val _apiKey = MutableStateFlow<String?>(null)
+    val apiKey: StateFlow<String?> = _apiKey.asStateFlow()
     fun setApiKeyValue(newValue: String) =
         savePreference(userPreferencesRepository::setApiKey, newValue)
 
     // API base url
-    private val _baseUrl = MutableStateFlow("")
-    val baseUrl: StateFlow<String> = _baseUrl.asStateFlow()
+    private val _baseUrl = MutableStateFlow<String?>(null)
+    val baseUrl: StateFlow<String?> = _baseUrl.asStateFlow()
     fun setBaseUrlValue(newValue: String) =
         savePreference(userPreferencesRepository::setBaseUrl, newValue)
 
@@ -181,6 +187,18 @@ class SummaryViewModel @Inject constructor(
             ?: emptyList()
     }
 
+    // --- App Start Action ---
+    private val _appStartAction = MutableStateFlow(AppStartAction())
+    val appStartAction: StateFlow<AppStartAction> = _appStartAction.asStateFlow()
+
+    fun setAppStartAction(action: AppStartAction) {
+        _appStartAction.value = action
+    }
+
+    fun onStartActionHandled() {
+        _appStartAction.value = AppStartAction()
+    }
+
     // --- Summarization State ---
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -196,64 +214,90 @@ class SummaryViewModel @Inject constructor(
         _error.value = null
     }
 
-    fun summarize(source: SummarySource) {
+    fun summarize(text: String) {
+        val source = when {
+            text.startsWith("http", ignoreCase = true)
+                    || text.startsWith("https", ignoreCase = true) ->
+                if (isYouTubeLink(text)) SummarySource.Video(text)
+                else SummarySource.Article(text)
+
+            text.isNotBlank() -> SummarySource.Text(text)
+            else -> SummarySource.None
+        }
         viewModelScope.launch {
-            _isLoading.value = true
-            _currentSummaryResult.value = null
-            _error.value = null
-            try {
-                if (apiKey.value.isEmpty()) {
-                    throw SummaryException.NoKeyException
-                }
+            summarizeInternal(source)
+        }
+    }
 
-                val language = if (useOriginalLanguage.value) "the same language as the content"
-                else application.resources.configuration.locales[0].getDisplayLanguage(Locale.ENGLISH)
+    fun summarize(uri: Uri) {
+        viewModelScope.launch {
+            val filename = getFileName(application, uri)
+            val source = SummarySource.Document(filename, uri.toString())
+            summarizeInternal(source)
+        }
+    }
 
-                val agent = llmHandler.createSummarizationAgent(
-                    provider = model.value,
-                    apiKey = apiKey.value,
-                    baseUrl = if (model.value == AIProvider.OPENAI) baseUrl.value else null,
-                    modelName = null, // TODO: user custom model selection
-                    summaryLength = summaryLength.value,
-                    language = language
-                )
+    private suspend fun summarizeInternal(source: SummarySource) {
+        // Wait for preferences to be loaded before proceeding.
+        apiKey.first { it != null }
+        baseUrl.first { it != null }
 
-                val inputString = prepareSummarizationInput(source)
-
-                val summaryOutput = withContext(Dispatchers.IO) {
-                    agent.run(inputString)
-                }
-
-                if (summaryOutput.summary.startsWith("Error:")) {
-                    val errorMsg = summaryOutput.summary
-                    if (errorMsg.contains("API key", ignoreCase = true))
-                        throw SummaryException.IncorrectKeyException
-                    if (errorMsg.contains("rate limit", ignoreCase = true))
-                        throw SummaryException.RateLimitException
-                    throw SummaryException.UnknownException(errorMsg)
-                }
-
-                _currentSummaryResult.value = summaryOutput
-                addHistorySummary(
-                    HistorySummary(
-                        id = UUID.randomUUID().toString(),
-                        title = summaryOutput.title,
-                        author = summaryOutput.author,
-                        summary = summaryOutput.summary.trim(),
-                        isYoutubeLink = summaryOutput.isYoutubeLink
-                    )
-                )
-
-            } catch (e: Exception) {
-                Log.e("SummaryViewModel", "Failed to summarize", e)
-                _error.value =
-                    e as? SummaryException
-                        ?: SummaryException.UnknownException(
-                            e.message ?: "An unknown error occurred."
-                        )
-            } finally {
-                _isLoading.value = false
+        _isLoading.value = true
+        _currentSummaryResult.value = null
+        _error.value = null
+        try {
+            val currentApiKey = apiKey.value
+            if (currentApiKey.isNullOrEmpty()) {
+                throw SummaryException.NoKeyException
             }
+
+            val language = if (useOriginalLanguage.value) "the same language as the content"
+            else application.resources.configuration.locales[0].getDisplayLanguage(Locale.ENGLISH)
+
+            val agent = llmHandler.createSummarizationAgent(
+                provider = model.value,
+                apiKey = currentApiKey,
+                baseUrl = if (model.value == AIProvider.OPENAI) baseUrl.value else null,
+                modelName = null, // TODO: user custom model selection
+                summaryLength = summaryLength.value,
+                language = language
+            )
+
+            val inputString = prepareSummarizationInput(source)
+
+            val summaryOutput = withContext(Dispatchers.IO) {
+                agent.run(inputString)
+            }
+
+            if (summaryOutput.summary.startsWith("Error:")) {
+                val errorMsg = summaryOutput.summary
+                if (errorMsg.contains("API key", ignoreCase = true))
+                    throw SummaryException.IncorrectKeyException
+                if (errorMsg.contains("rate limit", ignoreCase = true))
+                    throw SummaryException.RateLimitException
+                throw SummaryException.UnknownException(errorMsg)
+            }
+
+            _currentSummaryResult.value = summaryOutput
+            addHistorySummary(
+                HistorySummary(
+                    id = UUID.randomUUID().toString(),
+                    title = summaryOutput.title,
+                    author = summaryOutput.author,
+                    summary = summaryOutput.summary.trim(),
+                    isYoutubeLink = summaryOutput.isYoutubeLink
+                )
+            )
+
+        } catch (e: Exception) {
+            Log.e("SummaryViewModel", "Failed to summarize", e)
+            _error.value =
+                e as? SummaryException
+                    ?: SummaryException.UnknownException(
+                        e.message ?: "An unknown error occurred."
+                    )
+        } finally {
+            _isLoading.value = false
         }
     }
 

@@ -56,7 +56,6 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -83,16 +82,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.SummaryLength
 import me.nanova.summaryexpressive.llm.SummaryOutput
-import me.nanova.summaryexpressive.llm.tools.YouTubeTranscriptTool.Companion.isYouTubeLink
 import me.nanova.summaryexpressive.llm.tools.getFileName
 import me.nanova.summaryexpressive.model.SummaryException
 import me.nanova.summaryexpressive.ui.component.SummaryCard
-import me.nanova.summaryexpressive.vm.SummarySource
 import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 
@@ -117,27 +115,41 @@ private object MimeTypes {
 fun HomeScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    sharedUrl: String? = null,
     viewModel: SummaryViewModel,
 ) {
     var urlOrText by rememberSaveable { mutableStateOf("") }
     var documentFilename by remember { mutableStateOf<String?>(null) }
     var singleLine by remember { mutableStateOf(false) }
 
-    LaunchedEffect(sharedUrl) {
-        sharedUrl?.let {
+    val focusManager = LocalFocusManager.current // Hide cursor
+    val focusRequester = remember { FocusRequester() } // Show cursor after removing
+
+    fun summarize() {
+        focusManager.clearFocus()
+        if (documentFilename != null) {
+            viewModel.summarize(urlOrText.toUri())
+        } else {
+            viewModel.summarize(urlOrText)
+        }
+    }
+
+    val appStartAction by viewModel.appStartAction.collectAsState()
+    LaunchedEffect(appStartAction) {
+        appStartAction.content?.let {
             viewModel.clearCurrentSummary()
             documentFilename = null
             singleLine = false
             urlOrText = it
+            if (appStartAction.autoTrigger) {
+                summarize()
+            }
+            viewModel.onStartActionHandled()
         }
     }
 
     val scope = rememberCoroutineScope() // Coroutine scope for async calls
     val context = LocalContext.current
     val clipboard = LocalClipboard.current // Clipboard
-    val focusManager = LocalFocusManager.current // Hide cursor
-    val focusRequester = remember { FocusRequester() } // Show cursor after removing
     val options = listOf(
         stringResource(id = R.string.short_length),
         stringResource(id = R.string.middle_length),
@@ -149,20 +161,6 @@ fun HomeScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val snackbarHostState = remember { SnackbarHostState() }
     val apiKey by viewModel.apiKey.collectAsState()
-    val inputSource by remember {
-        derivedStateOf {
-            when {
-                documentFilename != null -> SummarySource.Document(documentFilename, urlOrText)
-                urlOrText.startsWith("http", ignoreCase = true)
-                        || urlOrText.startsWith("https", ignoreCase = true) ->
-                    if (isYouTubeLink(urlOrText)) SummarySource.Video(urlOrText)
-                    else SummarySource.Article(urlOrText)
-
-                urlOrText.isNotBlank() -> SummarySource.Text(urlOrText)
-                else -> SummarySource.None
-            }
-        }
-    }
     val showLength by viewModel.showLength.collectAsState()
     val summaryLength by viewModel.summaryLength.collectAsState()
     val multiLine by viewModel.multiLine.collectAsState()
@@ -179,11 +177,6 @@ fun HomeScreen(
                 urlOrText = uri.toString()
             }
         }
-
-    fun summarize() {
-        focusManager.clearFocus()
-        viewModel.summarize(inputSource)
-    }
 
     fun clearInput() {
         urlOrText = ""
@@ -249,7 +242,7 @@ fun HomeScreen(
                         onLaunchFilePicker = {
                             launcher.launch(MimeTypes.allSupported)
                         },
-                        inputSource = inputSource,
+                        documentFilename = documentFilename,
                         isLoading = isLoading,
                         multiLine = multiLine,
                         singleLine = singleLine,
@@ -332,9 +325,9 @@ private fun InputSection(
     urlOrText: String,
     onUrlChange: (String) -> Unit,
     onSummarize: () -> Unit,
-    inputSource: SummarySource,
+    documentFilename: String?,
     error: Throwable?,
-    apiKey: String,
+    apiKey: String?,
     onClear: () -> Unit,
     focusRequester: FocusRequester,
     onLaunchFilePicker: () -> Unit,
@@ -343,9 +336,9 @@ private fun InputSection(
     singleLine: Boolean,
     onSingleLineChange: (Boolean) -> Unit,
 ) {
+    val isDocument = documentFilename != null
     val showCancelIcon = remember(urlOrText) { urlOrText.isNotBlank() }
-    val textToShow =
-        if (inputSource is SummarySource.Document) inputSource.filename ?: urlOrText else urlOrText
+    val textToShow = documentFilename ?: urlOrText
 
     Column {
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -354,7 +347,7 @@ private fun InputSection(
                 onValueChange = onUrlChange,
                 label = { Text("URL/Text") },
                 enabled = !isLoading,
-                readOnly = inputSource is SummarySource.Document,
+                readOnly = isDocument,
                 isError = error != null,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onSummarize() }),
@@ -363,7 +356,8 @@ private fun InputSection(
                         ErrorMessage(error.message, apiKey)
                     } else {
                         Column {
-                            if (inputSource is SummarySource.Text && urlOrText.isNotBlank()) {
+                            val isUrl = urlOrText.startsWith("http", ignoreCase = true)
+                            if (!isDocument && urlOrText.isNotBlank() && !isUrl) {
                                 // Based on the rule of thumb that 100 tokens is about 75 words.
                                 // ref: https://platform.openai.com/tokenizer
                                 val wordCount = urlOrText.trim().split(Regex("\\s+")).size
@@ -409,7 +403,7 @@ private fun InputSection(
                         .height(58.dp)
                 ) {
                     Icon(
-                        if (inputSource is SummarySource.Document) Icons.Filled.CheckCircle
+                        if (isDocument) Icons.Filled.CheckCircle
                         else Icons.Filled.AddCircle,
                         contentDescription = "Floating action button",
                     )
@@ -564,7 +558,7 @@ private fun HomeFloatingActionButtons(
 }
 
 @Composable
-private fun ErrorMessage(errorMessage: String?, apiKey: String) {
+private fun ErrorMessage(errorMessage: String?, apiKey: String?) {
     val errMsg = when (errorMessage) {
         SummaryException.NoInternetException.message -> stringResource(id = R.string.noInternet)
         SummaryException.InvalidLinkException.message -> stringResource(id = R.string.invalidURL)
@@ -574,7 +568,7 @@ private fun ErrorMessage(errorMessage: String?, apiKey: String) {
         SummaryException.PaywallException.message -> stringResource(id = R.string.paywallDetected)
         SummaryException.TooLongException.message -> stringResource(id = R.string.tooLong)
         SummaryException.IncorrectKeyException.message -> {
-            if (apiKey.isBlank()) {
+            if (apiKey.isNullOrBlank()) {
                 stringResource(id = R.string.incorrectKeyOpenSource)
             } else {
                 stringResource(id = R.string.incorrectKey)
@@ -610,7 +604,7 @@ private fun UrlInputSectionPreview() {
             onClear = {},
             focusRequester = focusRequester,
             onLaunchFilePicker = {},
-            inputSource = SummarySource.Article(url),
+            documentFilename = null,
             isLoading = false,
             multiLine = true,
             singleLine = false,
@@ -620,7 +614,7 @@ private fun UrlInputSectionPreview() {
         HorizontalDivider()
 
         InputSection(
-            urlOrText = "",
+            urlOrText = "uri://for/some/file",
             onUrlChange = {},
             onSummarize = {},
             error = SummaryException.InvalidLinkException,
@@ -628,10 +622,7 @@ private fun UrlInputSectionPreview() {
             onClear = {},
             focusRequester = focusRequester,
             onLaunchFilePicker = {},
-            inputSource = SummarySource.Document(
-                filename = "some image or documentations",
-                uri = ""
-            ),
+            documentFilename = "some image or documentations",
             isLoading = false,
             multiLine = true,
             singleLine = false,
