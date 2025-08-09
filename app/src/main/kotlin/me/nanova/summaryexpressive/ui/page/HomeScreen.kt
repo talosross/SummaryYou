@@ -1,9 +1,14 @@
 package me.nanova.summaryexpressive.ui.page
 
 import android.content.ClipData
+import android.content.ContentValues
 import android.net.Uri
+import android.os.Environment
+import android.provider.MediaStore
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,27 +20,32 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.Cancel
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.CameraAlt
+import androidx.compose.material.icons.rounded.Cancel
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ContentPaste
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,19 +53,22 @@ import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +80,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboard
@@ -76,8 +90,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -119,18 +135,14 @@ fun HomeScreen(
 ) {
     var urlOrText by rememberSaveable { mutableStateOf("") }
     var documentFilename by remember { mutableStateOf<String?>(null) }
-    var singleLine by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current // Hide cursor
     val focusRequester = remember { FocusRequester() } // Show cursor after removing
 
     fun summarize() {
         focusManager.clearFocus()
-        if (documentFilename != null) {
-            viewModel.summarize(urlOrText.toUri())
-        } else {
-            viewModel.summarize(urlOrText)
-        }
+        if (documentFilename != null) viewModel.summarize(urlOrText.toUri())
+        else viewModel.summarize(urlOrText)
     }
 
     val appStartAction by viewModel.appStartAction.collectAsState()
@@ -138,7 +150,6 @@ fun HomeScreen(
         appStartAction.content?.let {
             viewModel.clearCurrentSummary()
             documentFilename = null
-            singleLine = false
             urlOrText = it
             if (appStartAction.autoTrigger) {
                 summarize()
@@ -163,7 +174,6 @@ fun HomeScreen(
     val apiKey by viewModel.apiKey.collectAsState()
     val showLength by viewModel.showLength.collectAsState()
     val summaryLength by viewModel.summaryLength.collectAsState()
-    val multiLine by viewModel.multiLine.collectAsState()
 
     val result = remember { mutableStateOf<Uri?>(null) }
     val launcher =
@@ -178,13 +188,40 @@ fun HomeScreen(
             }
         }
 
+    val imagePickerLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            if (uri == null) return@rememberLauncherForActivityResult
+
+            scope.launch {
+                viewModel.clearCurrentSummary()
+                documentFilename = getFileName(context, uri)
+                urlOrText = uri.toString()
+            }
+        }
+
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+    val cameraLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success) {
+                cameraImageUri?.let { uri ->
+                    scope.launch {
+                        viewModel.clearCurrentSummary()
+                        documentFilename = getFileName(context, uri)
+                        urlOrText = uri.toString()
+                    }
+                }
+            }
+        }
+
     fun clearInput() {
         urlOrText = ""
         viewModel.clearCurrentSummary()
         focusRequester.requestFocus()
         documentFilename = null
-        singleLine = false
     }
+
+    val listState = rememberLazyListState()
+    val fabVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
 
     Scaffold(
         modifier = modifier
@@ -193,7 +230,8 @@ fun HomeScreen(
         topBar = { HomeTopAppBar(navController, scrollBehavior) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            HomeFloatingActionButtons(
+            FloatingActionButtons(
+                fabVisible = fabVisible,
                 onPaste = {
                     clearInput()
                     scope.launch {
@@ -208,11 +246,36 @@ fun HomeScreen(
                     scope.launch {
                         snackbarHostState.showSnackbar(message)
                     }
+                },
+                onLaunchFilePicker = {
+                    launcher.launch(MimeTypes.allSupported)
+                },
+                onLaunchImagePicker = {
+                    imagePickerLauncher.launch("image/*")
+                },
+                onLaunchCamera = {
+                    val values = ContentValues().apply {
+                        put(MediaStore.Images.Media.DISPLAY_NAME, "new_image.jpg")
+                        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                        put(
+                            MediaStore.Images.Media.RELATIVE_PATH,
+                            Environment.DIRECTORY_PICTURES
+                        )
+                    }
+                    val uri = context.contentResolver.insert(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        values
+                    )
+                    uri?.let {
+                        cameraImageUri = it
+                        cameraLauncher.launch(it)
+                    }
                 }
             )
         }
     ) { innerPadding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize(),
             contentPadding = innerPadding
@@ -231,27 +294,18 @@ fun HomeScreen(
 
                     InputSection(
                         urlOrText = urlOrText,
-                        onUrlChange = { newText ->
-                            urlOrText = newText
-                        },
+                        onUrlChange = { urlOrText = it },
                         onSummarize = { summarize() },
                         error = error,
                         apiKey = apiKey,
                         onClear = { clearInput() },
                         focusRequester = focusRequester,
-                        onLaunchFilePicker = {
-                            launcher.launch(MimeTypes.allSupported)
-                        },
                         documentFilename = documentFilename,
                         isLoading = isLoading,
-                        multiLine = multiLine,
-                        singleLine = singleLine,
-                        onSingleLineChange = { singleLine = it }
                     )
 
-                    val currentResult = summaryResult
                     if (showLength) {
-                        SummaryLengthSelector(
+                        LengthSelector(
                             selectedIndex = summaryLength.ordinal,
                             onSelectedIndexChange = { viewModel.setSummaryLength(SummaryLength.entries[it]) },
                             options = options,
@@ -270,9 +324,9 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(height = 8.dp))
                     }
 
-                    if (currentResult != null && currentResult.summary.isNotEmpty()) {
+                    summaryResult?.takeIf { it.summary.isNotEmpty() }?.let {
                         SummaryResultSection(
-                            summaryOutput = currentResult,
+                            summaryOutput = it,
                             onRegenerate = { summarize() },
                             onShowSnackbar = { message ->
                                 scope.launch {
@@ -330,112 +384,87 @@ private fun InputSection(
     apiKey: String?,
     onClear: () -> Unit,
     focusRequester: FocusRequester,
-    onLaunchFilePicker: () -> Unit,
     isLoading: Boolean,
-    multiLine: Boolean,
-    singleLine: Boolean,
-    onSingleLineChange: (Boolean) -> Unit,
 ) {
     val isDocument = documentFilename != null
-    val showCancelIcon = remember(urlOrText) { urlOrText.isNotBlank() }
+    val isUrl = urlOrText.startsWith("http://", ignoreCase = true)
+            || urlOrText.startsWith("https://", ignoreCase = true)
+
+    val isExpandable = !isDocument && (urlOrText.length >= 100 || urlOrText.contains('\n'))
+    var isExpanded by rememberSaveable(isExpandable) { mutableStateOf(isExpandable) }
+
+    val hasText = remember(urlOrText) { urlOrText.isNotBlank() }
     val textToShow = documentFilename ?: urlOrText
 
-    Column {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = textToShow,
-                onValueChange = onUrlChange,
-                label = { Text("URL/Text") },
-                enabled = !isLoading,
-                readOnly = isDocument,
-                isError = error != null,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { onSummarize() }),
-                supportingText = {
-                    if (error != null) {
-                        ErrorMessage(error.message, apiKey)
-                    } else {
-                        Column {
-                            val isUrl = urlOrText.startsWith("http", ignoreCase = true)
-                            if (!isDocument && urlOrText.isNotBlank() && !isUrl) {
-                                // Based on the rule of thumb that 100 tokens is about 75 words.
-                                // ref: https://platform.openai.com/tokenizer
-                                val wordCount = urlOrText.trim().split(Regex("\\s+")).size
-                                val tokenCount = (wordCount * 4) / 3
-                                Text(
-                                    text = "Approximate tokens: $tokenCount",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.End,
-                                    color = MaterialTheme.colorScheme.tertiaryFixedDim
-                                )
-                            }
-                        }
-                    }
-                },
-                trailingIcon = {
-                    if (showCancelIcon) {
-                        IconButton(onClick = onClear) {
-                            Icon(
-                                Icons.Outlined.Cancel,
-                                contentDescription = "Cancel",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                },
-                maxLines = 15,
-                singleLine = if (multiLine) singleLine else true,
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(top = 20.dp)
-                    .focusRequester(focusRequester)
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column {
-                OutlinedButton(
-                    onClick = onLaunchFilePicker,
-                    enabled = !isLoading,
-                    modifier = Modifier
-                        .padding(top = 27.dp)
-                        .height(58.dp)
-                ) {
-                    Icon(
-                        if (isDocument) Icons.Filled.CheckCircle
-                        else Icons.Filled.AddCircle,
-                        contentDescription = "Floating action button",
+    OutlinedTextField(
+        value = textToShow,
+        onValueChange = onUrlChange,
+        label = { Text("URL/Text") },
+        enabled = !isLoading,
+        readOnly = isDocument,
+        isError = error != null,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { onSummarize() }),
+        supportingText = {
+            if (error != null) {
+                ErrorMessage(error.message, apiKey)
+            } else if (hasText && !isDocument && !isUrl) {
+                Column {
+                    // Based on the rule of thumb that 100 tokens is about 75 words.
+                    // ref: https://platform.openai.com/tokenizer
+                    val wordCount = urlOrText.trim().split(Regex("\\s+")).size
+                    val tokenCount = (wordCount * 4) / 3
+                    Text(
+                        text = "Approximate tokens: $tokenCount",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.End,
+                        color = MaterialTheme.colorScheme.tertiaryFixedDim
                     )
                 }
-                if (multiLine) {
-                    val textLength = urlOrText.length
-                    val lineBreaks = urlOrText.count { it == '\n' }
-                    if (textLength >= 100 || lineBreaks >= 1) {
-                        Button(
-                            onClick = { onSingleLineChange(!singleLine) },
-                            enabled = !isLoading,
-                            modifier = Modifier
-                                .height(72.dp)
-                                .padding(top = 15.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (singleLine) Icons.Outlined.KeyboardArrowDown
-                                else Icons.Outlined.KeyboardArrowUp,
-                                contentDescription = if (singleLine) "Minimize" else "Expand",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+            }
+        },
+        trailingIcon = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                if (hasText) {
+                    IconButton(onClick = onClear, enabled = !isLoading) {
+                        Icon(
+                            Icons.Rounded.Cancel,
+                            contentDescription = "Cancel",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                if (isExpandable) {
+                    IconButton(
+                        onClick = { isExpanded = !isExpanded },
+                        enabled = !isLoading
+                    ) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                            contentDescription = if (isExpanded) "Collapse" else "Expand",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
             }
-        }
-    }
+        },
+        maxLines = if (isExpanded) 7 else 1,
+        singleLine = !isExpanded,
+        shape = MaterialTheme.shapes.extraLarge,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 20.dp)
+            .focusRequester(focusRequester)
+            .animateContentSize()
+    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun SummaryLengthSelector(
+private fun LengthSelector(
     selectedIndex: Int,
     onSelectedIndexChange: (Int) -> Unit,
     options: List<String>,
@@ -522,37 +551,98 @@ private fun SummaryResultSection(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun HomeFloatingActionButtons(
+private fun FloatingActionButtons(
+    fabVisible: Boolean,
     onPaste: () -> Unit,
     onSummarize: () -> Unit,
     isLoading: Boolean,
     onShowSnackbar: (String) -> Unit,
+    onLaunchFilePicker: () -> Unit,
+    onLaunchImagePicker: () -> Unit,
+    onLaunchCamera: () -> Unit,
 ) {
     val stillLoading = stringResource(id = R.string.stillLoading)
+    var menuExpanded by rememberSaveable { mutableStateOf(false) }
+
+    BackHandler(menuExpanded) { menuExpanded = false }
+
+    val attachmentItems = listOf(
+        Triple(Icons.Rounded.Image, "Image", onLaunchImagePicker),
+        Triple(Icons.Rounded.CameraAlt, "Camera", onLaunchCamera),
+        Triple(Icons.Rounded.Description, "Document", onLaunchFilePicker)
+    )
+
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.End
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        FloatingActionButtonMenu(
+            expanded = menuExpanded,
+            button = {
+                ToggleFloatingActionButton(
+                    checked = menuExpanded,
+                    onCheckedChange = { if (!isLoading) menuExpanded = !menuExpanded },
+                    modifier = Modifier
+                        .semantics {
+                            stateDescription = if (menuExpanded) "Expanded" else "Collapsed"
+                            contentDescription = "Toggle attachments menu"
+                        }
+                        .animateFloatingActionButton(
+                            visible = fabVisible,
+                            alignment = Alignment.BottomEnd
+                        )
+                ) {
+                    val imageVector by remember {
+                        derivedStateOf {
+                            if (checkedProgress > 0.5f) Icons.Filled.Close else Icons.Filled.Add
+                        }
+                    }
+                    Icon(
+                        painter = rememberVectorPainter(imageVector),
+                        contentDescription = "More actions",
+                        modifier = Modifier.animateIcon({ checkedProgress }),
+                    )
+                }
+            },
+        ) {
+            attachmentItems.forEach { (icon, text, onClick) ->
+                FloatingActionButtonMenuItem(
+                    icon = { Icon(icon, contentDescription = null) },
+                    text = { Text(text) },
+                    onClick = {
+                        onClick()
+                        menuExpanded = false
+                    }
+                )
+            }
+        }
+
         FloatingActionButton(
-            onClick = { if (!isLoading) onPaste() }
+            onClick = { if (!isLoading) onPaste() },
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .animateFloatingActionButton(
+                    visible = fabVisible && !menuExpanded,
+                    alignment = Alignment.BottomEnd
+                )
         ) {
             Icon(
                 Icons.Rounded.ContentPaste,
-                contentDescription = "Paste",
-                modifier = Modifier.size(24.dp)
+                contentDescription = "Paste from clipboard",
             )
         }
+
         FloatingActionButton(
             onClick = {
-                if (isLoading) {
-                    onShowSnackbar(stillLoading)
-                } else {
-                    onSummarize()
-                }
-            }
+                if (isLoading) onShowSnackbar(stillLoading)
+                else onSummarize()
+            },
+            modifier = Modifier.animateFloatingActionButton(
+                visible = fabVisible && !menuExpanded,
+                alignment = Alignment.TopStart
+            )
         ) {
             if (isLoading) LoadingIndicator()
-            else Icon(Icons.Filled.Check, "Check")
+            else Icon(Icons.Rounded.Check, "Summarize")
         }
     }
 }
@@ -590,25 +680,20 @@ private fun ErrorMessage(errorMessage: String?, apiKey: String?) {
 @Preview
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun UrlInputSectionPreview() {
-    val url by remember { mutableStateOf("https://example.com") }
+private fun InputSectionPreview() {
     val focusRequester = remember { FocusRequester() }
 
     Column {
         InputSection(
-            urlOrText = url,
+            urlOrText = "A very long text to test the multiline feature. This text is intentionally made long to exceed the one hundred character limit that is used to trigger the visibility of the expand and collapse button. It also includes\na line break.",
             onUrlChange = {},
             onSummarize = {},
             error = null,
             apiKey = "test_api_key",
             onClear = {},
             focusRequester = focusRequester,
-            onLaunchFilePicker = {},
             documentFilename = null,
             isLoading = false,
-            multiLine = true,
-            singleLine = false,
-            onSingleLineChange = {}
         )
 
         HorizontalDivider()
@@ -621,28 +706,39 @@ private fun UrlInputSectionPreview() {
             apiKey = "test_api_key",
             onClear = {},
             focusRequester = focusRequester,
-            onLaunchFilePicker = {},
             documentFilename = "some image or documentations",
             isLoading = false,
-            multiLine = true,
-            singleLine = false,
-            onSingleLineChange = {}
         )
     }
 }
 
-
 @Preview
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun SummaryLengthSelectorPreview() {
+private fun LengthSelectorPreview() {
     val selectedIndex by remember { mutableIntStateOf(0) }
     val options = listOf("Short", "Medium", "Long")
 
-    SummaryLengthSelector(
+    LengthSelector(
         selectedIndex = selectedIndex,
         onSelectedIndexChange = {},
         options = options,
         enabled = true
+    )
+}
+
+@Preview
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun FloatingActionButtonsPreview() {
+    FloatingActionButtons(
+        fabVisible = true,
+        onPaste = {},
+        onSummarize = {},
+        isLoading = false,
+        onShowSnackbar = {},
+        onLaunchFilePicker = {},
+        onLaunchImagePicker = {},
+        onLaunchCamera = {}
     )
 }

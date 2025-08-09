@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.HelpCenter
 import androidx.compose.material.icons.automirrored.rounded.ShortText
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ModelTraining
 import androidx.compose.material.icons.outlined.Clear
@@ -375,7 +376,7 @@ private fun SettingsContent(
                     supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
                     leadingContent = {
                         Icon(
-                            Icons.Default.ModelTraining,
+                            Icons.Default.AutoAwesome,
                             contentDescription = "AI Model",
                             modifier = Modifier.size(24.dp)
                         )

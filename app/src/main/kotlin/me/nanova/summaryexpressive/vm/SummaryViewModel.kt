@@ -216,8 +216,8 @@ class SummaryViewModel @Inject constructor(
 
     fun summarize(text: String) {
         val source = when {
-            text.startsWith("http", ignoreCase = true)
-                    || text.startsWith("https", ignoreCase = true) ->
+            text.startsWith("http://", ignoreCase = true)
+                    || text.startsWith("https://", ignoreCase = true) ->
                 if (isYouTubeLink(text)) SummarySource.Video(text)
                 else SummarySource.Article(text)
 

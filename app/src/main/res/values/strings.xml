@@ -30,7 +30,7 @@
     <string name="useMultiLinesDescription">Use more lines in the URL-Field</string>
     <string name="setApiKey">Set API-Key</string>
     <string name="setApiKeyDescription">Set your OpenAI API Key</string>
-    <string name="setModel">AI-Model</string>
+    <string name="setModel">AI Model</string>
     <string name="setModelDescription">Set the model for the summary</string>
     <string name="theme">Theme</string>
     <string name="cancel">Cancel</string>
