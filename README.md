@@ -4,7 +4,10 @@
 
 # Summary Expressive
 
-### Summarize YouTube-Videos, Articles, Images and Documents with AI
+Summarize YouTube-Videos, Articles, Images and Documents with AI
+
+[MAD](https://developer.android.com/courses/pathways/android-architecture): Kotlin + Jetpack
+compose + M3 Expressive
 
 </div>
 
@@ -21,7 +24,12 @@
 
 ---
 
-## Download
+## 🔗 Download
+
+[<img src="https://s1.ax1x.com/2023/01/12/pSu1a36.png" alt="Get it on GitHub" height="80">](https://github.com/kid1412621/SummaryExpressive/releases)
+[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+alt="Get it on Google Play"
+height="80">](https://play.google.com/store/apps/details?id=me.nanova.SummaryExpressive)
 
 ### Github Release
 
@@ -35,10 +43,9 @@ There are 2 releases available:
 
 ### Play Store (coming soon)
 
-> Note: The Play Store package is signed by Google managed key for simplicity, which means it's not
-> compatible to update in Google Play Store if you installed a github package previously.
-
-<a href='https://play.google.com/store/apps/details?id=me.nanova.SummaryExpressive'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='300'/></a>
+The Play Store release bundled with gms version. This package is signed by Google managed key for
+simplicity, which means it's not compatible to update in Google Play Store if you installed a github
+package previously.
 
 ## 📖 Features
 
