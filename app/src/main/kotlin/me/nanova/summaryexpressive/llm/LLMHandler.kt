@@ -32,7 +32,8 @@ data class SummaryOutput(
     override val title: String,
     override val author: String,
     override val summary: String,
-    val isYoutubeLink: Boolean
+    val isYoutubeLink: Boolean,
+    val length: SummaryLength
 ) : SummaryData
 
 class LLMHandler(private val context: Context, httpClient: HttpClient) {
@@ -63,6 +64,7 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
                 articleExtractorTool,
                 youTubeTranscriptTool,
                 fileExtractorTool,
+                summaryLength
             ),
             agentConfig = agentConfig,
             toolRegistry = tools
@@ -139,6 +141,7 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
         articleExtractorTool: ArticleExtractorTool,
         youTubeTranscriptTool: YouTubeTranscriptTool,
         fileExtractorTool: FileExtractorTool,
+        summaryLength: SummaryLength,
     ): AIAgentStrategy<String, SummaryOutput> =
         strategy("summarization_router_strategy")
         {
@@ -187,7 +190,8 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
                     title = pc.title,
                     author = pc.author,
                     summary = response.content,
-                    isYoutubeLink = isYoutube
+                    isYoutubeLink = isYoutube,
+                    length = summaryLength
                 )
             }
 
@@ -197,7 +201,8 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
                     title = "Error",
                     author = "System",
                     summary = errorContent,
-                    isYoutubeLink = isYoutube
+                    isYoutubeLink = isYoutube,
+                    length = summaryLength
                 )
             }
 

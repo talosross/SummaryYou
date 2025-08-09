@@ -46,16 +46,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
+import me.nanova.summaryexpressive.llm.SummaryLength
+import me.nanova.summaryexpressive.llm.SummaryOutput
 import java.util.UUID
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SummaryCard(
     modifier: Modifier = Modifier,
-    title: String?,
-    author: String?,
-    summary: String?,
-    isYouTube: Boolean,
+    summary: SummaryOutput,
     cardColors: CardColors = CardDefaults.cardColors(),
     onLongClick: (() -> Unit)? = null,
     onShowSnackbar: (String) -> Unit,
@@ -70,22 +69,22 @@ fun SummaryCard(
         colors = cardColors,
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
     ) {
-        if (!title.isNullOrEmpty()) {
+        if (summary.title.isNotEmpty()) {
             Text(
-                text = title,
+                text = summary.title,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .padding(top = 12.dp, start = 12.dp, end = 12.dp)
             )
-            if (!author.isNullOrEmpty()) {
+            if (summary.author.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = author,
+                        text = summary.author,
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )
-                    if (isYouTube) {
+                    if (summary.isYoutubeLink) {
                         Icon(
                             painter = painterResource(id = R.drawable.youtube),
                             contentDescription = "Youtube Icon",
@@ -95,31 +94,33 @@ fun SummaryCard(
                 }
             }
         }
-        summary?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier
-                    .padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        top = 10.dp,
-                        bottom = 12.dp
-                    )
-            )
-        }
-        SummaryActionButtons(summary = summary, onShowSnackbar = onShowSnackbar)
+        Text(
+            text = summary.summary,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .padding(
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = 10.dp,
+                    bottom = 12.dp
+                )
+        )
+        SummaryActionButtons(summary = summary.summary, onShowSnackbar = onShowSnackbar)
     }
 }
 
 @Preview
 @Composable
 fun SummaryCardPreview() {
-    SummaryCard(
+    val summary = SummaryOutput(
         title = "Sample Title",
         author = "Sample Author",
         summary = "This is a sample summary for preview purposes. It should be long enough to test the TTS functionality and also the layout of the card.",
-        isYouTube = true,
+        isYoutubeLink = true,
+        length = SummaryLength.SHORT
+    )
+    SummaryCard(
+        summary = summary,
         onShowSnackbar = {}
     )
 }

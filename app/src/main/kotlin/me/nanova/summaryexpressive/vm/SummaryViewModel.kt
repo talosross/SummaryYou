@@ -285,7 +285,8 @@ class SummaryViewModel @Inject constructor(
                     title = summaryOutput.title,
                     author = summaryOutput.author,
                     summary = summaryOutput.summary.trim(),
-                    isYoutubeLink = summaryOutput.isYoutubeLink
+                    isYoutubeLink = summaryOutput.isYoutubeLink,
+                    length = summaryLength.value
                 )
             )
 

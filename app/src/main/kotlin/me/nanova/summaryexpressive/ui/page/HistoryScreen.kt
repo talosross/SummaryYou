@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
+import me.nanova.summaryexpressive.llm.SummaryOutput
 import me.nanova.summaryexpressive.ui.component.SummaryCard
 import me.nanova.summaryexpressive.vm.SummaryViewModel
 
@@ -114,10 +115,13 @@ fun HistoryScreen(
                                 .fillMaxWidth()
                                 .padding(vertical = 15.dp)
                                 .animateItem(),
-                            title = it.title,
-                            author = it.author,
-                            summary = it.summary,
-                            isYouTube = it.isYoutubeLink,
+                            summary = SummaryOutput(
+                                title = it.title,
+                                summary = it.summary,
+                                author = it.author,
+                                isYoutubeLink = it.isYoutubeLink,
+                                length = it.length
+                            ),
                             cardColors = CardDefaults.elevatedCardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant
                             ),

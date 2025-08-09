@@ -1,7 +1,7 @@
 package me.nanova.summaryexpressive.model
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import me.nanova.summaryexpressive.llm.SummaryLength
 
 @Serializable
 data class HistorySummary(
@@ -10,4 +10,5 @@ data class HistorySummary(
     override val author: String,
     override val summary: String,
     val isYoutubeLink: Boolean,
+    val length: SummaryLength,
 ) : SummaryData

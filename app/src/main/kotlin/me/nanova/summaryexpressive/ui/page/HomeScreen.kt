@@ -28,18 +28,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -103,7 +103,6 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.SummaryLength
-import me.nanova.summaryexpressive.llm.SummaryOutput
 import me.nanova.summaryexpressive.llm.tools.getFileName
 import me.nanova.summaryexpressive.model.SummaryException
 import me.nanova.summaryexpressive.ui.component.SummaryCard
@@ -161,6 +160,8 @@ fun HomeScreen(
     val scope = rememberCoroutineScope() // Coroutine scope for async calls
     val context = LocalContext.current
     val clipboard = LocalClipboard.current // Clipboard
+    val haptics = LocalHapticFeedback.current
+
     val options = listOf(
         stringResource(id = R.string.short_length),
         stringResource(id = R.string.middle_length),
@@ -174,6 +175,9 @@ fun HomeScreen(
     val apiKey by viewModel.apiKey.collectAsState()
     val showLength by viewModel.showLength.collectAsState()
     val summaryLength by viewModel.summaryLength.collectAsState()
+
+    val hasResult = summaryResult?.summary?.isNotEmpty() == true
+    val isDirty = showLength && (summaryResult?.let { it.length != summaryLength } ?: false)
 
     val result = remember { mutableStateOf<Uri?>(null) }
     val launcher =
@@ -221,7 +225,7 @@ fun HomeScreen(
     }
 
     val listState = rememberLazyListState()
-    val fabVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+    val fabVisible by remember { derivedStateOf { !listState.canScrollBackward } }
 
     Scaffold(
         modifier = modifier
@@ -240,8 +244,13 @@ fun HomeScreen(
                         }
                     }
                 },
-                onSummarize = { summarize() },
+                onSummarize = {
+                    haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                    summarize()
+                },
                 isLoading = isLoading,
+                hasResult = hasResult,
+                isDirty = isDirty,
                 onShowSnackbar = { message ->
                     scope.launch {
                         snackbarHostState.showSnackbar(message)
@@ -324,14 +333,23 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(height = 8.dp))
                     }
 
-                    summaryResult?.takeIf { it.summary.isNotEmpty() }?.let {
-                        SummaryResultSection(
-                            summaryOutput = it,
-                            onRegenerate = { summarize() },
-                            onShowSnackbar = { message ->
+                    summaryResult?.takeIf { it.summary.isNotEmpty() }?.let { summaryOutput ->
+                        SummaryCard(
+                            modifier = Modifier.padding(vertical = 15.dp),
+                            summary = summaryOutput,
+                            onLongClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 scope.launch {
-                                    snackbarHostState.showSnackbar(message)
+                                    clipboard.setClipEntry(
+                                        ClipData.newPlainText(
+                                            "User Input",
+                                            summaryOutput.summary
+                                        ).toClipEntry()
+                                    )
                                 }
+                            },
+                            onShowSnackbar = {
+                                scope.launch { snackbarHostState.showSnackbar(it) }
                             }
                         )
                     }
@@ -431,8 +449,8 @@ private fun InputSection(
                 if (hasText) {
                     IconButton(onClick = onClear, enabled = !isLoading) {
                         Icon(
-                            Icons.Rounded.Cancel,
-                            contentDescription = "Cancel",
+                            Icons.Outlined.Cancel,
+                            contentDescription = "Clear",
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -494,61 +512,6 @@ private fun LengthSelector(
     }
 }
 
-@Composable
-private fun SummaryResultSection(
-    summaryOutput: SummaryOutput,
-    onRegenerate: () -> Unit,
-    onShowSnackbar: (String) -> Unit,
-) {
-    val scope = rememberCoroutineScope()
-    val clipboard = LocalClipboard.current
-    val haptics = LocalHapticFeedback.current
-    val isYoutube = summaryOutput.isYoutubeLink
-
-    SummaryCard(
-        modifier = Modifier.padding(top = 15.dp, bottom = 15.dp),
-        title = summaryOutput.title,
-        author = summaryOutput.author,
-        summary = summaryOutput.summary,
-        isYouTube = isYoutube,
-        onLongClick = {
-            scope.launch {
-                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                clipboard.setClipEntry(
-                    ClipData.newPlainText(
-                        "User Input",
-                        summaryOutput.summary
-                    ).toClipEntry()
-                )
-            }
-        },
-        onShowSnackbar = onShowSnackbar
-    )
-
-    Column(
-        modifier = Modifier
-            .padding(top = 15.dp, bottom = 90.dp)
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row {
-            Button(
-                onClick = onRegenerate,
-                contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-            ) {
-                Icon(
-                    Icons.Filled.Refresh,
-                    contentDescription = "Refresh",
-                    modifier = Modifier.size(ButtonDefaults.IconSize)
-                )
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(stringResource(id = R.string.regenerate))
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun FloatingActionButtons(
@@ -556,6 +519,8 @@ private fun FloatingActionButtons(
     onPaste: () -> Unit,
     onSummarize: () -> Unit,
     isLoading: Boolean,
+    hasResult: Boolean,
+    isDirty: Boolean,
     onShowSnackbar: (String) -> Unit,
     onLaunchFilePicker: () -> Unit,
     onLaunchImagePicker: () -> Unit,
@@ -641,8 +606,13 @@ private fun FloatingActionButtons(
                 alignment = Alignment.TopStart
             )
         ) {
-            if (isLoading) LoadingIndicator()
-            else Icon(Icons.Rounded.Check, "Summarize")
+            if (isLoading) {
+                LoadingIndicator()
+            } else if (hasResult && !isDirty) {
+                Icon(Icons.Rounded.Refresh, stringResource(R.string.regenerate))
+            } else {
+                Icon(Icons.Rounded.Check, "Summarize")
+            }
         }
     }
 }
@@ -736,6 +706,8 @@ private fun FloatingActionButtonsPreview() {
         onPaste = {},
         onSummarize = {},
         isLoading = false,
+        hasResult = false,
+        isDirty = false,
         onShowSnackbar = {},
         onLaunchFilePicker = {},
         onLaunchImagePicker = {},
