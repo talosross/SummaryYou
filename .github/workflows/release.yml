@@ -99,7 +99,7 @@ jobs:
         run: |
           mkdir -p whatsnew &&
           {
-            awk -v version="${{ env.VERSION_NAME }}" 'BEGIN{tag=substr(version, 2)} $0 ~ "^## \\[" tag "\\]"{p=1;next} /^## / {p=0} p && NF' CHANGELOG.md
+            awk -v version="${{ env.VERSION_NAME }}" '$0 ~ "^## \\[" version "\\]"{p=1;next} /^## / {p=0} p && NF' CHANGELOG.md
           } > whatsnew/whatsnew-en-US
 
       - name: Release to Google Play

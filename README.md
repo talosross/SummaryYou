@@ -50,7 +50,7 @@ There are 2 releases available:
 - Set length of summary
 
 - Read-Out the summaries
-- 
+ 
 - Instant summarize via share sheet or text selection toolbar
 
 - History-Section
@@ -58,3 +58,10 @@ There are 2 releases available:
 - Multiple LLM model supported
 
 It uses OpenAI/Gemini to summarize.
+
+## 🌟 Credits
+
+- The [original idea](https://github.com/talosross/SummaryYou)
+  from [talosross](https://github.com/talosross)
+
+- [Koog](https://koog.ai) for kotlin-based LLM interactions
