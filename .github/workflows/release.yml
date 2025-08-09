@@ -95,6 +95,13 @@ jobs:
           files: |
             ${{ env.APK_DIR }}/*.apk
 
+      - name: Generate release notes
+        run: |
+          mkdir -p whatsnew &&
+          {
+            awk -v version="${{ env.VERSION_NAME }}" 'BEGIN{tag=substr(version, 2)} $0 ~ "^## \\[" tag "\\]"{p=1;next} /^## / {p=0} p && NF' CHANGELOG.md
+          } > whatsnew/whatsnew-en-US
+
       - name: Release to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
@@ -102,3 +109,4 @@ jobs:
           packageName: me.nanova.summaryexpressive
           releaseFiles: ${{ env.APK_DIR }}/*.aab
           track: internal
+          whatsNewDirectory: whatsnew

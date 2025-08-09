@@ -31,9 +31,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.CameraAlt
-import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Image
@@ -180,7 +178,7 @@ fun HomeScreen(
     val isDirty = showLength && (summaryResult?.let { it.length != summaryLength } ?: false)
 
     val result = remember { mutableStateOf<Uri?>(null) }
-    val launcher =
+    val filePickerLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             result.value = uri
             if (uri == null) return@rememberLauncherForActivityResult
@@ -257,7 +255,7 @@ fun HomeScreen(
                     }
                 },
                 onLaunchFilePicker = {
-                    launcher.launch(MimeTypes.allSupported)
+                    filePickerLauncher.launch(MimeTypes.allSupported)
                 },
                 onLaunchImagePicker = {
                     imagePickerLauncher.launch("image/*")

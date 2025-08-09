@@ -35,23 +35,26 @@ There are 2 releases available:
 
 ### Play Store (coming soon)
 
+> Note: The Play Store package is signed by Google managed key for simplicity, which means it's not
+> compatible to update in Google Play Store if you installed a github package previously.
+
 <a href='https://play.google.com/store/apps/details?id=me.nanova.SummaryExpressive'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='300'/></a>
 
 ## 📖 Features
 
 - Summarize YouTube-Videos, Articles, Images and Documents with AI
 
+- [Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) style UI, with
+  dynamic color theme.
+
 - Set length of summary
 
 - Read-Out the summaries
+- 
+- Instant summarize via share sheet or text selection toolbar
 
 - History-Section
 
-- OLED-Dark Mode
-
-- Easy to use and user-friendly.
-
-- [Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) style UI, with
-  dynamic color theme.
+- Multiple LLM model supported
 
 It uses OpenAI/Gemini to summarize.
