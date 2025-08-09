@@ -27,7 +27,6 @@
     <string name="useDynamicColor">Dynamic Color</string>
     <string name="useDynamicColorDescription">Use colors from your wallpaper</string>
     <string name="useMultiLines">More Lines for URL</string>
-    <string name="useMultiLinesDescription">Use more lines in the URL-Field</string>
     <string name="setApiKey">Set API-Key</string>
     <string name="setApiKeyDescription">Set your OpenAI API Key</string>
     <string name="setModel">AI Model</string>

@@ -27,7 +27,6 @@
     <string name="useDynamicColor">Dynamische Farben</string>
     <string name="useDynamicColorDescription">Benutze Farben von deinem Hintergrundbild</string>
     <string name="useMultiLines">Mehrere Linien für URL</string>
-    <string name="useMultiLinesDescription">Benutze mehrere Linien im URL-Feld</string>
     <string name="setApiKey">API-Schlüssel</string>
     <string name="setApiKeyDescription">Setze deinen API Schlüssel</string>
     <string name="theme">Thema</string>

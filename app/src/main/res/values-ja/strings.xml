@@ -48,8 +48,6 @@
 
     <string name="useMultiLines">URL の行数を増やす</string>
 
-    <string name="useMultiLinesDescription">URL フィールドでより多くの行を使用します</string>
-
     <string name="setApiKey">API キーの設定</string>
 
     <string name="setApiKeyDescription">OpenAI API キーを設定する</string>

@@ -8,7 +8,11 @@ import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -440,11 +444,12 @@ private fun InputSection(
             }
         },
         trailingIcon = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween,
-            ) {
-                if (hasText) {
+            val clearButton = @Composable {
+                AnimatedVisibility(
+                    visible = hasText,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
                     IconButton(onClick = onClear, enabled = !isLoading) {
                         Icon(
                             Icons.Outlined.Cancel,
@@ -453,7 +458,13 @@ private fun InputSection(
                         )
                     }
                 }
-                if (isExpandable) {
+            }
+            val expandButton = @Composable {
+                AnimatedVisibility(
+                    visible = isExpandable,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
                     IconButton(
                         onClick = { isExpanded = !isExpanded },
                         enabled = !isLoading
@@ -463,6 +474,29 @@ private fun InputSection(
                             contentDescription = if (isExpanded) "Collapse" else "Expand",
                             modifier = Modifier.size(24.dp)
                         )
+                    }
+                }
+            }
+        
+            AnimatedContent(
+                targetState = isExpanded,
+                label = "trailing-icon-swap",
+            ) { targetIsExpanded ->
+                if (!targetIsExpanded) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        clearButton()
+                        expandButton()
+                    }
+                } else {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        clearButton()
+                        expandButton()
                     }
                 }
             }

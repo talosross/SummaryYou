@@ -25,7 +25,6 @@
     <string name="useDynamicColor">Dynamické barvy</string>
     <string name="useDynamicColorDescription">Použít barvy z tapety</string>
     <string name="useMultiLines">Více řádků pro URL</string>
-    <string name="useMultiLinesDescription">Použít více řádků v URL poli</string>
     <string name="setApiKey">Definovat API klíč</string>
     <string name="setApiKeyDescription">Nastavit svůj OpenAI API klíč</string>
     <string name="theme">Motiv</string>

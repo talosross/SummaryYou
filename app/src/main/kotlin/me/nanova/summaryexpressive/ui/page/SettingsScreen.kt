@@ -25,11 +25,9 @@ import androidx.compose.material.icons.automirrored.rounded.HelpCenter
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.ModelTraining
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.FormatLineSpacing
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Star
@@ -95,7 +93,6 @@ data class SettingsState(
     val model: AIProvider,
     val useOriginalLanguage: Boolean,
     val dynamicColor: Boolean,
-    val multiLine: Boolean,
     val showLength: Boolean,
 )
 
@@ -106,7 +103,6 @@ data class SettingsActions(
     val onBaseUrlChange: (String) -> Unit,
     val onUseOriginalLanguageChange: (Boolean) -> Unit,
     val onDynamicColorChange: (Boolean) -> Unit,
-    val onMultiLineChange: (Boolean) -> Unit,
     val onShowLengthChange: (Boolean) -> Unit,
 )
 
@@ -126,7 +122,6 @@ fun SettingsScreen(
         model = viewModel.model.collectAsState().value,
         useOriginalLanguage = viewModel.useOriginalLanguage.collectAsState().value,
         dynamicColor = viewModel.dynamicColor.collectAsState().value,
-        multiLine = viewModel.multiLine.collectAsState().value,
         showLength = viewModel.showLength.collectAsState().value
     )
     val actions = SettingsActions(
@@ -136,7 +131,6 @@ fun SettingsScreen(
         onBaseUrlChange = viewModel::setBaseUrlValue,
         onUseOriginalLanguageChange = viewModel::setUseOriginalLanguageValue,
         onDynamicColorChange = viewModel::setDynamicColorValue,
-        onMultiLineChange = viewModel::setMultiLineValue,
         onShowLengthChange = viewModel::setShowLengthValue
     )
 
@@ -253,6 +247,7 @@ private fun SettingsContent(
                     },
                     supportingContent = { Text(stringResource(id = R.string.chooseLanguageDescription)) },
                 )
+
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
@@ -302,6 +297,7 @@ private fun SettingsContent(
                         )
                     }
                 )
+
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
@@ -324,25 +320,7 @@ private fun SettingsContent(
                         )
                     }
                 )
-                ListItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.useMultiLines)) },
-                    supportingContent = { Text(stringResource(id = R.string.useMultiLinesDescription)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.FormatLineSpacing,
-                            contentDescription = "Lines Spacing",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = state.multiLine,
-                            onCheckedChange = { actions.onMultiLineChange(it) }
-                        )
-                    }
-                )
+
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
@@ -382,6 +360,7 @@ private fun SettingsContent(
                         )
                     }
                 )
+
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = onShowDialogKey)
@@ -417,6 +396,7 @@ private fun SettingsContent(
                     },
                     supportingContent = { Text(stringResource(id = R.string.tutorialDescription)) },
                 )
+
                 ListItem(
                     modifier = Modifier
                         .clickable {
@@ -436,6 +416,7 @@ private fun SettingsContent(
                     },
                     supportingContent = { Text(stringResource(id = R.string.githubDescription)) },
                 )
+
                 ListItem(
                     modifier = Modifier
                         .clickable {
@@ -827,7 +808,6 @@ private fun ScrollContentPreview() {
             model = AIProvider.OPENAI,
             useOriginalLanguage = false,
             dynamicColor = true,
-            multiLine = true,
             showLength = true
         )
         val actions = SettingsActions(
@@ -837,7 +817,6 @@ private fun ScrollContentPreview() {
             onBaseUrlChange = {},
             onUseOriginalLanguageChange = {},
             onDynamicColorChange = {},
-            onMultiLineChange = {},
             onShowLengthChange = {}
         )
         Scaffold { innerPadding ->

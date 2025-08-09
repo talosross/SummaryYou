@@ -50,8 +50,6 @@
 
     <string name="useMultiLines">使用多行 URL</string>
 
-    <string name="useMultiLinesDescription">在 URL 输入框中使用多行</string>
-
     <string name="setApiKey">设置 API 密钥</string>
 
     <string name="setApiKeyDescription">设置您的 OpenAI API 密钥</string>

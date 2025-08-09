@@ -17,7 +17,6 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 class UserPreferencesRepository(private val context: Context) {
     private val useOriginalLanguage = booleanPreferencesKey("use_original_language")
-    private val multiLine = booleanPreferencesKey("multi_line")
     private val dynamicColor = booleanPreferencesKey("dynamic_color")
     private val theme = intPreferencesKey("theme")
     private val baseUrl = stringPreferencesKey("base_url")
@@ -33,12 +32,6 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun setUseOriginalLanguage(value: Boolean) =
         context.dataStore.edit { it[useOriginalLanguage] = value }
-
-    fun getMultiLine(): Flow<Boolean> =
-        context.dataStore.data.map { it[multiLine] ?: true }
-
-    suspend fun setMultiLine(value: Boolean) =
-        context.dataStore.edit { it[multiLine] = value }
 
     fun getDynamicColor(): Flow<Boolean> =
         context.dataStore.data.map { it[dynamicColor] ?: true }

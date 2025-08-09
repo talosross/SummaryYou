@@ -54,12 +54,6 @@ class SummaryViewModel @Inject constructor(
     fun setUseOriginalLanguageValue(newValue: Boolean) =
         savePreference(userPreferencesRepository::setUseOriginalLanguage, newValue)
 
-    // Multiline URL-Field
-    private val _multiLine = MutableStateFlow(true)
-    val multiLine: StateFlow<Boolean> = _multiLine.asStateFlow()
-    fun setMultiLineValue(newValue: Boolean) =
-        savePreference(userPreferencesRepository::setMultiLine, newValue)
-
     // Dynamic color
     private val _dynamicColor = MutableStateFlow(true)
     val dynamicColor: StateFlow<Boolean> = _dynamicColor.asStateFlow()
@@ -133,7 +127,6 @@ class SummaryViewModel @Inject constructor(
 
     private fun loadPreferences() {
         userPreferencesRepository.getUseOriginalLanguage().collectInto(_useOriginalLanguage)
-        userPreferencesRepository.getMultiLine().collectInto(_multiLine)
         userPreferencesRepository.getDynamicColor().collectInto(_dynamicColor)
         userPreferencesRepository.getTheme().collectInto(_theme)
         userPreferencesRepository.getApiKey().collectInto(_apiKey)

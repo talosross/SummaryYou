@@ -45,8 +45,6 @@
 
     <string name="useMultiLines">Più righe per l\'URL</string>
 
-    <string name="useMultiLinesDescription">Utilizza più righe nel campo URL</string>
-
     <string name="setApiKey">Imposta la chiave API</string>
 
     <string name="setApiKeyDescription">Imposta la chiave API OpenAI</string>
