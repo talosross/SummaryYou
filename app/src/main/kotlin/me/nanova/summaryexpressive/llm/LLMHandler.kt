@@ -26,6 +26,7 @@ import me.nanova.summaryexpressive.llm.tools.YouTubeTranscript
 import me.nanova.summaryexpressive.llm.tools.YouTubeTranscriptTool
 import me.nanova.summaryexpressive.model.ExtractedContent
 import me.nanova.summaryexpressive.model.SummaryData
+import me.nanova.summaryexpressive.model.SummaryException
 
 @Serializable
 data class SummaryOutput(
@@ -185,25 +186,36 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
             )
 
             val nodeCombineResult by node<Message.Response, SummaryOutput>("combine_result") { response ->
+                val content = response.content
+                if (content.startsWith("Error:", ignoreCase = true)) {
+                    if (content.contains("API key", ignoreCase = true))
+                        throw SummaryException.IncorrectKeyException
+                    if (content.contains("rate limit", ignoreCase = true))
+                        throw SummaryException.RateLimitException
+                    throw SummaryException.UnknownException(content)
+                }
                 val pc = preparedContentHolder!!
                 SummaryOutput(
                     title = pc.title,
                     author = pc.author,
-                    summary = response.content,
+                    summary = content,
                     isYoutubeLink = isYoutube,
                     length = summaryLength
                 )
             }
 
-            // FIXME: the error should not show as result
-            val nodeHandleError by node<String, SummaryOutput>("handle_error") { errorContent ->
-                SummaryOutput(
-                    title = "Error",
-                    author = "System",
-                    summary = errorContent,
-                    isYoutubeLink = isYoutube,
-                    length = summaryLength
-                )
+            // TODO: improve this
+            val nodeHandleError by node<String, Any>("handle_error") { errorContent ->
+                throw when (errorContent) {
+                    SummaryException.NoInternetException.message -> SummaryException.NoInternetException
+                    SummaryException.InvalidLinkException.message -> SummaryException.InvalidLinkException
+                    SummaryException.NoTranscriptException.message -> SummaryException.NoTranscriptException
+                    SummaryException.NoContentException.message -> SummaryException.NoContentException
+                    SummaryException.TooShortException.message -> SummaryException.TooShortException
+                    SummaryException.PaywallException.message -> SummaryException.PaywallException
+                    SummaryException.TooLongException.message -> SummaryException.TooLongException
+                    else -> SummaryException.UnknownException(errorContent)
+                }
             }
 
             edge(nodeStart forwardTo nodeAnalyzeInput)
@@ -232,6 +244,5 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
             edge(nodeSummarizeText forwardTo nodeCombineResult)
 
             edge(nodeCombineResult forwardTo nodeFinish)
-            edge(nodeHandleError forwardTo nodeFinish)
         }
 }

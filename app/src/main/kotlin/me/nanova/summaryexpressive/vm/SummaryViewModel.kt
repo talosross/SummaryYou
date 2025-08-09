@@ -264,15 +264,6 @@ class SummaryViewModel @Inject constructor(
                 agent.run(inputString)
             }
 
-            if (summaryOutput.summary.startsWith("Error:")) {
-                val errorMsg = summaryOutput.summary
-                if (errorMsg.contains("API key", ignoreCase = true))
-                    throw SummaryException.IncorrectKeyException
-                if (errorMsg.contains("rate limit", ignoreCase = true))
-                    throw SummaryException.RateLimitException
-                throw SummaryException.UnknownException(errorMsg)
-            }
-
             _currentSummaryResult.value = summaryOutput
             addHistorySummary(
                 HistorySummary(
