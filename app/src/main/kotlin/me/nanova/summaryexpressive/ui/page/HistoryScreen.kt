@@ -68,9 +68,9 @@ fun HistoryScreen(
         ) { innerPadding ->
             val allSummaries = viewModel.historySummaries
             val summariesToShow = if (searchText.isBlank()) {
-                allSummaries.reversed()
+                allSummaries
             } else {
-                val resultIds = viewModel.searchHistorySummary(searchText).reversed()
+                val resultIds = viewModel.searchHistorySummary(searchText)
                 val summariesMap = allSummaries.associateBy { summary -> summary.id }
                 resultIds.mapNotNull { id -> summariesMap[id] }
             }

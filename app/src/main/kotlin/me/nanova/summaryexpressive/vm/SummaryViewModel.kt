@@ -121,7 +121,9 @@ class SummaryViewModel @Inject constructor(
                         kotlin.runCatching { Json.decodeFromString<List<HistorySummary>>(summariesJson) }
                             .getOrNull()
                     historySummaries.clear()
-                    summaries?.let { historySummaries.addAll(it) }
+                    summaries?.let { list ->
+                        historySummaries.addAll(list.sortedByDescending { it.createdOn })
+                    }
                 } else {
                     historySummaries.clear()
                 }
@@ -286,7 +288,8 @@ class SummaryViewModel @Inject constructor(
                     author = summaryOutput.author,
                     summary = summaryOutput.summary.trim(),
                     isYoutubeLink = summaryOutput.isYoutubeLink,
-                    length = summaryLength.value
+                    length = summaryLength.value,
+                    createdOn = System.currentTimeMillis()
                 )
             )
 

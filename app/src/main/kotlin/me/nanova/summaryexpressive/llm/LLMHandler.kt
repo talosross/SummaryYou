@@ -172,7 +172,7 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
 
             val nodePrepareForLLM by node<ExtractedContent, String>("prepare_for_llm") { ec ->
                 if (ec.title == "Error") {
-                    ec.content // This is the error message
+                    ec.content
                 } else {
                     preparedContentHolder = ec
                     ec.content

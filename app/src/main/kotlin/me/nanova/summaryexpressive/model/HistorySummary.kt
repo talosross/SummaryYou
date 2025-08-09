@@ -11,4 +11,5 @@ data class HistorySummary(
     override val summary: String,
     val isYoutubeLink: Boolean,
     val length: SummaryLength,
+    val createdOn: Long = 0L,
 ) : SummaryData
