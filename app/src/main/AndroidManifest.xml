@@ -46,5 +46,27 @@
                 <data android:scheme="summaryexpressive" android:host="clipboard" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".InstantSummaryActivity"
+            android:exported="true"
+            android:taskAffinity=""
+            android:label="@string/instant_summarize"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="me.nanova.summaryexpressive.action.INSTANT_SUMMARIZE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

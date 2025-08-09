@@ -52,5 +52,6 @@
     <string name="tutorialDescription">Znovu spustit tutoriál</string>
     <string name="shortcut_summarize_clipboard_short">Schránka</string>
     <string name="shortcut_summarize_clipboard_long">Shrnout ze schránky</string>
+    <string name="instant_summarize">Okamžité shrnutí</string>
 </resources>
 

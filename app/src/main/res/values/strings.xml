@@ -62,4 +62,5 @@
     <string name="useLengthOptionsDescription">Use the length options for the summary</string>
     <string name="shortcut_summarize_clipboard_short">Clipboard</string>
     <string name="shortcut_summarize_clipboard_long">Summarize from clipboard</string>
+    <string name="instant_summarize">Instant Summarize</string>
 </resources>

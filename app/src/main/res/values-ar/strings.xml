@@ -55,4 +55,5 @@
     <string name="noHistory">لم تقم بتلخيص أي شيء بعد.</string>
     <string name="shortcut_summarize_clipboard_short">الحافظة</string>
     <string name="shortcut_summarize_clipboard_long">تلخيص من الحافظة</string>
+    <string name="instant_summarize">تلخيص فوري</string>
 </resources>

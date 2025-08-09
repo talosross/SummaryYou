@@ -81,4 +81,5 @@
     <string name="continueButton">Continuar</string>
     <string name="shortcut_summarize_clipboard_short">Área de transferência</string>
     <string name="shortcut_summarize_clipboard_long">Resumir da área de transferência</string>
+    <string name="instant_summarize">Resumo Instantâneo</string>
 </resources>

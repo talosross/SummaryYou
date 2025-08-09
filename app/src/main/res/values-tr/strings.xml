@@ -59,4 +59,5 @@
     <string name="stillLoading">Belge hala işleniyor…</string>
     <string name="shortcut_summarize_clipboard_short">Pano</string>
     <string name="shortcut_summarize_clipboard_long">Panodan özetle</string>
+    <string name="instant_summarize">Anında Özetle</string>
 </resources>

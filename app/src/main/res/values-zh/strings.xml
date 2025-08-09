@@ -96,4 +96,5 @@
     <string name="useLengthOptionsDescription">设置总结结果的长度</string>
     <string name="shortcut_summarize_clipboard_short">剪贴板</string>
     <string name="shortcut_summarize_clipboard_long">总结剪贴板内容</string>
+    <string name="instant_summarize">即时总结</string>
 </resources>

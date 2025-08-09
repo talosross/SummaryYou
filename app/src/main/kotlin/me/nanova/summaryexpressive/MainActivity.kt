@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
                 intent.data = null
                 // Postpone clipboard access until the window has focus.
                 window.decorView.post {
-                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                     clipboard.primaryClip?.getItemAt(0)?.text?.let {
                         viewModel.setAppStartAction(
                             AppStartAction(

@@ -78,4 +78,5 @@
     <string name="continueButton">Continua</string>
     <string name="shortcut_summarize_clipboard_short">Appunti</string>
     <string name="shortcut_summarize_clipboard_long">Sintetizza dagli appunti</string>
+    <string name="instant_summarize">Riepilogo Istantaneo</string>
 </resources>

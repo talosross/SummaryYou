@@ -47,4 +47,5 @@
     <string name="continueButton">Продовжити</string>
     <string name="shortcut_summarize_clipboard_short">Буфер обміну</string>
     <string name="shortcut_summarize_clipboard_long">Узагальнити з буфера обміну</string>
+    <string name="instant_summarize">Миттєве узагальнення</string>
 </resources>
