@@ -96,11 +96,16 @@ jobs:
             ${{ env.APK_DIR }}/*.apk
 
       - name: Generate release notes
+        env:
+          WHATS_NEW_DIR: whatsnew
+          WHATS_NEW_FILENAME: whatsnew-en-US
         run: |
-          mkdir -p whatsnew &&
-          {
-            awk -v version="${{ env.VERSION_NAME }}" '$0 ~ "^## \\[" version "\\]"{p=1;next} /^## / {p=0} p && NF' CHANGELOG.md
-          } > whatsnew/whatsnew-en-US
+          WHATS_NEW_FILE="${WHATS_NEW_DIR}/${WHATS_NEW_FILENAME}"
+          mkdir -p ${{ env.WHATS_NEW_DIR }}
+          
+          awk -v version="${{ env.VERSION_NAME }}" '$0 ~ "^## \\[" version "\\]"{p=1;next} /^## / {p=0} p && NF' CHANGELOG.md > ${WHATS_NEW_FILE}
+          
+          [[ ! -s ${WHATS_NEW_FILE} ]] && echo "Bug fixes and improvements." > ${WHATS_NEW_FILE}
 
       - name: Release to Google Play
         uses: r0adkll/upload-google-play@v1

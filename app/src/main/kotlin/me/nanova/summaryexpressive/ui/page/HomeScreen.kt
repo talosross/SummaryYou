@@ -107,6 +107,7 @@ import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.SummaryLength
 import me.nanova.summaryexpressive.llm.tools.getFileName
 import me.nanova.summaryexpressive.model.SummaryException
+import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.component.SummaryCard
 import me.nanova.summaryexpressive.vm.SummaryViewModel
 
@@ -373,14 +374,14 @@ private fun HomeTopAppBar(
         title = { },
         navigationIcon = {
             IconButton(
-                onClick = { navController.navigate("settings") }
+                onClick = { navController.navigate(Nav.Settings.name) }
             ) {
                 Icon(Icons.Outlined.Settings, contentDescription = "Settings")
             }
         },
         actions = {
             IconButton(
-                onClick = { navController.navigate("history") }
+                onClick = { navController.navigate(Nav.History.name) }
             ) {
                 Icon(
                     Icons.AutoMirrored.Outlined.LibraryBooks,

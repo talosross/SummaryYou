@@ -82,6 +82,7 @@ import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.BuildConfig
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.AIProvider
+import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.SummaryViewModel
 
@@ -383,7 +384,7 @@ private fun SettingsContent(
             SettingsGroup {
                 ListItem(
                     modifier = Modifier
-                        .clickable(onClick = { navController.navigate("onboarding") })
+                        .clickable(onClick = { navController.navigate(Nav.Onboarding.name) })
                         .fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.tutorial)) },

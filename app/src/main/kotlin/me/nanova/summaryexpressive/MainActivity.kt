@@ -38,7 +38,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             val theme by viewModel.theme.collectAsState()
             val dynamicColor by viewModel.dynamicColor.collectAsState()
-            val showOnboarding by viewModel.showOnboardingScreen.collectAsState()
 
             SummaryExpressiveTheme(theme = theme, dynamicColor = dynamicColor) {
                 val navController = rememberNavController()
@@ -46,7 +45,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation(navController, showOnboarding)
+                    AppNavigation(navController)
                 }
             }
         }

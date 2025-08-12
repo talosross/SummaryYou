@@ -8,6 +8,8 @@ import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -22,10 +24,11 @@ import me.nanova.summaryexpressive.vm.SummaryViewModel
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    showOnboarding: Boolean,
 ) {
     val viewModel: SummaryViewModel = hiltViewModel()
-    val startDestination = if (showOnboarding) "onboarding" else "home"
+    val showOnboarding by viewModel.showOnboardingScreen.collectAsState()
+    val startDestination = if (showOnboarding) Nav.Onboarding else Nav.Home
+
     fun slideIn(dir: SlideDirection): AnimatedContentTransitionScope<*>.() -> EnterTransition = {
         slideIntoContainer(
             animationSpec = tween(300, easing = EaseIn),
@@ -39,24 +42,25 @@ fun AppNavigation(
             towards = dir
         )
     }
-    NavHost(navController, startDestination = startDestination) {
-        composable("home") {
+
+    NavHost(navController, startDestination = startDestination.name) {
+        composable(Nav.Home.name) {
             HomeScreen(
                 modifier = Modifier,
                 navController = navController,
                 viewModel = viewModel
             )
         }
-        composable("onboarding") {
+        composable(Nav.Onboarding.name) {
             OnboardingScreen(onDone = {
                 viewModel.setShowOnboardingScreenValue(false)
-                navController.navigate("home") {
-                    popUpTo("onboarding") { inclusive = true }
+                navController.navigate(Nav.Home.name) {
+                    popUpTo(Nav.Onboarding.name) { inclusive = true }
                 }
             })
         }
         composable(
-            "settings",
+            Nav.Settings.name,
             enterTransition = slideIn(SlideDirection.End),
             exitTransition = slideOut(SlideDirection.Start)
         ) {
@@ -65,7 +69,7 @@ fun AppNavigation(
             )
         }
         composable(
-            "history",
+            Nav.History.name,
             enterTransition = slideIn(SlideDirection.Start),
             exitTransition = slideOut(SlideDirection.End)
         ) {
