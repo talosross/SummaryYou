@@ -3,82 +3,83 @@ package me.nanova.summaryexpressive
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.llm.SummaryLength
+import java.io.IOException
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
+@Serializable
+data class UserPreferences(
+    val useOriginalLanguage: Boolean = true,
+    val dynamicColor: Boolean = true,
+    val theme: Int = 0,
+    val baseUrl: String = "",
+    val apiKey: String = "",
+    val model: String = AIProvider.OPENAI.name,
+    val showOnboarding: Boolean = false,
+    val showLength: Boolean = true,
+    val summaryLength: String = SummaryLength.MEDIUM.name,
+)
+
 class UserPreferencesRepository(private val context: Context) {
-    private val useOriginalLanguage = booleanPreferencesKey("use_original_language")
-    private val dynamicColor = booleanPreferencesKey("dynamic_color")
-    private val theme = intPreferencesKey("theme")
-    private val baseUrl = stringPreferencesKey("base_url")
-    private val apiKey = stringPreferencesKey("api_key")
-    private val model = stringPreferencesKey("model")
-    private val showOnboarding = booleanPreferencesKey("show_onboarding")
-    private val showLengthSelection = booleanPreferencesKey("show_length")
-    private val summaryLength = stringPreferencesKey("summary_length")
+    private val userPreferencesKey = stringPreferencesKey("user_preferences")
     private val history = stringPreferencesKey("text_summaries_json")
 
-    fun getUseOriginalLanguage(): Flow<Boolean> =
-        context.dataStore.data.map { it[useOriginalLanguage] ?: true }
+    val preferencesFlow: Flow<UserPreferences> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }.map { preferences ->
+            preferences[userPreferencesKey]?.let { jsonString ->
+                runCatching { Json.decodeFromString<UserPreferences>(jsonString) }.getOrNull()
+            } ?: UserPreferences()
+        }
+
+    private suspend fun updatePreferences(transform: (UserPreferences) -> UserPreferences) {
+        context.dataStore.edit { preferences ->
+            val currentPreferencesJson = preferences[userPreferencesKey]
+            val currentPreferences = currentPreferencesJson?.let {
+                runCatching { Json.decodeFromString<UserPreferences>(it) }.getOrNull()
+            } ?: UserPreferences()
+            val newPreferences = transform(currentPreferences)
+            preferences[userPreferencesKey] = Json.encodeToString(newPreferences)
+        }
+    }
 
     suspend fun setUseOriginalLanguage(value: Boolean) =
-        context.dataStore.edit { it[useOriginalLanguage] = value }
-
-    fun getDynamicColor(): Flow<Boolean> =
-        context.dataStore.data.map { it[dynamicColor] ?: true }
+        updatePreferences { it.copy(useOriginalLanguage = value) }
 
     suspend fun setDynamicColor(value: Boolean) =
-        context.dataStore.edit { it[dynamicColor] = value }
+        updatePreferences { it.copy(dynamicColor = value) }
 
-    fun getTheme(): Flow<Int> =
-        context.dataStore.data.map { it[theme] ?: 0 }
+    suspend fun setTheme(value: Int) = updatePreferences { it.copy(theme = value) }
 
-    suspend fun setTheme(value: Int) =
-        context.dataStore.edit { it[theme] = value }
+    suspend fun setBaseUrl(value: String) = updatePreferences { it.copy(baseUrl = value) }
 
-    fun getBaseUrl(): Flow<String> =
-        context.dataStore.data.map { it[baseUrl] ?: "" }
+    suspend fun setApiKey(value: String) = updatePreferences { it.copy(apiKey = value) }
 
-    suspend fun setBaseUrl(value: String) =
-        context.dataStore.edit { it[baseUrl] = value }
-
-    fun getApiKey(): Flow<String> = context.dataStore.data.map { it[apiKey] ?: "" }
-    suspend fun setApiKey(value: String) =
-        context.dataStore.edit { it[apiKey] = value }
-
-    fun getModel(): Flow<String> =
-        // fixme handle default value
-        context.dataStore.data.map { it[model] ?: AIProvider.OPENAI.name }
-
-    suspend fun setModel(value: String) =
-        context.dataStore.edit { it[model] = value }
-
-    fun getShowOnboarding(): Flow<Boolean> =
-        context.dataStore.data.map { it[showOnboarding] ?: false }
+    suspend fun setModel(value: String) = updatePreferences { it.copy(model = value) }
 
     suspend fun setShowOnboarding(value: Boolean) =
-        context.dataStore.edit { it[showOnboarding] = value }
+        updatePreferences { it.copy(showOnboarding = value) }
 
-    fun getShowLength(): Flow<Boolean> =
-        context.dataStore.data.map { it[showLengthSelection] ?: true }
-
-    suspend fun setShowLength(value: Boolean) =
-        context.dataStore.edit { it[showLengthSelection] = value }
-
-    fun getSummaryLength(): Flow<String> =
-        context.dataStore.data.map { it[summaryLength] ?: SummaryLength.MEDIUM.name }
+    suspend fun setShowLength(value: Boolean) = updatePreferences { it.copy(showLength = value) }
 
     suspend fun setSummaryLength(value: String) =
-        context.dataStore.edit { it[summaryLength] = value }
+        updatePreferences { it.copy(summaryLength = value) }
 
     fun getTextSummaries(): Flow<String> =
         context.dataStore.data.map { it[history] ?: "[]" }

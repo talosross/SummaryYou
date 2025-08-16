@@ -46,12 +46,12 @@ import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.SummaryOutput
 import me.nanova.summaryexpressive.ui.component.SummaryCard
-import me.nanova.summaryexpressive.vm.SummaryViewModel
+import me.nanova.summaryexpressive.vm.HistoryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HistoryScreen(
-    viewModel: SummaryViewModel = hiltViewModel(),
+    viewModel: HistoryViewModel = hiltViewModel(),
 ) {
     val haptics = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()

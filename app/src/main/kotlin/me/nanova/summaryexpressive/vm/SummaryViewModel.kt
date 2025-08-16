@@ -3,25 +3,24 @@ package me.nanova.summaryexpressive.vm
 import android.app.Application
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import me.nanova.summaryexpressive.UserPreferencesRepository
 import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.llm.LLMHandler
 import me.nanova.summaryexpressive.llm.SummaryLength
 import me.nanova.summaryexpressive.llm.SummaryOutput
-import me.nanova.summaryexpressive.llm.tools.YouTubeTranscriptTool.Companion.isYouTubeLink
+import me.nanova.summaryexpressive.llm.tools.YouTubeTranscriptTool
 import me.nanova.summaryexpressive.llm.tools.getFileName
 import me.nanova.summaryexpressive.model.HistorySummary
 import me.nanova.summaryexpressive.model.SummaryException
@@ -30,231 +29,60 @@ import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
-sealed class SummarySource {
-    data class Document(val filename: String?, val uri: String) : SummarySource()
-    data class Article(val url: String) : SummarySource()
-    data class Video(val url: String) : SummarySource()
-    data class Text(val content: String) : SummarySource()
-    data object None : SummarySource()
-}
-
-data class AppStartAction(val content: String? = null, val autoTrigger: Boolean = false)
-
 @HiltViewModel
 class SummaryViewModel @Inject constructor(
     private val llmHandler: LLMHandler,
-    private val userPreferencesRepository: UserPreferencesRepository,
     private val application: Application,
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
-    val historySummaries = mutableStateListOf<HistorySummary>()
 
-    // Original Language in summary
-    private val _useOriginalLanguage = MutableStateFlow(true)
-    val useOriginalLanguage: StateFlow<Boolean> = _useOriginalLanguage.asStateFlow()
-    fun setUseOriginalLanguageValue(newValue: Boolean) =
-        savePreference(userPreferencesRepository::setUseOriginalLanguage, newValue)
-
-    // Dynamic color
-    private val _dynamicColor = MutableStateFlow(true)
-    val dynamicColor: StateFlow<Boolean> = _dynamicColor.asStateFlow()
-    fun setDynamicColorValue(newValue: Boolean) =
-        savePreference(userPreferencesRepository::setDynamicColor, newValue)
-
-    // Theme for Dark, Light or System
-    private val _theme = MutableStateFlow(0)
-    val theme: StateFlow<Int> = _theme.asStateFlow()
-    fun setTheme(newValue: Int) =
-        savePreference(userPreferencesRepository::setTheme, newValue)
-
-    // API Key
-    private val _apiKey = MutableStateFlow<String?>(null)
-    val apiKey: StateFlow<String?> = _apiKey.asStateFlow()
-    fun setApiKeyValue(newValue: String) =
-        savePreference(userPreferencesRepository::setApiKey, newValue)
-
-    // API base url
-    private val _baseUrl = MutableStateFlow<String?>(null)
-    val baseUrl: StateFlow<String?> = _baseUrl.asStateFlow()
-    fun setBaseUrlValue(newValue: String) =
-        savePreference(userPreferencesRepository::setBaseUrl, newValue)
-
-    // AI-Model
-    private val _model = MutableStateFlow(AIProvider.OPENAI)
-    val model: StateFlow<AIProvider> = _model.asStateFlow()
-    fun setModelValue(newValue: String) =
-        savePreference(userPreferencesRepository::setModel, newValue)
-
-    // OnboardingScreen
-    private val _showOnboardingScreen = MutableStateFlow(false)
-    val showOnboardingScreen: StateFlow<Boolean> = _showOnboardingScreen.asStateFlow()
-    fun setShowOnboardingScreenValue(newValue: Boolean) =
-        savePreference(userPreferencesRepository::setShowOnboarding, newValue)
-
-    // Show length
-    private val _showLength = MutableStateFlow(true)
-    val showLength: StateFlow<Boolean> = _showLength.asStateFlow()
-    fun setShowLengthValue(newValue: Boolean) =
-        savePreference(userPreferencesRepository::setShowLength, newValue)
-
-    // Summary Length
-    private val _summaryLength = MutableStateFlow(SummaryLength.MEDIUM)
-    val summaryLength: StateFlow<SummaryLength> = _summaryLength.asStateFlow()
-    fun setSummaryLength(newValue: SummaryLength) =
-        savePreference(userPreferencesRepository::setSummaryLength, newValue.name)
-
-    init {
-        loadSummaries()
-        loadPreferences()
-    }
-
-    private fun loadSummaries() {
-        viewModelScope.launch {
-            userPreferencesRepository.getTextSummaries().collect { summariesJson ->
-                if (summariesJson.isNotEmpty()) {
-                    val summaries =
-                        kotlin.runCatching { Json.decodeFromString<List<HistorySummary>>(summariesJson) }
-                            .getOrNull()
-                    historySummaries.clear()
-                    summaries?.let { list ->
-                        historySummaries.addAll(list.sortedByDescending { it.createdOn })
-                    }
-                } else {
-                    historySummaries.clear()
-                }
-            }
-        }
-    }
-
-    private fun loadPreferences() {
-        userPreferencesRepository.getUseOriginalLanguage().collectInto(_useOriginalLanguage)
-        userPreferencesRepository.getDynamicColor().collectInto(_dynamicColor)
-        userPreferencesRepository.getTheme().collectInto(_theme)
-        userPreferencesRepository.getApiKey().collectInto(_apiKey)
-        userPreferencesRepository.getBaseUrl().collectInto(_baseUrl)
-        userPreferencesRepository.getModel()
-            .collectInto(_model) { AIProvider.valueOf(it) }
-        userPreferencesRepository.getShowOnboarding()
-            .collectInto(_showOnboardingScreen)
-        userPreferencesRepository.getShowLength().collectInto(_showLength)
-        userPreferencesRepository.getSummaryLength()
-            .collectInto(_summaryLength) { SummaryLength.valueOf(it) }
-    }
-
-    private fun addHistorySummary(summary: HistorySummary) {
-        if (summary.summary.isNotBlank() && summary.summary != "invalid link") {
-            historySummaries.add(0, summary)
-            // Save text data in SharedPreferences
-            saveHistorySummaries()
-        }
-    }
-
-    private fun saveHistorySummaries() {
-        viewModelScope.launch {
-            val historySummariesJson = Json.encodeToString(historySummaries.toList())
-            userPreferencesRepository.setTextSummaries(historySummariesJson)
-        }
-    }
-
-    fun removeHistorySummary(id: String) {
-        // Find the TextSummary object to remove based on id
-        val summaryToRemove = historySummaries.firstOrNull { it.id == id }
-
-        // Check whether a matching TextSummary object was found and remove it
-        summaryToRemove?.let {
-            historySummaries.remove(it)
-
-            // After removing, save the updated ViewModel (if necessary)
-            saveHistorySummaries()
-        }
-    }
-
-    fun searchHistorySummary(searchText: String): List<String> {
-        return historySummaries
-            .filter {
-                it.title.contains(searchText, ignoreCase = true) || it.author.contains(
-                    searchText,
-                    ignoreCase = true
-                ) || it.summary.contains(searchText, ignoreCase = true)
-            }
-            .map { it.id }
-            .takeIf { it.isNotEmpty() }
-            ?.toList()
-            ?: emptyList()
-    }
-
-    // --- App Start Action ---
-    private val _appStartAction = MutableStateFlow(AppStartAction())
-    val appStartAction: StateFlow<AppStartAction> = _appStartAction.asStateFlow()
-
-    fun setAppStartAction(action: AppStartAction) {
-        _appStartAction.value = action
-    }
-
-    fun onStartActionHandled() {
-        _appStartAction.value = AppStartAction()
-    }
-
-    // --- Summarization State ---
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    private val _currentSummaryResult = MutableStateFlow<SummaryOutput?>(null)
-    val currentSummaryResult: StateFlow<SummaryOutput?> = _currentSummaryResult.asStateFlow()
-
-    private val _error = MutableStateFlow<Throwable?>(null)
-    val error: StateFlow<Throwable?> = _error.asStateFlow()
+    private val _summarizationState = MutableStateFlow(SummarizationState())
+    val summarizationState: StateFlow<SummarizationState> = _summarizationState.asStateFlow()
 
     fun clearCurrentSummary() {
-        _currentSummaryResult.value = null
-        _error.value = null
+        _summarizationState.update { it.copy(summaryResult = null, error = null) }
     }
 
-    fun summarize(text: String) {
+    fun summarize(text: String, settings: SettingsUiState) {
         val source = when {
             text.startsWith("http://", ignoreCase = true)
                     || text.startsWith("https://", ignoreCase = true) ->
-                if (isYouTubeLink(text)) SummarySource.Video(text)
+                if (YouTubeTranscriptTool.isYouTubeLink(text)) SummarySource.Video(text)
                 else SummarySource.Article(text)
 
             text.isNotBlank() -> SummarySource.Text(text)
             else -> SummarySource.None
         }
         viewModelScope.launch {
-            summarizeInternal(source)
+            summarizeInternal(source, settings)
         }
     }
 
-    fun summarize(uri: Uri) {
+    fun summarize(uri: Uri, settings: SettingsUiState) {
         viewModelScope.launch {
             val filename = getFileName(application, uri)
             val source = SummarySource.Document(filename, uri.toString())
-            summarizeInternal(source)
+            summarizeInternal(source, settings)
         }
     }
 
-    private suspend fun summarizeInternal(source: SummarySource) {
-        // Wait for preferences to be loaded before proceeding.
-        apiKey.first { it != null }
-        baseUrl.first { it != null }
-
-        _isLoading.value = true
-        _currentSummaryResult.value = null
-        _error.value = null
+    private suspend fun summarizeInternal(source: SummarySource, settings: SettingsUiState) {
+        _summarizationState.value = SummarizationState(isLoading = true)
         try {
-            val currentApiKey = apiKey.value
+            val currentApiKey = settings.apiKey
             if (currentApiKey.isNullOrEmpty()) {
                 throw SummaryException.NoKeyException
             }
 
-            val language = if (useOriginalLanguage.value) "the same language as the content"
+            val language = if (settings.useOriginalLanguage) "the same language as the content"
             else application.resources.configuration.locales[0].getDisplayLanguage(Locale.ENGLISH)
 
             val agent = llmHandler.getSummarizationAgent(
-                provider = model.value,
+                provider = settings.model,
                 apiKey = currentApiKey,
-                baseUrl = if (model.value == AIProvider.OPENAI) baseUrl.value else null,
+                baseUrl = if (settings.model == AIProvider.OPENAI) settings.baseUrl else null,
                 modelName = null, // TODO: user custom model selection
-                summaryLength = summaryLength.value,
+                summaryLength = settings.summaryLength,
                 language = language
             )
 
@@ -264,28 +92,19 @@ class SummaryViewModel @Inject constructor(
                 agent.run(inputString)
             }
 
-            _currentSummaryResult.value = summaryOutput
-            addHistorySummary(
-                HistorySummary(
-                    id = UUID.randomUUID().toString(),
-                    title = summaryOutput.title,
-                    author = summaryOutput.author,
-                    summary = summaryOutput.summary.trim(),
-                    isYoutubeLink = summaryOutput.isYoutubeLink,
-                    length = summaryLength.value,
-                    createdOn = System.currentTimeMillis()
-                )
-            )
+            _summarizationState.update { it.copy(summaryResult = summaryOutput) }
+            addHistorySummary(summaryOutput, settings.summaryLength)
 
         } catch (e: Exception) {
-            Log.e("SummaryViewModel", "Failed to summarize", e)
-            _error.value =
+            Log.e("LLMViewModel", "Failed to summarize", e)
+            val error =
                 e as? SummaryException
                     ?: SummaryException.UnknownException(
                         e.message ?: "An unknown error occurred."
                     )
+            _summarizationState.update { it.copy(error = error) }
         } finally {
-            _isLoading.value = false
+            _summarizationState.update { it.copy(isLoading = false) }
         }
     }
 
@@ -310,22 +129,30 @@ class SummaryViewModel @Inject constructor(
         return inputString
     }
 
-    // --- Preference Handling Helpers ---
-    private fun <T, R> Flow<T>.collectInto(
-        stateFlow: MutableStateFlow<R>,
-        transform: (T) -> R,
-    ) {
+    private fun addHistorySummary(summaryOutput: SummaryOutput, summaryLength: SummaryLength) {
         viewModelScope.launch {
-            this@collectInto.collect { stateFlow.value = transform(it) }
-        }
-    }
-
-    private fun <T> Flow<T>.collectInto(stateFlow: MutableStateFlow<T>) =
-        collectInto(stateFlow) { it }
-
-    private fun <T> savePreference(setter: suspend (T) -> Unit, value: T) {
-        viewModelScope.launch {
-            setter(value)
+            val summary = HistorySummary(
+                id = UUID.randomUUID().toString(),
+                title = summaryOutput.title,
+                author = summaryOutput.author,
+                summary = summaryOutput.summary.trim(),
+                isYoutubeLink = summaryOutput.isYoutubeLink,
+                length = summaryLength,
+                createdOn = System.currentTimeMillis()
+            )
+            if (summary.summary.isNotBlank() && summary.summary != "invalid link") {
+                val currentSummariesJson = userPreferencesRepository.getTextSummaries().first()
+                val summaries = if (currentSummariesJson.isNotEmpty()) {
+                    kotlin.runCatching { Json.decodeFromString<List<HistorySummary>>(currentSummariesJson) }.getOrDefault(
+                        emptyList()
+                    )
+                } else {
+                    emptyList()
+                }
+                val updatedSummaries = listOf(summary) + summaries
+                val updatedSummariesJson = Json.encodeToString(updatedSummaries)
+                userPreferencesRepository.setTextSummaries(updatedSummariesJson)
+            }
         }
     }
 }

@@ -31,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,10 +49,12 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.SummaryViewModel
+import me.nanova.summaryexpressive.vm.UIViewModel
 
 @AndroidEntryPoint
 class InstantSummaryActivity : ComponentActivity() {
-    private val viewModel: SummaryViewModel by viewModels()
+    private val uiViewModel: UIViewModel by viewModels()
+    private val summaryViewModel: SummaryViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,16 +76,20 @@ class InstantSummaryActivity : ComponentActivity() {
             return
         }
 
-        viewModel.clearCurrentSummary()
-        viewModel.summarize(textToSummarize)
-
         setContent {
-            val theme by viewModel.theme.collectAsState()
-            val dynamicColor by viewModel.dynamicColor.collectAsState()
+            val settings by uiViewModel.settingsUiState.collectAsState()
+            val summarizationState by summaryViewModel.summarizationState.collectAsState()
 
-            SummaryExpressiveTheme(theme = theme, dynamicColor = dynamicColor) {
+
+            LaunchedEffect(settings) {
+                if (summarizationState.summaryResult == null && !summarizationState.isLoading) {
+                    summaryViewModel.summarize(textToSummarize, settings)
+                }
+            }
+
+            SummaryExpressiveTheme(theme = settings.theme, dynamicColor = settings.dynamicColor) {
                 InstantSummaryDialog(
-                    viewModel = viewModel,
+                    viewModel = summaryViewModel,
                     onDismiss = { finish() }
                 )
             }
@@ -93,9 +100,10 @@ class InstantSummaryActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InstantSummaryDialog(viewModel: SummaryViewModel, onDismiss: () -> Unit) {
-    val isLoading by viewModel.isLoading.collectAsState()
-    val summaryResult by viewModel.currentSummaryResult.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val summarizationState by viewModel.summarizationState.collectAsState()
+    val isLoading = summarizationState.isLoading
+    val summaryResult = summarizationState.summaryResult
+    val error = summarizationState.error
     val clipboard = LocalClipboard.current
     val density = LocalDensity.current
     val containerSize = LocalWindowInfo.current.containerSize

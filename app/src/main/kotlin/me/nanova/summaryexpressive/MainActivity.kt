@@ -20,12 +20,12 @@ import dagger.hilt.android.AndroidEntryPoint
 import me.nanova.summaryexpressive.ui.AppNavigation
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.AppStartAction
-import me.nanova.summaryexpressive.vm.SummaryViewModel
+import me.nanova.summaryexpressive.vm.UIViewModel
 
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val viewModel: SummaryViewModel by viewModels()
+    private val viewModel: UIViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,10 +36,9 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
 
         setContent {
-            val theme by viewModel.theme.collectAsState()
-            val dynamicColor by viewModel.dynamicColor.collectAsState()
+            val settings by viewModel.settingsUiState.collectAsState()
 
-            SummaryExpressiveTheme(theme = theme, dynamicColor = dynamicColor) {
+            SummaryExpressiveTheme(theme = settings.theme, dynamicColor = settings.dynamicColor) {
                 val navController = rememberNavController()
                 Surface(
                     modifier = Modifier.fillMaxSize(),

@@ -19,41 +19,43 @@ import me.nanova.summaryexpressive.ui.page.HistoryScreen
 import me.nanova.summaryexpressive.ui.page.HomeScreen
 import me.nanova.summaryexpressive.ui.page.OnboardingScreen
 import me.nanova.summaryexpressive.ui.page.SettingsScreen
-import me.nanova.summaryexpressive.vm.SummaryViewModel
+import me.nanova.summaryexpressive.vm.HistoryViewModel
+import me.nanova.summaryexpressive.vm.UIViewModel
+
+private fun slideIn(dir: SlideDirection): AnimatedContentTransitionScope<*>.() -> EnterTransition = {
+    slideIntoContainer(
+        animationSpec = tween(300, easing = EaseIn),
+        towards = dir
+    )
+}
+
+private fun slideOut(dir: SlideDirection): AnimatedContentTransitionScope<*>.() -> ExitTransition = {
+    slideOutOfContainer(
+        animationSpec = tween(300, easing = EaseOut),
+        towards = dir
+    )
+}
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
 ) {
-    val viewModel: SummaryViewModel = hiltViewModel()
-    val showOnboarding by viewModel.showOnboardingScreen.collectAsState()
-    val startDestination = if (showOnboarding) Nav.Onboarding else Nav.Home
-
-    fun slideIn(dir: SlideDirection): AnimatedContentTransitionScope<*>.() -> EnterTransition = {
-        slideIntoContainer(
-            animationSpec = tween(300, easing = EaseIn),
-            towards = dir
-        )
-    }
-
-    fun slideOut(dir: SlideDirection): AnimatedContentTransitionScope<*>.() -> ExitTransition = {
-        slideOutOfContainer(
-            animationSpec = tween(300, easing = EaseOut),
-            towards = dir
-        )
-    }
+    val uiViewModel: UIViewModel = hiltViewModel()
+    val settings by uiViewModel.settingsUiState.collectAsState()
+    val startDestination = if (settings.showOnboarding) Nav.Onboarding else Nav.Home
 
     NavHost(navController, startDestination = startDestination.name) {
         composable(Nav.Home.name) {
             HomeScreen(
                 modifier = Modifier,
                 navController = navController,
-                viewModel = viewModel
+                uiViewModel = uiViewModel,
+                summaryViewModel = hiltViewModel()
             )
         }
         composable(Nav.Onboarding.name) {
             OnboardingScreen(onDone = {
-                viewModel.setShowOnboardingScreenValue(false)
+                uiViewModel.setShowOnboardingScreenValue(false)
                 navController.navigate(Nav.Home.name) {
                     popUpTo(Nav.Onboarding.name) { inclusive = true }
                 }
@@ -65,7 +67,8 @@ fun AppNavigation(
             exitTransition = slideOut(SlideDirection.Start)
         ) {
             SettingsScreen(
-                navController = navController
+                navController = navController,
+                viewModel = uiViewModel
             )
         }
         composable(
@@ -73,7 +76,7 @@ fun AppNavigation(
             enterTransition = slideIn(SlideDirection.Start),
             exitTransition = slideOut(SlideDirection.End)
         ) {
-            HistoryScreen()
+            HistoryScreen(viewModel = hiltViewModel<HistoryViewModel>())
         }
     }
 }

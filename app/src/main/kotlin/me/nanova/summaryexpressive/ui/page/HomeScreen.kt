@@ -110,6 +110,7 @@ import me.nanova.summaryexpressive.model.SummaryException
 import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.component.SummaryCard
 import me.nanova.summaryexpressive.vm.SummaryViewModel
+import me.nanova.summaryexpressive.vm.UIViewModel
 
 
 private object MimeTypes {
@@ -133,7 +134,8 @@ private object MimeTypes {
 fun HomeScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    viewModel: SummaryViewModel,
+    uiViewModel: UIViewModel,
+    summaryViewModel: SummaryViewModel,
 ) {
     var urlOrText by rememberSaveable { mutableStateOf("") }
     var documentFilename by remember { mutableStateOf<String?>(null) }
@@ -141,22 +143,24 @@ fun HomeScreen(
     val focusManager = LocalFocusManager.current // Hide cursor
     val focusRequester = remember { FocusRequester() } // Show cursor after removing
 
+    val settings by uiViewModel.settingsUiState.collectAsState()
+
     fun summarize() {
         focusManager.clearFocus()
-        if (documentFilename != null) viewModel.summarize(urlOrText.toUri())
-        else viewModel.summarize(urlOrText)
+        if (documentFilename != null) summaryViewModel.summarize(urlOrText.toUri(), settings)
+        else summaryViewModel.summarize(urlOrText, settings)
     }
 
-    val appStartAction by viewModel.appStartAction.collectAsState()
+    val appStartAction by uiViewModel.appStartAction.collectAsState()
     LaunchedEffect(appStartAction) {
         appStartAction.content?.let {
-            viewModel.clearCurrentSummary()
+            summaryViewModel.clearCurrentSummary()
             documentFilename = null
             urlOrText = it
             if (appStartAction.autoTrigger) {
                 summarize()
             }
-            viewModel.onStartActionHandled()
+            uiViewModel.onStartActionHandled()
         }
     }
 
@@ -170,14 +174,17 @@ fun HomeScreen(
         stringResource(id = R.string.middle_length),
         stringResource(id = R.string.long_length)
     ) // Lengths
-    val isLoading by viewModel.isLoading.collectAsState()
-    val summaryResult by viewModel.currentSummaryResult.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val summarizationState by summaryViewModel.summarizationState.collectAsState()
+
+    val isLoading = summarizationState.isLoading
+    val summaryResult = summarizationState.summaryResult
+    val error = summarizationState.error
+    val apiKey = settings.apiKey
+    val showLength = settings.showLength
+    val summaryLength = settings.summaryLength
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val snackbarHostState = remember { SnackbarHostState() }
-    val apiKey by viewModel.apiKey.collectAsState()
-    val showLength by viewModel.showLength.collectAsState()
-    val summaryLength by viewModel.summaryLength.collectAsState()
 
     val hasResult = summaryResult?.summary?.isNotEmpty() == true
     val isDirty = showLength && (summaryResult?.let { it.length != summaryLength } ?: false)
@@ -189,7 +196,7 @@ fun HomeScreen(
             if (uri == null) return@rememberLauncherForActivityResult
 
             scope.launch {
-                viewModel.clearCurrentSummary()
+                summaryViewModel.clearCurrentSummary()
                 documentFilename = getFileName(context, uri)
                 urlOrText = uri.toString()
             }
@@ -200,7 +207,7 @@ fun HomeScreen(
             if (uri == null) return@rememberLauncherForActivityResult
 
             scope.launch {
-                viewModel.clearCurrentSummary()
+                summaryViewModel.clearCurrentSummary()
                 documentFilename = getFileName(context, uri)
                 urlOrText = uri.toString()
             }
@@ -212,7 +219,7 @@ fun HomeScreen(
             if (success) {
                 cameraImageUri?.let { uri ->
                     scope.launch {
-                        viewModel.clearCurrentSummary()
+                        summaryViewModel.clearCurrentSummary()
                         documentFilename = getFileName(context, uri)
                         urlOrText = uri.toString()
                     }
@@ -222,7 +229,7 @@ fun HomeScreen(
 
     fun clearInput() {
         urlOrText = ""
-        viewModel.clearCurrentSummary()
+        summaryViewModel.clearCurrentSummary()
         focusRequester.requestFocus()
         documentFilename = null
     }
@@ -319,7 +326,7 @@ fun HomeScreen(
                     if (showLength) {
                         LengthSelector(
                             selectedIndex = summaryLength.ordinal,
-                            onSelectedIndexChange = { viewModel.setSummaryLength(SummaryLength.entries[it]) },
+                            onSelectedIndexChange = { uiViewModel.setSummaryLength(SummaryLength.entries[it]) },
                             options = options,
                             enabled = !isLoading,
                         )

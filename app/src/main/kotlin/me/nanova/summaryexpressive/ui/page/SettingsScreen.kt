@@ -84,18 +84,10 @@ import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
-import me.nanova.summaryexpressive.vm.SummaryViewModel
+import me.nanova.summaryexpressive.vm.SettingsUiState
+import me.nanova.summaryexpressive.vm.UIViewModel
 
 
-data class SettingsState(
-    val theme: Int,
-    val apiKey: String?,
-    val apiBaseUrl: String?,
-    val model: AIProvider,
-    val useOriginalLanguage: Boolean,
-    val dynamicColor: Boolean,
-    val showLength: Boolean,
-)
 
 data class SettingsActions(
     val onThemeChange: (Int) -> Unit,
@@ -111,20 +103,12 @@ data class SettingsActions(
 @Composable
 fun SettingsScreen(
     navController: NavHostController,
-    viewModel: SummaryViewModel = hiltViewModel(),
+    viewModel: UIViewModel = hiltViewModel(),
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    val state = SettingsState(
-        theme = viewModel.theme.collectAsState().value,
-        apiKey = viewModel.apiKey.collectAsState().value,
-        apiBaseUrl = viewModel.baseUrl.collectAsState().value,
-        model = viewModel.model.collectAsState().value,
-        useOriginalLanguage = viewModel.useOriginalLanguage.collectAsState().value,
-        dynamicColor = viewModel.dynamicColor.collectAsState().value,
-        showLength = viewModel.showLength.collectAsState().value
-    )
+    val state by viewModel.settingsUiState.collectAsState()
     val actions = SettingsActions(
         onThemeChange = viewModel::setTheme,
         onApiKeyChange = viewModel::setApiKeyValue,
@@ -159,7 +143,7 @@ fun SettingsScreen(
         ModelSettingsDialog(
             onDismissRequest = { showDialogModel = false },
             initialModel = state.model,
-            initialApiBaseUrl = state.apiBaseUrl,
+            initialBaseUrl = state.baseUrl,
             onConfirm = { model, baseUrl ->
                 actions.onModelChange(model.name)
                 actions.onBaseUrlChange(baseUrl)
@@ -208,7 +192,7 @@ fun SettingsScreen(
 private fun SettingsContent(
     innerPadding: PaddingValues,
     navController: NavHostController,
-    state: SettingsState,
+    state: SettingsUiState,
     actions: SettingsActions,
     onShowDialogTheme: () -> Unit,
     onShowDialogKey: () -> Unit,
@@ -617,11 +601,11 @@ private fun ApiKeySettingsDialog(
 private fun ModelSettingsDialog(
     onDismissRequest: () -> Unit,
     initialModel: AIProvider,
-    initialApiBaseUrl: String?,
+    initialBaseUrl: String?,
     onConfirm: (model: AIProvider, baseUrl: String) -> Unit,
 ) {
     var selectedModel by remember { mutableStateOf(initialModel) }
-    var apiBaseUrlTextFieldValue by remember { mutableStateOf(initialApiBaseUrl ?: "") }
+    var baseUrlTextFieldValue by remember { mutableStateOf(initialBaseUrl ?: "") }
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
 
@@ -636,16 +620,16 @@ private fun ModelSettingsDialog(
                 if (selectedModel.isBaseUrlCustomisable) {
                     Spacer(modifier = Modifier.height(9.dp))
                     OutlinedTextField(
-                        value = apiBaseUrlTextFieldValue,
-                        onValueChange = { apiBaseUrlTextFieldValue = it },
+                        value = baseUrlTextFieldValue,
+                        onValueChange = { baseUrlTextFieldValue = it },
                         label = { Text("(Optional) Custom URL") },
                         shape = MaterialTheme.shapes.large,
                         trailingIcon = {
-                            if (apiBaseUrlTextFieldValue.isBlank()) {
+                            if (baseUrlTextFieldValue.isBlank()) {
                                 IconButton(onClick = {
                                     scope.launch {
                                         clipboard.getClipEntry()?.let {
-                                            apiBaseUrlTextFieldValue =
+                                            baseUrlTextFieldValue =
                                                 it.clipData.getItemAt(0).text.toString()
                                         }
                                     }
@@ -657,7 +641,7 @@ private fun ModelSettingsDialog(
                                     )
                                 }
                             } else {
-                                IconButton(onClick = { apiBaseUrlTextFieldValue = "" }) {
+                                IconButton(onClick = { baseUrlTextFieldValue = "" }) {
                                     Icon(
                                         Icons.Outlined.Clear,
                                         contentDescription = "Clear",
@@ -673,7 +657,7 @@ private fun ModelSettingsDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    onConfirm(selectedModel, apiBaseUrlTextFieldValue)
+                    onConfirm(selectedModel, baseUrlTextFieldValue)
                     onDismissRequest()
                 }
             ) {
@@ -765,7 +749,7 @@ private fun ModelSettingsDialogPreview() {
         ModelSettingsDialog(
             onDismissRequest = {},
             initialModel = AIProvider.OPENAI,
-            initialApiBaseUrl = "",
+            initialBaseUrl = "",
             onConfirm = { _, _ -> }
         )
     }
@@ -802,10 +786,10 @@ private fun AIProviderItemPreview() {
 private fun ScrollContentPreview() {
     SummaryExpressiveTheme {
         val navController = rememberNavController()
-        val state = SettingsState(
+        val state = SettingsUiState(
             theme = 0,
             apiKey = "test_key",
-            apiBaseUrl = "",
+            baseUrl = "",
             model = AIProvider.OPENAI,
             useOriginalLanguage = false,
             dynamicColor = true,
