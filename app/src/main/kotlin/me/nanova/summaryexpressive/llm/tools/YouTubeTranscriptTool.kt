@@ -63,7 +63,10 @@ class YouTubeTranscriptTool(client: HttpClient) : Tool<YouTubeTranscript, Extrac
             val transcript = transcriptResult.first
             ExtractedContent(details.title, details.author, transcript)
         } catch (e: Exception) {
-            ExtractedContent("Error", "System", "Error getting YouTube transcript: ${e.message}")
+            ExtractedContent(
+                error = true,
+                content = "Error getting YouTube transcript: ${e.message}"
+            )
         }
     }
 

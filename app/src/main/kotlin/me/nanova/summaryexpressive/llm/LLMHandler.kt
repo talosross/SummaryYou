@@ -5,7 +5,9 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeExecuteSingleTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
@@ -42,7 +44,19 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
     private val articleExtractorTool = ArticleExtractorTool(httpClient)
     private val youTubeTranscriptTool = YouTubeTranscriptTool(httpClient)
 
-    fun createSummarizationAgent(
+    private data class AgentConfigParams(
+        val provider: AIProvider,
+        val apiKey: String,
+        val baseUrl: String?,
+        val modelName: String?,
+        val summaryLength: SummaryLength,
+        val language: String,
+    )
+
+    private var summarizationAgent: AIAgent<String, SummaryOutput>? = null
+    private var agentConfigParams: AgentConfigParams? = null
+
+    fun getSummarizationAgent(
         provider: AIProvider,
         apiKey: String,
         baseUrl: String? = null,
@@ -50,26 +64,41 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
         summaryLength: SummaryLength = SummaryLength.MEDIUM,
         language: String,
     ): AIAgent<String, SummaryOutput> {
-        val executor = createExecutor(provider, apiKey, baseUrl)
-
-        val articleToolRegistry = ToolRegistry { tool(articleExtractorTool) }
-        val videoToolRegistry = ToolRegistry { tool(youTubeTranscriptTool) }
-        val fileToolRegistry = ToolRegistry { tool(fileExtractorTool) }
-        val tools = articleToolRegistry + videoToolRegistry + fileToolRegistry
-
-        val agentConfig = createAgentConfig(provider, modelName, summaryLength, language)
-
-        return AIAgent(
-            promptExecutor = executor,
-            strategy = createSummarizationStrategy(
-                articleExtractorTool,
-                youTubeTranscriptTool,
-                fileExtractorTool,
-                summaryLength
-            ),
-            agentConfig = agentConfig,
-            toolRegistry = tools
+        val currentParams = AgentConfigParams(
+            provider = provider,
+            apiKey = apiKey,
+            baseUrl = baseUrl,
+            modelName = modelName,
+            summaryLength = summaryLength,
+            language = language
         )
+
+        synchronized(this) {
+            if (summarizationAgent == null || agentConfigParams != currentParams) {
+                val executor = createExecutor(provider, apiKey, baseUrl)
+
+                val articleToolRegistry = ToolRegistry { tool(articleExtractorTool) }
+                val videoToolRegistry = ToolRegistry { tool(youTubeTranscriptTool) }
+                val fileToolRegistry = ToolRegistry { tool(fileExtractorTool) }
+                val tools = articleToolRegistry + videoToolRegistry + fileToolRegistry
+
+                val agentConfig = createAgentConfig(provider, modelName, summaryLength, language)
+
+                summarizationAgent = AIAgent(
+                    promptExecutor = executor,
+                    strategy = createSummarizationStrategy(
+                        articleExtractorTool,
+                        youTubeTranscriptTool,
+                        fileExtractorTool,
+                        summaryLength
+                    ),
+                    agentConfig = agentConfig,
+                    toolRegistry = tools
+                )
+                agentConfigParams = currentParams
+            }
+            return summarizationAgent!!
+        }
     }
 
     private fun createExecutor(
@@ -149,35 +178,30 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
             var preparedContentHolder: ExtractedContent? = null
             var isYoutube = false
 
-            val nodeAnalyzeInput by node<String, String>("analyze_input") { input ->
-                isYoutube = isYouTubeUrl(input)
-                input
-            }
-
-            // FIXME: the declaration of tool node should run execute manually
-            val nodeExtractArticle by node<String, ExtractedContent>("extract_article") { url ->
-                articleExtractorTool.execute(Article(url))
-            }
-
-            val nodeExtractVideo by node<String, ExtractedContent>("extract_video") { url ->
-                youTubeTranscriptTool.execute(YouTubeTranscript(url))
-            }
-
-            val nodeExtractFile by node<String, ExtractedContent>("extract_file") { uriString ->
-                fileExtractorTool.execute(File(uriString))
-            }
+            val nodeExtractArticle by nodeExecuteSingleTool(tool = articleExtractorTool)
+            val nodeExtractVideo by nodeExecuteSingleTool(tool = youTubeTranscriptTool)
+            val nodeExtractFile by nodeExecuteSingleTool(tool = fileExtractorTool)
 
             val nodePreparePlainText by node<String, ExtractedContent>("prepare_plain_text") { text ->
                 ExtractedContent("Text Input", "Unknown", text)
             }
 
-            val nodePrepareForLLM by node<ExtractedContent, String>("prepare_for_llm") { ec ->
-                if (ec.title == "Error") {
-                    ec.content
-                } else {
-                    preparedContentHolder = ec
-                    ec.content
+            val nodePrepareForLLM by node<ExtractedContent, String>("prepare_for_llm") {
+                if (it.error) {
+                    val errorContent = it.content
+                    throw when (errorContent) {
+                        SummaryException.NoInternetException.message -> SummaryException.NoInternetException
+                        SummaryException.InvalidLinkException.message -> SummaryException.InvalidLinkException
+                        SummaryException.NoTranscriptException.message -> SummaryException.NoTranscriptException
+                        SummaryException.NoContentException.message -> SummaryException.NoContentException
+                        SummaryException.TooShortException.message -> SummaryException.TooShortException
+                        SummaryException.PaywallException.message -> SummaryException.PaywallException
+                        SummaryException.TooLongException.message -> SummaryException.TooLongException
+                        else -> SummaryException.UnknownException(errorContent)
+                    }
                 }
+                preparedContentHolder = it
+                it.content
             }
 
             val nodeSummarizeText by nodeLLMRequest(
@@ -187,7 +211,7 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
 
             val nodeCombineResult by node<Message.Response, SummaryOutput>("combine_result") { response ->
                 val content = response.content
-                if (content.startsWith("Error:", ignoreCase = true)) {
+                if (content.isBlank() || content.startsWith("Error:", ignoreCase = true)) {
                     if (content.contains("API key", ignoreCase = true))
                         throw SummaryException.IncorrectKeyException
                     if (content.contains("rate limit", ignoreCase = true))
@@ -204,42 +228,42 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
                 )
             }
 
-            // TODO: improve this
-            val nodeHandleError by node<String, Any>("handle_error") { errorContent ->
-                throw when (errorContent) {
-                    SummaryException.NoInternetException.message -> SummaryException.NoInternetException
-                    SummaryException.InvalidLinkException.message -> SummaryException.InvalidLinkException
-                    SummaryException.NoTranscriptException.message -> SummaryException.NoTranscriptException
-                    SummaryException.NoContentException.message -> SummaryException.NoContentException
-                    SummaryException.TooShortException.message -> SummaryException.TooShortException
-                    SummaryException.PaywallException.message -> SummaryException.PaywallException
-                    SummaryException.TooLongException.message -> SummaryException.TooLongException
-                    else -> SummaryException.UnknownException(errorContent)
+            edge(
+                nodeStart forwardTo nodeExtractArticle
+                        onCondition { isWebUrl(it) }
+                        transformed { Article(it) }
+            )
+            edge(
+                nodeStart forwardTo nodeExtractVideo
+                        onCondition { isYouTubeUrl(it) }
+                        transformed {
+                    isYoutube = true
+                    YouTubeTranscript(it)
+                }
+            )
+            edge(
+                nodeStart forwardTo nodeExtractFile
+                        onCondition { isFileUri(it) }
+                        transformed { File(it) }
+            )
+            edge(
+                nodeStart forwardTo nodePreparePlainText
+                        onCondition { isPlainText(it) })
+
+
+            val processToolResult = { it: SafeTool.Result<out ExtractedContent> ->
+                when (it) {
+                    is SafeTool.Result.Success -> it.result
+                    is SafeTool.Result.Failure -> ExtractedContent(content = it.message)
                 }
             }
 
-            edge(nodeStart forwardTo nodeAnalyzeInput)
-
-            edge(
-                nodeAnalyzeInput forwardTo nodeExtractArticle
-                        onCondition { isWebUrl(it) })
-            edge(
-                nodeAnalyzeInput forwardTo nodeExtractVideo
-                        onCondition { isYouTubeUrl(it) })
-            edge(
-                nodeAnalyzeInput forwardTo nodeExtractFile
-                        onCondition { isFileUri(it) })
-            edge(
-                nodeAnalyzeInput forwardTo nodePreparePlainText
-                        onCondition { isPlainText(it) })
-
-            edge(nodeExtractArticle forwardTo nodePrepareForLLM)
-            edge(nodeExtractVideo forwardTo nodePrepareForLLM)
-            edge(nodeExtractFile forwardTo nodePrepareForLLM)
+            edge(nodeExtractArticle forwardTo nodePrepareForLLM transformed { processToolResult(it) })
+            edge(nodeExtractVideo forwardTo nodePrepareForLLM transformed { processToolResult(it) })
+            edge(nodeExtractFile forwardTo nodePrepareForLLM transformed { processToolResult(it) })
             edge(nodePreparePlainText forwardTo nodePrepareForLLM)
 
-            edge(nodePrepareForLLM forwardTo nodeSummarizeText onCondition { preparedContentHolder != null })
-            edge(nodePrepareForLLM forwardTo nodeHandleError onCondition { preparedContentHolder == null })
+            edge(nodePrepareForLLM forwardTo nodeSummarizeText)
 
             edge(nodeSummarizeText forwardTo nodeCombineResult)
 

@@ -27,6 +27,7 @@ fun createSummarizationPrompt(length: SummaryLength, language: String): Prompt {
             Include the main point and any conclusion if relevant.
             Do not use any headings, introductions, or metacommentary.
             No markdown formatting or special characters.
+            Better highlight the main concept or viewpoint with bulleted or numbered list.
             If you receive an error message as input, do not try to summarize it. Instead, repeat the error message back to the user verbatim.
             """.trimIndent()
             // TODO: Structure the output in well-structured markdown for readability.

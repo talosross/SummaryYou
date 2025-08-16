@@ -36,7 +36,7 @@ class ArticleExtractorTool(private val client: HttpClient) : Tool<Article, Extra
         return try {
             extractTextFromArticleUrl(args.url)
         } catch (e: Exception) {
-            ExtractedContent("Error", "System", "Error extracting article: ${e.message}")
+            ExtractedContent(error = true, content =  "Error extracting article: ${e.message}")
         }
     }
 

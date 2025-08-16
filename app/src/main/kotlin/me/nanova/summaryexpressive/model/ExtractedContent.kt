@@ -5,9 +5,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ExtractedContent(
-    val title: String,
-    val author: String,
+    val title: String = "Unknown",
+    val author: String = "Unknown",
     val content: String,
+    val error: Boolean = false
 ) : ToolResult {
     override fun toStringDefault(): String = "title: $title, author: $author, content: $content"
 }

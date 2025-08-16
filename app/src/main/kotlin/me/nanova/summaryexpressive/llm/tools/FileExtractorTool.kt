@@ -176,7 +176,7 @@ class FileExtractorTool(private val context: Context) : Tool<File, ExtractedCont
 
             ExtractedContent(filename, "File System", content)
         } catch (e: Exception) {
-            ExtractedContent("Error", "System", "Error extracting text from file: ${e.message}")
+            ExtractedContent(error = true, content =  "Error extracting text from file: ${e.message}")
         }
     }
 }

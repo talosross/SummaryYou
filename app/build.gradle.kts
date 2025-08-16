@@ -21,8 +21,8 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 17
-        versionName = "0.2.3"
+        versionCode = 18
+        versionName = "0.2.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -96,10 +96,10 @@ android {
 
 dependencies {
     // https://developer.android.com/develop/ui/compose/bom/bom-mapping
-    val composeBomVersion = "2025.07.00"
+    val composeBomVersion = "2025.08.00"
 
     // Core & Lifecycle
-    implementation("androidx.core:core-ktx:1.16.0")
+    implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")
@@ -119,7 +119,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     // Keep alpha override for material expressive features, as intended
     // https://developer.android.com/jetpack/androidx/releases/compose-material3#compose_material3_version_15_2
-    implementation("androidx.compose.material3:material3:1.5.0-alpha01")
+    implementation("androidx.compose.material3:material3:1.5.0-alpha02")
 
     // Data Persistence
     implementation("androidx.datastore:datastore-preferences:1.1.7")

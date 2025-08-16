@@ -249,7 +249,7 @@ class SummaryViewModel @Inject constructor(
             val language = if (useOriginalLanguage.value) "the same language as the content"
             else application.resources.configuration.locales[0].getDisplayLanguage(Locale.ENGLISH)
 
-            val agent = llmHandler.createSummarizationAgent(
+            val agent = llmHandler.getSummarizationAgent(
                 provider = model.value,
                 apiKey = currentApiKey,
                 baseUrl = if (model.value == AIProvider.OPENAI) baseUrl.value else null,
