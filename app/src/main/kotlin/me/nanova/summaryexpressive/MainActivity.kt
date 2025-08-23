@@ -1,7 +1,6 @@
 package me.nanova.summaryexpressive
 
 import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity

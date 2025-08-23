@@ -842,7 +842,7 @@ private fun ScrollContentPreview() {
             model = AIProvider.OPENAI,
             useOriginalLanguage = false,
             dynamicColor = true,
-            showLength = true
+            showLength = true,
         )
         val actions = SettingsActions(
             onThemeChange = {},

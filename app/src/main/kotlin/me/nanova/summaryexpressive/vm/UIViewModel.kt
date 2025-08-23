@@ -36,7 +36,7 @@ class UIViewModel @Inject constructor(
             )
         }.stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Eagerly,
             initialValue = SettingsUiState()
         )
 
@@ -63,7 +63,6 @@ class UIViewModel @Inject constructor(
     // AI-Model
     fun setModelValue(newValue: String) =
         savePreference(userPreferencesRepository::setModel, newValue)
-
 
     // OnboardingScreen
     fun setShowOnboardingScreenValue(newValue: Boolean) =

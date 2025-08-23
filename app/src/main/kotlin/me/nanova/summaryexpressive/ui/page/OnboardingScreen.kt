@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -134,7 +133,8 @@ private fun OnboardingStepPage(
                     isRotating = true,
                     modifier = Modifier.padding(bottom = 50.dp)
                 )
-            }
+            },
+            verticalArrangement = Arrangement.Center
         )
 
         1 -> OnboardingStepContent(
@@ -150,10 +150,6 @@ private fun OnboardingStepPage(
         3 -> OnboardingStepContent(
             descriptionRes = R.string.instructionsHistory,
             image = { OnboardingImage("$CDN/screen3.webp", imageLoader) },
-            actions = {
-                Spacer(modifier = Modifier.padding(top = 16.dp))
-
-            }
         )
     }
 }
@@ -174,7 +170,7 @@ private fun OnboardingImage(imageRes: String, imageLoader: ImageLoader) {
         contentScale = ContentScale.FillBounds,
         modifier = Modifier
             .clip(shape = RoundedCornerShape(20.dp))
-            .heightIn(max = 750.dp)
+            .heightIn(max = 700.dp)
     )
 }
 
@@ -183,13 +179,13 @@ private fun OnboardingStepContent(
     image: @Composable (() -> Unit)? = null,
     @StringRes titleRes: Int? = null,
     @StringRes descriptionRes: Int? = null,
-    actions: @Composable (() -> Unit)? = null,
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 20.dp, end = 20.dp, bottom = 50.dp),
-        verticalArrangement = Arrangement.Center,
+            .padding(horizontal = 20.dp, vertical = 40.dp),
+        verticalArrangement = verticalArrangement,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         image?.invoke()
@@ -198,7 +194,7 @@ private fun OnboardingStepContent(
             Text(
                 text = stringResource(id = it),
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(top = 20.dp, bottom = 5.dp)
+                modifier = Modifier.padding(top = 20.dp)
             )
         }
 
@@ -206,14 +202,12 @@ private fun OnboardingStepContent(
             Text(
                 text = stringResource(id = it),
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 15.dp)
+                    .padding(top = 20.dp)
             )
         }
-
-        actions?.invoke()
     }
 }
 

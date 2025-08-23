@@ -26,7 +26,7 @@ data class UserPreferences(
     val baseUrl: String = "",
     val apiKey: String = "",
     val model: String = AIProvider.OPENAI.name,
-    val showOnboarding: Boolean = false,
+    val showOnboarding: Boolean = true,
     val showLength: Boolean = true,
     val summaryLength: String = SummaryLength.MEDIUM.name,
 )
