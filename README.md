@@ -22,9 +22,9 @@ Compose + M3 Expressive
 ## 📱 Screenshots
 
 <div style="text-align: center;">
-  <img src="app/src/main/res/drawable/screen1.webp" alt="Screenshot 1" width="32%">
-  <img src="app/src/main/res/drawable/screen2.webp" alt="Screenshot 2" width="32%">
-  <img src="app/src/main/res/drawable/screen3.webp" alt="Screenshot 3" width="32%">
+  <img src=".github/screenshots/screen1.webp" alt="Screenshot 1" width="32%">
+  <img src=".github/screenshots/screen2.webp" alt="Screenshot 2" width="32%">
+  <img src=".github/screenshots/screen3.webp" alt="Screenshot 3" width="32%">
 </div>
 
 ## 🔗 Downloads

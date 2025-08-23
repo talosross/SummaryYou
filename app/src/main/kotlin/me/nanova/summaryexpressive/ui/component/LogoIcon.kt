@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun LogoIcon(outerBoxSize: Dp, isRotating: Boolean = false) {
+fun LogoIcon(modifier: Modifier = Modifier, size: Dp, isRotating: Boolean = false) {
     val infiniteTransition = rememberInfiniteTransition(label = "logo rotation")
     val angle by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -35,11 +35,11 @@ fun LogoIcon(outerBoxSize: Dp, isRotating: Boolean = false) {
         label = "rotation angle"
     )
 
-    val innerBoxSize = outerBoxSize / 1.6f
+    val innerBoxSize = size / 1.6f
 
     Box(
-        modifier = Modifier
-            .size(outerBoxSize)
+        modifier = modifier
+            .size(size)
             .rotate(-angle)
             .clip(MaterialShapes.VerySunny.toShape())
             .background(MaterialTheme.colorScheme.primary),
@@ -59,6 +59,6 @@ fun LogoIcon(outerBoxSize: Dp, isRotating: Boolean = false) {
 @Preview
 @Composable
 fun LogoIconPreview() {
-    LogoIcon(outerBoxSize = 250.dp)
+    LogoIcon(size = 250.dp)
 }
 

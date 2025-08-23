@@ -1,47 +1,57 @@
 package me.nanova.summaryexpressive.ui.page
 
-import androidx.compose.foundation.Image
+import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import coil.ImageLoader
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
-import coil.size.Size
+import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
+import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.component.LogoIcon
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
+    navController: NavHostController,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var step by remember { mutableIntStateOf(1) }
+    val pagerState = rememberPagerState(pageCount = { 4 })
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val imageLoader = ImageLoader.Builder(context)
         .components {
@@ -49,149 +59,184 @@ fun OnboardingScreen(
         }
         .build()
 
-    LazyColumn(
+    Box(
         modifier = modifier
             .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        item {
-            when (step) {
-                1 -> {
-                    LogoIcon(outerBoxSize = 220.dp, isRotating = true)
-                    Spacer(Modifier.height(200.dp))
-                    Text(
-                        text = stringResource(id = R.string.welcome),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 19.sp,
-                        modifier = Modifier.padding(top = 20.dp)
-                    )
-                    Text(
-                        text = stringResource(id = R.string.welcomeDescription),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 12.dp, end = 12.dp, top = 15.dp)
-                    )
-                    Row {
-                        FilledTonalButton(
-                            modifier = Modifier
-                                .padding(vertical = 18.dp),
-                            onClick = onDone
-                        ) {
-                            Text(text = stringResource(id = R.string.skip))
-                        }
-                        Spacer(modifier = Modifier.padding(start = 12.dp))
-                        Button(
-                            modifier = Modifier
-                                .padding(vertical = 18.dp),
-                            onClick = { step = 2 }
-                        ) {
-                            Text(text = stringResource(id = R.string.continueButton))
-                        }
-                    }
-                }
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            OnboardingStepPage(
+                page = page,
+                imageLoader = imageLoader,
+            )
+        }
 
-                2 -> {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            ImageRequest.Builder(context)
-                                .data(data = R.drawable.screen1)
-                                .apply(block = {
-                                    size(Size.ORIGINAL)
-                                })
-                                .build(), imageLoader = imageLoader
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(top = 60.dp, start = 40.dp, end = 40.dp, bottom = 0.dp)
-                            .clip(shape = RoundedCornerShape(20.dp)),
-                    )
-                    Text(
-                        text = stringResource(id = R.string.instruction),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 12.dp, end = 12.dp, top = 18.dp)
-                    )
-                    Button(
-                        modifier = Modifier.padding(vertical = 18.dp),
-                        onClick = { step = 3 }
-                    ) {
-                        Text(text = stringResource(id = R.string.continueButton))
-                    }
-                    Spacer(modifier = Modifier.padding(top = 18.dp))
-                }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            val isLast = pagerState.currentPage == pagerState.pageCount - 1
+            val isFirst = pagerState.currentPage == 0
 
-                3 -> {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            ImageRequest.Builder(context)
-                                .data(data = R.drawable.screen2)
-                                .apply(block = {
-                                    size(Size.ORIGINAL)
-                                })
-                                .build(), imageLoader = imageLoader
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(top = 60.dp, start = 40.dp, end = 40.dp, bottom = 0.dp)
-                            .clip(shape = RoundedCornerShape(20.dp)),
-                    )
-                    Text(
-                        text = stringResource(id = R.string.instructionsShare),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 12.dp, end = 12.dp, top = 15.dp)
-                    )
-                    Button(
-                        modifier = Modifier.padding(vertical = 18.dp),
-                        onClick = { step = 4 }
-                    ) {
-                        Text(text = stringResource(id = R.string.continueButton))
-                    }
-                    Spacer(modifier = Modifier.padding(top = 18.dp))
-                }
+            TextButton(onClick = {
+                if (isFirst) onDone()
+                else scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+            }) {
+                Text(text = if (isFirst) stringResource(id = R.string.skip) else "Previous")
+            }
 
-                4 -> {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            ImageRequest.Builder(context)
-                                .data(data = R.drawable.screen3)
-                                .apply(block = {
-                                    size(Size.ORIGINAL)
-                                })
-                                .build(), imageLoader = imageLoader
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(top = 60.dp, start = 40.dp, end = 40.dp, bottom = 0.dp)
-                            .clip(shape = RoundedCornerShape(20.dp)),
-                    )
-                    Text(
-                        text = stringResource(id = R.string.instructionsHistory),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 12.dp, end = 12.dp, top = 15.dp)
-                    )
-                    Button(
-                        modifier = Modifier
-                            .padding(vertical = 18.dp),
-                        onClick = onDone
-                    ) {
-                        Text(text = stringResource(id = R.string.finishButton))
-                    }
-                    Spacer(modifier = Modifier.padding(top = 18.dp))
+            if (isLast) {
+                Button(onClick = {
+                    onDone()
+                    navController.navigate("${Nav.Settings.name}?highlight=ai")
+                }) {
+                    Text("Setup AI")
                 }
+            }
+
+            FilledTonalButton(
+                onClick = {
+                    if (isLast) onDone()
+                    else scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+                }
+            ) {
+                Text(
+                    text = if (isLast) stringResource(id = R.string.finishButton)
+                    else "Next"
+                )
             }
         }
     }
 }
 
+const val CDN =
+    "https://cdn.jsdelivr.net/gh/kid1412621/SummaryExpressive@refs/heads/main/.github/screenshots"
+
+@Composable
+private fun OnboardingStepPage(
+    page: Int,
+    imageLoader: ImageLoader,
+) {
+
+    when (page) {
+        0 -> OnboardingStepContent(
+            titleRes = R.string.welcome,
+            descriptionRes = R.string.welcomeDescription,
+            image = {
+                LogoIcon(
+                    size = 220.dp,
+                    isRotating = true,
+                    modifier = Modifier.padding(bottom = 50.dp)
+                )
+            }
+        )
+
+        1 -> OnboardingStepContent(
+            descriptionRes = R.string.instruction,
+            image = { OnboardingImage("$CDN/screen1.webp", imageLoader) }
+        )
+
+        2 -> OnboardingStepContent(
+            descriptionRes = R.string.instructionsShare,
+            image = { OnboardingImage("$CDN/screen2.webp", imageLoader) }
+        )
+
+        3 -> OnboardingStepContent(
+            descriptionRes = R.string.instructionsHistory,
+            image = { OnboardingImage("$CDN/screen3.webp", imageLoader) },
+            actions = {
+                Spacer(modifier = Modifier.padding(top = 16.dp))
+
+            }
+        )
+    }
+}
+
+@Composable
+private fun OnboardingImage(imageRes: String, imageLoader: ImageLoader) {
+    val context = LocalContext.current
+    val placeholder = ColorPainter(Color.LightGray)
+
+    AsyncImage(
+        model = ImageRequest.Builder(context)
+            .data(imageRes)
+            .crossfade(true)
+            .build(),
+        imageLoader = imageLoader,
+        placeholder = placeholder,
+        contentDescription = null,
+        contentScale = ContentScale.FillBounds,
+        modifier = Modifier
+            .clip(shape = RoundedCornerShape(20.dp))
+            .heightIn(max = 750.dp)
+    )
+}
+
+@Composable
+private fun OnboardingStepContent(
+    image: @Composable (() -> Unit)? = null,
+    @StringRes titleRes: Int? = null,
+    @StringRes descriptionRes: Int? = null,
+    actions: @Composable (() -> Unit)? = null,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 20.dp, end = 20.dp, bottom = 50.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        image?.invoke()
+
+        titleRes?.let {
+            Text(
+                text = stringResource(id = it),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(top = 20.dp, bottom = 5.dp)
+            )
+        }
+
+        descriptionRes?.let {
+            Text(
+                text = stringResource(id = it),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 15.dp)
+            )
+        }
+
+        actions?.invoke()
+    }
+}
+
+
+@Preview
+@Composable
+fun OnboardingStepContentPreview() {
+    val context = LocalContext.current
+    val imageLoader = ImageLoader.Builder(context)
+        .components {
+            add(ImageDecoderDecoder.Factory())
+        }
+        .build()
+
+    OnboardingStepContent(
+        descriptionRes = R.string.instruction,
+        image = { OnboardingImage("$CDN/screen1.webp", imageLoader) }
+    )
+}
+
+
 @Preview
 @Composable
 fun OnboardingScreenPreview() {
-    OnboardingScreen(onDone = {})
+    OnboardingScreen(navController = rememberNavController(), onDone = {})
 }

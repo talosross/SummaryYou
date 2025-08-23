@@ -5,6 +5,11 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.Animatable
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.TweenSpec
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -52,6 +58,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,6 +84,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.BuildConfig
@@ -86,8 +94,6 @@ import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.SettingsUiState
 import me.nanova.summaryexpressive.vm.UIViewModel
-
-
 
 data class SettingsActions(
     val onThemeChange: (Int) -> Unit,
@@ -108,6 +114,8 @@ fun SettingsScreen(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val highlightSection = backStackEntry?.arguments?.getString("highlight")
     val state by viewModel.settingsUiState.collectAsState()
     val actions = SettingsActions(
         onThemeChange = viewModel::setTheme,
@@ -183,7 +191,8 @@ fun SettingsScreen(
             actions,
             onShowDialogTheme = { showDialogTheme = true },
             onShowDialogKey = { showDialogKey = true },
-            onShowDialogModel = { showDialogModel = true }
+            onShowDialogModel = { showDialogModel = true },
+            highlightSection = highlightSection
         )
     }
 }
@@ -197,13 +206,22 @@ private fun SettingsContent(
     onShowDialogTheme: () -> Unit,
     onShowDialogKey: () -> Unit,
     onShowDialogModel: () -> Unit,
+    highlightSection: String?,
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
+    val lazyListState = rememberLazyListState()
+
+    LaunchedEffect(highlightSection) {
+        if (highlightSection == "ai") {
+            lazyListState.animateScrollToItem(index = 2)
+        }
+    }
 
     LazyColumn(
+        state = lazyListState,
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
@@ -329,7 +347,7 @@ private fun SettingsContent(
         }
 
         item {
-            SettingsGroup {
+            SettingsGroup(highlighted = highlightSection == "ai") {
                 ListItem(
                     modifier = Modifier
                         .clickable(onClick = onShowDialogModel)
@@ -435,7 +453,7 @@ private fun SettingsContent(
                 val appInfo =
                     "${BuildConfig.VERSION_NAME} - ${BuildConfig.VERSION_CODE} (${BuildConfig.FLAVOR})"
                 Text(
-                    text = "Version ${appInfo}",
+                    text = "Version $appInfo",
                     modifier = Modifier
                         .clickable {
                             scope.launch {
@@ -458,15 +476,46 @@ private fun SettingsContent(
     }
 }
 
+private fun <T> inTween(): TweenSpec<T> = tween(durationMillis = 700)
+private fun <T> outTween(): TweenSpec<T> = tween(durationMillis = 1000, delayMillis = 500)
+
 @Composable
 private fun SettingsGroup(
+    modifier: Modifier = Modifier,
+    highlighted: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    val surfaceVariantColor = MaterialTheme.colorScheme.surfaceVariant
+    val secondaryContainerColor = MaterialTheme.colorScheme.secondaryContainer
+
+    val animatedColor = remember(surfaceVariantColor) { Animatable(surfaceVariantColor) }
+    val animatedBorderWidth = remember { Animatable(0f) }
+
+    LaunchedEffect(highlighted, surfaceVariantColor, secondaryContainerColor) {
+        if (highlighted) {
+            launch {
+                animatedColor.animateTo(secondaryContainerColor, animationSpec = inTween())
+                animatedColor.animateTo(surfaceVariantColor, animationSpec = outTween())
+            }
+            launch {
+                animatedBorderWidth.animateTo(3f, animationSpec = inTween())
+                animatedBorderWidth.animateTo(0f, animationSpec = outTween())
+            }
+        } else {
+            animatedColor.snapTo(surfaceVariantColor)
+            animatedBorderWidth.snapTo(0f)
+        }
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        )
+            containerColor = animatedColor.value,
+        ),
+        border = if (animatedBorderWidth.value > 0) BorderStroke(
+            animatedBorderWidth.value.dp,
+            MaterialTheme.colorScheme.secondary
+        ) else null
     ) {
         content()
     }
@@ -812,7 +861,8 @@ private fun ScrollContentPreview() {
                 actions = actions,
                 onShowDialogTheme = {},
                 onShowDialogKey = {},
-                onShowDialogModel = {}
+                onShowDialogModel = {},
+                highlightSection = null
             )
         }
     }

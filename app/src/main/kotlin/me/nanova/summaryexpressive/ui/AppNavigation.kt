@@ -13,8 +13,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import me.nanova.summaryexpressive.ui.page.HistoryScreen
 import me.nanova.summaryexpressive.ui.page.HomeScreen
 import me.nanova.summaryexpressive.ui.page.OnboardingScreen
@@ -53,24 +55,35 @@ fun AppNavigation(
                 summaryViewModel = hiltViewModel()
             )
         }
+
         composable(Nav.Onboarding.name) {
-            OnboardingScreen(onDone = {
-                uiViewModel.setShowOnboardingScreenValue(false)
-                navController.navigate(Nav.Home.name) {
-                    popUpTo(Nav.Onboarding.name) { inclusive = true }
-                }
-            })
+            OnboardingScreen(
+                onDone = {
+                    uiViewModel.setShowOnboardingScreenValue(false)
+                    navController.navigate(Nav.Home.name) {
+                        popUpTo(Nav.Onboarding.name) { inclusive = true }
+                    }
+                },
+                navController = navController,
+            )
         }
+
         composable(
-            Nav.Settings.name,
+            route = "${Nav.Settings.name}?highlight={highlight}",
             enterTransition = slideIn(SlideDirection.End),
-            exitTransition = slideOut(SlideDirection.Start)
+            exitTransition = slideOut(SlideDirection.Start),
+            arguments = listOf(navArgument("highlight") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
         ) {
             SettingsScreen(
                 navController = navController,
                 viewModel = uiViewModel
             )
         }
+
         composable(
             Nav.History.name,
             enterTransition = slideIn(SlideDirection.Start),
