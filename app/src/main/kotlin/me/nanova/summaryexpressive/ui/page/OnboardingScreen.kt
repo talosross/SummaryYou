@@ -27,6 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -158,6 +160,9 @@ private fun OnboardingStepPage(
 private fun OnboardingImage(imageRes: String, imageLoader: ImageLoader) {
     val context = LocalContext.current
     val placeholder = ColorPainter(Color.LightGray)
+    val density = LocalDensity.current
+    val containerSize = LocalWindowInfo.current.containerSize
+    val maxHeight = with(density) { (containerSize.height * 0.8f).toDp() }
 
     AsyncImage(
         model = ImageRequest.Builder(context)
@@ -170,7 +175,7 @@ private fun OnboardingImage(imageRes: String, imageLoader: ImageLoader) {
         contentScale = ContentScale.FillBounds,
         modifier = Modifier
             .clip(shape = RoundedCornerShape(20.dp))
-            .heightIn(max = 700.dp)
+            .heightIn(max = maxHeight)
     )
 }
 
@@ -184,7 +189,7 @@ private fun OnboardingStepContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 40.dp),
+            .padding(horizontal = 15.dp, vertical = 40.dp),
         verticalArrangement = verticalArrangement,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
