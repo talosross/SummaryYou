@@ -13,6 +13,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.Url
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
@@ -53,7 +54,7 @@ class YouTubeTranscriptTool(client: HttpClient) : Tool<YouTubeTranscript, Extrac
     public override suspend fun execute(args: YouTubeTranscript): ExtractedContent {
         return try {
             val videoId = YouTubeExtractor.extractVideoId(args.url)
-                ?: throw Exception("Could not extract video ID from URL.")
+                ?: throw Exception("Could not extract video ID from URL: ${args.url}")
             val detailsResult = youtubeExtractor.getVideoDetails(videoId)
                 ?: throw Exception("Could not get video details.")
             val details = detailsResult.first
@@ -101,12 +102,46 @@ private class YouTubeExtractor(private val client: HttpClient) {
         private const val INNERTUBE_CONTEXT_JSON =
             """{"client": {"clientName": "ANDROID", "clientVersion": "20.10.38"}}"""
 
-        fun extractVideoId(url: String): String? {
-            val pattern =
-                "(?<=watch\\?v=|/videos/|embed/|youtu.be/|/v/|/e/|watch\\?v%3D|watch\\?feature=player_embedded&v=|%2Fvideos%2F|embed%\u200C\u200B2F|youtu.be%2F|%2Fv%2F)[a-zA-Z0-9_-]+"
-            val compiledPattern = Pattern.compile(pattern)
-            val matcher = compiledPattern.matcher(url)
-            return if (matcher.find()) matcher.group() else null
+        fun extractVideoId(urlInput: String): String? {
+            try {
+                val urlString = if (!urlInput.matches(Regex("^https?://.*"))) {
+                    "https://$urlInput"
+                } else {
+                    urlInput
+                }
+                val url = Url(urlString)
+                val host = url.host.lowercase()
+                val pathSegments = url.segments
+
+                val vid = when {
+                    host == "youtu.be" -> pathSegments.firstOrNull()
+
+                    host.endsWith("youtube.com") -> {
+                        when (pathSegments.firstOrNull()) {
+                            "watch" -> url.parameters["v"]
+                            "live", "embed", "v", "shorts" -> pathSegments.getOrNull(1)
+                            else -> {
+                                // Fallback for URLs like youtube.com/VIDEO_ID or youtube.com/VIDEO_ID?foo=bar
+                                if (pathSegments.isNotEmpty()
+                                    && pathSegments.first().matches(Regex("[a-zA-Z0-9_-]{11}"))
+                                ) {
+                                    pathSegments.first()
+                                } else {
+                                    null
+                                }
+                            }
+                        }
+                    }
+
+                    else -> null
+                }
+
+                // Standard YouTube video IDs are 11 characters long and use alphanumeric characters, underscores, and hyphens.
+                return vid?.takeIf { it.matches(Regex("[a-zA-Z0-9_-]{11}")) }
+            } catch (e: Exception) {
+                Log.e("YouTube", "Error parsing URL to extract video ID: $urlInput", e)
+                return null
+            }
         }
 
         fun isYouTubeLink(input: String): Boolean {
