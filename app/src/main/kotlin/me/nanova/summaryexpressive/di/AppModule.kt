@@ -8,8 +8,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.serialization.kotlinx.json.json
 import me.nanova.summaryexpressive.UserPreferencesRepository
 import me.nanova.summaryexpressive.llm.LLMHandler
 import javax.inject.Singleton
@@ -40,6 +42,7 @@ object AppModule {
             install(HttpCookies) {
                 storage = AcceptAllCookiesStorage()
             }
+            install(ContentNegotiation) { json() }
         }
     }
 }

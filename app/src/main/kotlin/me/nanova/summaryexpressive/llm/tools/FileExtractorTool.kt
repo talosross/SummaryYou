@@ -151,33 +151,29 @@ class FileExtractorTool(private val context: Context) : Tool<File, ExtractedCont
     )
 
     public override suspend fun execute(args: File): ExtractedContent {
-        return try {
-            val uri = args.fileUriString.toUri()
-            val filename = getFileName(context, uri)
-            val mimeType = context.contentResolver.getType(uri)
+        val uri = args.fileUriString.toUri()
+        val filename = getFileName(context, uri)
+        val mimeType = context.contentResolver.getType(uri)
 
-            val extractor: TextExtractor? = when {
-                filename.endsWith(".pdf", ignoreCase = true) -> PdfTextExtractor
-                filename.endsWith(".docx", ignoreCase = true) -> DocxTextExtractor
-                mimeType?.startsWith("image/") == true ||
-                        filename.endsWith(".jpg", ignoreCase = true) ||
-                        filename.endsWith(".jpeg", ignoreCase = true) ||
-                        filename.endsWith(".png", ignoreCase = true)
-                    -> ImageTextExtractor
-                else -> null
-            }
-
-            val content = extractor?.extract(context, uri)
-                ?: throw Exception("Unsupported file type for URI: $uri. Mime type: $mimeType, Filename: $filename")
-
-            if (content.isBlank()) {
-                throw Exception("Extracted text from file is empty.")
-            }
-
-            ExtractedContent(filename, "File System", content)
-        } catch (e: Exception) {
-            ExtractedContent(error = true, content =  "Error extracting text from file: ${e.message}")
+        val extractor: TextExtractor? = when {
+            filename.endsWith(".pdf", ignoreCase = true) -> PdfTextExtractor
+            filename.endsWith(".docx", ignoreCase = true) -> DocxTextExtractor
+            mimeType?.startsWith("image/") == true ||
+                    filename.endsWith(".jpg", ignoreCase = true) ||
+                    filename.endsWith(".jpeg", ignoreCase = true) ||
+                    filename.endsWith(".png", ignoreCase = true)
+            -> ImageTextExtractor
+            else -> null
         }
+
+        val content = extractor?.extract(context, uri)
+            ?: throw Exception("Unsupported file type for URI: $uri. Mime type: $mimeType, Filename: $filename")
+
+        if (content.isBlank()) {
+            throw Exception("Extracted text from file is empty.")
+        }
+
+        return ExtractedContent(filename, "File System", content)
     }
 }
 

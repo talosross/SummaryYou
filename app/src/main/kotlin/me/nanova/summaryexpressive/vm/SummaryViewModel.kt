@@ -80,7 +80,7 @@ class SummaryViewModel @Inject constructor(
             val agent = llmHandler.getSummarizationAgent(
                 provider = settings.model,
                 apiKey = currentApiKey,
-                baseUrl = if (settings.model == AIProvider.OPENAI) settings.baseUrl else null,
+                baseUrl = settings.baseUrl,
                 modelName = null, // TODO: user custom model selection
                 summaryLength = settings.summaryLength,
                 language = language

@@ -9,12 +9,16 @@ import ai.koog.agents.core.dsl.extension.nodeExecuteSingleTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.google.GoogleClientSettings
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
-import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import android.content.Context
@@ -108,7 +112,8 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
     ): PromptExecutor {
         return when (provider) {
             AIProvider.OPENAI -> createOpenAIExecutor(apiKey, baseUrl)
-            AIProvider.GEMINI -> simpleGoogleAIExecutor(apiKey)
+            AIProvider.GEMINI -> createGeminiExecutor(apiKey, baseUrl)
+            AIProvider.CLAUDE -> createClaudExecutor(apiKey, baseUrl)
             AIProvider.GROQ -> createGroqExecutor(apiKey)
         }
     }
@@ -122,10 +127,13 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
         val llmModel = when (provider) {
             // FIXME
             AIProvider.OPENAI -> (modelName?.let { OpenAIModels.Chat.GPT4_1 }
-                ?: OpenAIModels.Chat.GPT4o)
+                ?: OpenAIModels.CostOptimized.GPT4oMini)
 
             AIProvider.GEMINI -> (modelName?.let { GoogleModels.Gemini2_5Pro }
                 ?: GoogleModels.Gemini2_5Flash)
+
+            AIProvider.CLAUDE -> (modelName?.let { AnthropicModels.Sonnet_4 }
+                ?: AnthropicModels.Sonnet_3_5)
 
             AIProvider.GROQ -> OpenAIModels.Chat.GPT4o
 //            (
@@ -141,14 +149,26 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
     }
 
     private fun createOpenAIExecutor(apiKey: String, baseUrl: String?): PromptExecutor {
-        val client = if (baseUrl.isNullOrBlank()) {
-            OpenAILLMClient(apiKey)
-        } else {
-            OpenAILLMClient(
-                apiKey,
-                settings = OpenAIClientSettings(baseUrl = baseUrl)
-            )
-        }
+        val client = baseUrl?.takeIf { it.isNotBlank() }
+            ?.let { OpenAILLMClient(apiKey, settings = OpenAIClientSettings(baseUrl = it)) }
+            ?: OpenAILLMClient(apiKey)
+
+        return SingleLLMPromptExecutor(client)
+    }
+
+    private fun createGeminiExecutor(apiKey: String, baseUrl: String?): PromptExecutor {
+        val client = baseUrl?.takeIf { it.isNotBlank() }
+            ?.let { GoogleLLMClient(apiKey, settings = GoogleClientSettings(baseUrl = it)) }
+            ?: GoogleLLMClient(apiKey)
+
+        return SingleLLMPromptExecutor(client)
+    }
+
+    private fun createClaudExecutor(apiKey: String, baseUrl: String?): PromptExecutor {
+        val client = baseUrl?.takeIf { it.isNotBlank() }
+            ?.let { AnthropicLLMClient(apiKey, settings = AnthropicClientSettings(baseUrl = it)) }
+            ?: AnthropicLLMClient(apiKey)
+
         return SingleLLMPromptExecutor(client)
     }
 
@@ -187,26 +207,13 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
             }
 
             val nodePrepareForLLM by node<ExtractedContent, String>("prepare_for_llm") {
-                if (it.error) {
-                    val errorContent = it.content
-                    throw when (errorContent) {
-                        SummaryException.NoInternetException.message -> SummaryException.NoInternetException
-                        SummaryException.InvalidLinkException.message -> SummaryException.InvalidLinkException
-                        SummaryException.NoTranscriptException.message -> SummaryException.NoTranscriptException
-                        SummaryException.NoContentException.message -> SummaryException.NoContentException
-                        SummaryException.TooShortException.message -> SummaryException.TooShortException
-                        SummaryException.PaywallException.message -> SummaryException.PaywallException
-                        SummaryException.TooLongException.message -> SummaryException.TooLongException
-                        else -> SummaryException.UnknownException(errorContent)
-                    }
-                }
                 preparedContentHolder = it
                 it.content
             }
 
             val nodeSummarizeText by nodeLLMRequest(
                 "summarize_extracted_text",
-                allowToolCalls = false
+                allowToolCalls = false,
             )
 
             val nodeCombineResult by node<Message.Response, SummaryOutput>("combine_result") { response ->
@@ -226,6 +233,24 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
                     isYoutubeLink = isYoutube,
                     length = summaryLength
                 )
+            }
+
+            val processToolResult = { it: SafeTool.Result<out ExtractedContent> ->
+                when (it) {
+                    is SafeTool.Result.Success -> it.result
+                    is SafeTool.Result.Failure -> {
+                        val errorMessage = it.message
+                        throw when {
+                            errorMessage.contains("Paywall detected") -> SummaryException.PaywallException
+                            errorMessage.contains("Could not extract video ID") -> SummaryException.InvalidLinkException
+                            errorMessage.contains("Could not get transcript") -> SummaryException.NoTranscriptException
+                            errorMessage.contains("Could not extract text from URL") -> SummaryException.NoContentException
+                            errorMessage.contains("Unsupported file type") -> SummaryException.InvalidLinkException // Or a more specific FileTypeException
+                            errorMessage.contains("Extracted text from file is empty") -> SummaryException.NoContentException
+                            else -> SummaryException.UnknownException(errorMessage)
+                        }
+                    }
+                }
             }
 
             edge(
@@ -249,14 +274,6 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
             edge(
                 nodeStart forwardTo nodePreparePlainText
                         onCondition { isPlainText(it) })
-
-
-            val processToolResult = { it: SafeTool.Result<out ExtractedContent> ->
-                when (it) {
-                    is SafeTool.Result.Success -> it.result
-                    is SafeTool.Result.Failure -> ExtractedContent(content = it.message)
-                }
-            }
 
             edge(nodeExtractArticle forwardTo nodePrepareForLLM transformed { processToolResult(it) })
             edge(nodeExtractVideo forwardTo nodePrepareForLLM transformed { processToolResult(it) })

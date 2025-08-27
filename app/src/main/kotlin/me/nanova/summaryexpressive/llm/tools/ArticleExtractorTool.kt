@@ -33,11 +33,7 @@ class ArticleExtractorTool(private val client: HttpClient) : Tool<Article, Extra
     )
 
     public override suspend fun execute(args: Article): ExtractedContent {
-        return try {
-            extractTextFromArticleUrl(args.url)
-        } catch (e: Exception) {
-            ExtractedContent(error = true, content =  "Error extracting article: ${e.message}")
-        }
+        return extractTextFromArticleUrl(args.url)
     }
 
     private suspend fun fetchUrlContent(url: String): String {

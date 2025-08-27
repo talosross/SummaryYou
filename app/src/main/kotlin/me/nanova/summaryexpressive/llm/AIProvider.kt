@@ -2,10 +2,11 @@ package me.nanova.summaryexpressive.llm
 
 import me.nanova.summaryexpressive.R
 
-enum class AIProvider(val displayName: String, val isBaseUrlCustomisable: Boolean, val icon: Int) {
-    GEMINI("Gemini", false, R.drawable.gemini),
+enum class AIProvider(val displayName: String, val isBaseUrlCustomisable: Boolean, val icon: Int, val enabled: Boolean = true) {
     OPENAI("OpenAI", true, R.drawable.chatgpt),
+    GEMINI("Gemini", true, R.drawable.gemini),
+    CLAUDE("Anthropic", true, R.drawable.claude),
 
-    // fixme
-    GROQ("groq", false, R.drawable.chatgpt)
+    // TODO
+    GROQ("groq", false, R.drawable.chatgpt, false)
 }

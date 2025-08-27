@@ -48,6 +48,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -173,7 +174,7 @@ fun SettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Go Back"
@@ -663,7 +664,7 @@ private fun ModelSettingsDialog(
         title = { Text(stringResource(id = R.string.setModel)) },
         text = {
             Column {
-                AIProvider.entries.filter { it != AIProvider.GROQ }.map {
+                AIProvider.entries.filter { it.enabled }.map {
                     AIProviderItem(it, selected = (selectedModel == it)) { selectedModel = it }
                 }
                 if (selectedModel.isBaseUrlCustomisable) {
@@ -757,8 +758,9 @@ private fun AIProviderItem(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = llm.icon),
+                tint = if (selected) Color.Unspecified else LocalContentColor.current,
                 contentDescription = "${llm.displayName} icon",
-                Modifier.size(16.dp)
+                modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = llm.displayName, style = MaterialTheme.typography.bodyLarge)
@@ -824,8 +826,8 @@ private fun RadioButtonItemPreview() {
 private fun AIProviderItemPreview() {
     SummaryExpressiveTheme {
         Column(modifier = Modifier.padding(16.dp)) {
-            AIProviderItem(AIProvider.OPENAI, selected = true) {}
-            AIProviderItem(AIProvider.GEMINI, selected = false) {}
+            AIProvider.entries.filter { it.enabled }
+                .map { AIProviderItem(it, selected = it == AIProvider.GEMINI) {} }
         }
     }
 }

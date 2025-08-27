@@ -52,23 +52,16 @@ class YouTubeTranscriptTool(client: HttpClient) : Tool<YouTubeTranscript, Extrac
     )
 
     public override suspend fun execute(args: YouTubeTranscript): ExtractedContent {
-        return try {
-            val videoId = YouTubeExtractor.extractVideoId(args.url)
-                ?: throw Exception("Could not extract video ID from URL: ${args.url}")
-            val detailsResult = youtubeExtractor.getVideoDetails(videoId)
-                ?: throw Exception("Could not get video details.")
-            val details = detailsResult.first
-            val playerResponse = detailsResult.second
-            val transcriptResult = youtubeExtractor.getTranscript(videoId, playerResponse)
-                ?: throw Exception("Could not get transcript.")
-            val transcript = transcriptResult.first
-            ExtractedContent(details.title, details.author, transcript)
-        } catch (e: Exception) {
-            ExtractedContent(
-                error = true,
-                content = "Error getting YouTube transcript: ${e.message}"
-            )
-        }
+        val videoId = YouTubeExtractor.extractVideoId(args.url)
+            ?: throw Exception("Could not extract video ID from URL: ${args.url}")
+        val detailsResult = youtubeExtractor.getVideoDetails(videoId)
+            ?: throw Exception("Could not get video details.")
+        val details = detailsResult.first
+        val playerResponse = detailsResult.second
+        val transcriptResult = youtubeExtractor.getTranscript(videoId, playerResponse)
+            ?: throw Exception("Could not get transcript.")
+        val transcript = transcriptResult.first
+        return ExtractedContent(details.title, details.author, transcript)
     }
 
     companion object {
@@ -151,7 +144,7 @@ private class YouTubeExtractor(private val client: HttpClient) {
                 } else {
                     input
                 }
-                val url = io.ktor.http.Url(urlString)
+                val url = Url(urlString)
                 val host = url.host.lowercase()
                 // Valid hosts: youtu.be, youtube.com, or any subdomain of youtube.com (e.g., www.youtube.com, m.youtube.com)
                 return host == "youtu.be" || host == "youtube.com" || host.endsWith(".youtube.com")
