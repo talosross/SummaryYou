@@ -43,22 +43,10 @@ data class SummaryOutput(
     val length: SummaryLength
 ) : SummaryData
 
-class LLMHandler(private val context: Context, httpClient: HttpClient) {
+class LLMHandler(context: Context, httpClient: HttpClient) {
     private val fileExtractorTool: FileExtractorTool = FileExtractorTool(context)
     private val articleExtractorTool = ArticleExtractorTool(httpClient)
     private val youTubeTranscriptTool = YouTubeTranscriptTool(httpClient)
-
-    private data class AgentConfigParams(
-        val provider: AIProvider,
-        val apiKey: String,
-        val baseUrl: String?,
-        val modelName: String?,
-        val summaryLength: SummaryLength,
-        val language: String,
-    )
-
-    private var summarizationAgent: AIAgent<String, SummaryOutput>? = null
-    private var agentConfigParams: AgentConfigParams? = null
 
     fun getSummarizationAgent(
         provider: AIProvider,
@@ -68,41 +56,26 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
         summaryLength: SummaryLength = SummaryLength.MEDIUM,
         language: String,
     ): AIAgent<String, SummaryOutput> {
-        val currentParams = AgentConfigParams(
-            provider = provider,
-            apiKey = apiKey,
-            baseUrl = baseUrl,
-            modelName = modelName,
-            summaryLength = summaryLength,
-            language = language
+        val executor = createExecutor(provider, apiKey, baseUrl)
+
+        val articleToolRegistry = ToolRegistry { tool(articleExtractorTool) }
+        val videoToolRegistry = ToolRegistry { tool(youTubeTranscriptTool) }
+        val fileToolRegistry = ToolRegistry { tool(fileExtractorTool) }
+        val tools = articleToolRegistry + videoToolRegistry + fileToolRegistry
+
+        val agentConfig = createAgentConfig(provider, modelName, summaryLength, language)
+
+        return AIAgent(
+            promptExecutor = executor,
+            strategy = createSummarizationStrategy(
+                articleExtractorTool,
+                youTubeTranscriptTool,
+                fileExtractorTool,
+                summaryLength
+            ),
+            agentConfig = agentConfig,
+            toolRegistry = tools
         )
-
-        synchronized(this) {
-            if (summarizationAgent == null || agentConfigParams != currentParams) {
-                val executor = createExecutor(provider, apiKey, baseUrl)
-
-                val articleToolRegistry = ToolRegistry { tool(articleExtractorTool) }
-                val videoToolRegistry = ToolRegistry { tool(youTubeTranscriptTool) }
-                val fileToolRegistry = ToolRegistry { tool(fileExtractorTool) }
-                val tools = articleToolRegistry + videoToolRegistry + fileToolRegistry
-
-                val agentConfig = createAgentConfig(provider, modelName, summaryLength, language)
-
-                summarizationAgent = AIAgent(
-                    promptExecutor = executor,
-                    strategy = createSummarizationStrategy(
-                        articleExtractorTool,
-                        youTubeTranscriptTool,
-                        fileExtractorTool,
-                        summaryLength
-                    ),
-                    agentConfig = agentConfig,
-                    toolRegistry = tools
-                )
-                agentConfigParams = currentParams
-            }
-            return summarizationAgent!!
-        }
     }
 
     private fun createExecutor(
@@ -195,7 +168,7 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
     ): AIAgentStrategy<String, SummaryOutput> =
         strategy("summarization_router_strategy")
         {
-            var preparedContentHolder: ExtractedContent? = null
+            var extractedContent: ExtractedContent? = null
             var isYoutube = false
 
             val nodeExtractArticle by nodeExecuteSingleTool(tool = articleExtractorTool)
@@ -207,7 +180,7 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
             }
 
             val nodePrepareForLLM by node<ExtractedContent, String>("prepare_for_llm") {
-                preparedContentHolder = it
+                extractedContent = it
                 it.content
             }
 
@@ -225,10 +198,10 @@ class LLMHandler(private val context: Context, httpClient: HttpClient) {
                         throw SummaryException.RateLimitException
                     throw SummaryException.UnknownException(content)
                 }
-                val pc = preparedContentHolder!!
+                val ec = extractedContent!!
                 SummaryOutput(
-                    title = pc.title,
-                    author = pc.author,
+                    title = ec.title,
+                    author = ec.author,
                     summary = content,
                     isYoutubeLink = isYoutube,
                     length = summaryLength
