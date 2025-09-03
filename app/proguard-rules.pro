@@ -21,7 +21,7 @@
 #-renamesourcefileattribute SourceFile
 -keepattributes Signature
 
-#-keep class ai.koog.** { *; }
+-keep class ai.koog.** { *; }
 
 -keep class io.ktor.client.engine.android.** { *; }
 -keep class io.ktor.client.plugins.contentnegotiation.** { *; }

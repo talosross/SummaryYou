@@ -179,15 +179,35 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
                 ExtractedContent("Text Input", "Unknown", text)
             }
 
-            val nodePrepareForLLM by node<ExtractedContent, String>("prepare_for_llm") {
+            // TODO: this is not necessary if the compress history is working
+            // see: https://github.com/JetBrains/koog/issues/706
+            val nodeTriggerSummaryFromTool by node<ExtractedContent, String>("trigger_summary_from_tool") {
                 extractedContent = it
-                it.content
+                "Content has been extracted. Please summarize it based on the instructions."
             }
 
             val nodeSummarizeText by nodeLLMRequest(
                 "summarize_extracted_text",
                 allowToolCalls = false,
             )
+
+            val processToolResult = { it: SafeTool.Result<out ExtractedContent> ->
+                when (it) {
+                    is SafeTool.Result.Success -> it.result
+                    is SafeTool.Result.Failure -> {
+                        val errorMessage = it.message
+                        throw when {
+                            errorMessage.contains("Paywall detected") -> SummaryException.PaywallException
+                            errorMessage.contains("Could not extract video ID") -> SummaryException.InvalidLinkException
+                            errorMessage.contains("Could not get transcript") -> SummaryException.NoTranscriptException
+                            errorMessage.contains("Could not extract text from URL") -> SummaryException.NoContentException
+                            errorMessage.contains("Unsupported file type") -> SummaryException.InvalidLinkException // Or a more specific FileTypeException
+                            errorMessage.contains("Extracted text from file is empty") -> SummaryException.NoContentException
+                            else -> SummaryException.UnknownException(errorMessage)
+                        }
+                    }
+                }
+            }
 
             val nodeCombineResult by node<Message.Response, SummaryOutput>("combine_result") { response ->
                 val content = response.content
@@ -206,24 +226,6 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
                     isYoutubeLink = isYoutube,
                     length = summaryLength
                 )
-            }
-
-            val processToolResult = { it: SafeTool.Result<out ExtractedContent> ->
-                when (it) {
-                    is SafeTool.Result.Success -> it.result
-                    is SafeTool.Result.Failure -> {
-                        val errorMessage = it.message
-                        throw when {
-                            errorMessage.contains("Paywall detected") -> SummaryException.PaywallException
-                            errorMessage.contains("Could not extract video ID") -> SummaryException.InvalidLinkException
-                            errorMessage.contains("Could not get transcript") -> SummaryException.NoTranscriptException
-                            errorMessage.contains("Could not extract text from URL") -> SummaryException.NoContentException
-                            errorMessage.contains("Unsupported file type") -> SummaryException.InvalidLinkException // Or a more specific FileTypeException
-                            errorMessage.contains("Extracted text from file is empty") -> SummaryException.NoContentException
-                            else -> SummaryException.UnknownException(errorMessage)
-                        }
-                    }
-                }
             }
 
             edge(
@@ -248,12 +250,17 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
                 nodeStart forwardTo nodePreparePlainText
                         onCondition { isPlainText(it) })
 
-            edge(nodeExtractArticle forwardTo nodePrepareForLLM transformed { processToolResult(it) })
-            edge(nodeExtractVideo forwardTo nodePrepareForLLM transformed { processToolResult(it) })
-            edge(nodeExtractFile forwardTo nodePrepareForLLM transformed { processToolResult(it) })
-            edge(nodePreparePlainText forwardTo nodePrepareForLLM)
+            // Tool-based paths
+            edge(nodeExtractArticle forwardTo nodeTriggerSummaryFromTool transformed { processToolResult(it) })
+            edge(nodeExtractVideo forwardTo nodeTriggerSummaryFromTool transformed { processToolResult(it) })
+            edge(nodeExtractFile forwardTo nodeTriggerSummaryFromTool transformed { processToolResult(it) })
+            edge(nodeTriggerSummaryFromTool forwardTo nodeSummarizeText)
 
-            edge(nodePrepareForLLM forwardTo nodeSummarizeText)
+            // Plain text path
+            edge(nodePreparePlainText forwardTo nodeSummarizeText transformed {
+                extractedContent = it
+                it.content
+            })
 
             edge(nodeSummarizeText forwardTo nodeCombineResult)
 
