@@ -20,15 +20,12 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 -keepattributes Signature
--keep class com.google.gson.reflect.TypeToken { *; }
--keep class * extends com.google.gson.reflect.TypeToken
 
--keep class ai.koog.** { *; }
+#-keep class ai.koog.** { *; }
 
 -keep class io.ktor.client.engine.android.** { *; }
 -keep class io.ktor.client.plugins.contentnegotiation.** { *; }
--keep class io.ktor.serialization.gson.** { *; }
--keep class com.google.gson.Gson
+-keep class io.ktor.serialization.kotlinx.** { *; }
 
 # Ktor and its dependencies (Netty, Reactor, etc.) have optional references
 # to classes not present in Android. We must tell R8 not to warn about them.
@@ -43,8 +40,5 @@
 -dontwarn org.eclipse.jetty.**
 -dontwarn reactor.blockhound.integration.BlockHoundIntegration
 -dontwarn java.lang.management.**
-
-# Keep data classes used by Gson for YouTube API parsing
--keep class me.nanova.summaryexpressive.llm.VideoDetails { *; }
--keep class me.nanova.summaryexpressive.llm.CaptionTrack { *; }
--keep class me.nanova.summaryexpressive.llm.CaptionTrack$* { *; }
+-dontwarn com.fasterxml.jackson.core.JsonFactory
+-dontwarn com.fasterxml.jackson.core.JsonGenerator

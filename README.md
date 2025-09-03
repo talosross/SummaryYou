@@ -52,12 +52,12 @@ package previously.
 
 - Summarize multiple media types
 
-| media        | supported types                         |
-|--------------|-----------------------------------------|
-| Video (Link) | Youtube, BiliBili (Planed)              |
-| Document     | MS Word, PDF (very long content planed) |
-| Image        | Jpg, Png, Webp (Latin only for now)     |
-| Text         | Article link, Plain text                |
+| media        | supported types                          |
+|--------------|------------------------------------------|
+| Video (Link) | Youtube, BiliBili (Planed)               |
+| Document     | MS Word, PDF (very long contents planed) |
+| Image        | Jpg, Png, Webp (Latin only for now)      |
+| Text         | Article link, Plain text                 |
 
 - Multiple LLM models supported
 
@@ -66,7 +66,7 @@ package previously.
 | OpenAI      | TBD    |
 | Gemini      | TBD    |
 | Gemini nano | Planed |
-| Claude      | Planed |
+| Claude      | TBD    |
 
 - [Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) style UI, with
   dynamic color theme.
