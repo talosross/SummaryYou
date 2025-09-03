@@ -39,8 +39,10 @@ data class SummaryOutput(
     override val title: String,
     override val author: String,
     override val summary: String,
+    val sourceLink: String? = null,
+    // TODO: just use SummarySource
     val isYoutubeLink: Boolean,
-    val length: SummaryLength
+    val length: SummaryLength,
 ) : SummaryData
 
 class LLMHandler(context: Context, httpClient: HttpClient) {
@@ -170,6 +172,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         {
             var extractedContent: ExtractedContent? = null
             var isYoutube = false
+            var sourceLink = ""
 
             val nodeExtractArticle by nodeExecuteSingleTool(tool = articleExtractorTool)
             val nodeExtractVideo by nodeExecuteSingleTool(tool = youTubeTranscriptTool)
@@ -223,6 +226,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
                     title = ec.title,
                     author = ec.author,
                     summary = content,
+                    sourceLink = sourceLink,
                     isYoutubeLink = isYoutube,
                     length = summaryLength
                 )
@@ -231,13 +235,17 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
             edge(
                 nodeStart forwardTo nodeExtractArticle
                         onCondition { isWebUrl(it) }
-                        transformed { Article(it) }
+                        transformed {
+                    sourceLink = it
+                    Article(it)
+                }
             )
             edge(
                 nodeStart forwardTo nodeExtractVideo
                         onCondition { isYouTubeUrl(it) }
                         transformed {
                     isYoutube = true
+                    sourceLink = it
                     YouTubeTranscript(it)
                 }
             )

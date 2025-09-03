@@ -119,6 +119,7 @@ fun HistoryScreen(
                                 title = it.title,
                                 summary = it.summary,
                                 author = it.author,
+                                sourceLink = it.sourceLink,
                                 isYoutubeLink = it.isYoutubeLink,
                                 length = it.length
                             ),

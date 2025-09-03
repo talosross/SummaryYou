@@ -62,4 +62,6 @@
     <string name="shortcut_summarize_clipboard_short">Clipboard</string>
     <string name="shortcut_summarize_clipboard_long">Summarize from clipboard</string>
     <string name="instant_summarize">Instant Summarize</string>
+    <string name="discord">Discord Group</string>
+    <string name="discordDescription">Join our community</string>
 </resources>

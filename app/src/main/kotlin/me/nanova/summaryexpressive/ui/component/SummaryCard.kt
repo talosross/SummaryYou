@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.PauseCircleFilled
 import androidx.compose.material.icons.outlined.PlayCircleFilled
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -44,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.SummaryLength
@@ -105,7 +107,7 @@ fun SummaryCard(
                     bottom = 12.dp
                 )
         )
-        SummaryActionButtons(summary = summary.summary, onShowSnackbar = onShowSnackbar)
+        SummaryActionButtons(summary = summary, onShowSnackbar = onShowSnackbar)
     }
 }
 
@@ -127,10 +129,14 @@ fun SummaryCardPreview() {
 
 
 @Composable
-private fun SummaryActionButtons(summary: String?, onShowSnackbar: (String) -> Unit) {
+private fun SummaryActionButtons(
+    summary: SummaryOutput,
+    onShowSnackbar: (String) -> Unit,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
+    val summaryText = summary.summary
 
     var tts: TextToSpeech? by remember { mutableStateOf(null) }
     var isSpeaking by remember { mutableStateOf(false) }
@@ -181,8 +187,8 @@ private fun SummaryActionButtons(summary: String?, onShowSnackbar: (String) -> U
         }
         tts = textToSpeech
         onDispose {
-            textToSpeech?.stop()
-            textToSpeech?.shutdown()
+            textToSpeech.stop()
+            textToSpeech.shutdown()
         }
     }
 
@@ -194,10 +200,10 @@ private fun SummaryActionButtons(summary: String?, onShowSnackbar: (String) -> U
                     isSpeaking = false
                     isPaused = false
                     currentPosition = 0
-                } else if (!summary.isNullOrEmpty()) {
+                } else if (summaryText.isNotEmpty()) {
                     utteranceId = UUID.randomUUID().toString()
                     tts?.speak(
-                        summary,
+                        summaryText,
                         TextToSpeech.QUEUE_FLUSH,
                         null,
                         utteranceId
@@ -218,7 +224,7 @@ private fun SummaryActionButtons(summary: String?, onShowSnackbar: (String) -> U
                 onClick = {
                     if (isPaused) {
                         val remainingText =
-                            summary?.substring(currentPosition).orEmpty()
+                            summaryText.substring(currentPosition)
                         utteranceId =
                             UUID.randomUUID().toString()
                         tts?.speak(
@@ -244,13 +250,30 @@ private fun SummaryActionButtons(summary: String?, onShowSnackbar: (String) -> U
 
         Spacer(modifier = Modifier.weight(1f))
 
+        summary.sourceLink?.let {
+            if (it.isNotEmpty()) {
+                IconButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, it.toUri())
+                        context.startActivity(intent)
+                    }
+                ) {
+                    Icon(
+                        Icons.Rounded.Link,
+                        contentDescription = "Original Link",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+
         IconButton(
             onClick = {
                 scope.launch {
                     clipboard.setClipEntry(
                         ClipData.newPlainText(
                             "User Input",
-                            summary
+                            summaryText
                         ).toClipEntry()
                     )
                     onShowSnackbar(copied)
@@ -270,7 +293,7 @@ private fun SummaryActionButtons(summary: String?, onShowSnackbar: (String) -> U
                     type = "text/plain"
                     putExtra(
                         Intent.EXTRA_TEXT,
-                        summary
+                        summaryText
                     )
                 }
                 val chooserIntent =
@@ -290,6 +313,13 @@ private fun SummaryActionButtons(summary: String?, onShowSnackbar: (String) -> U
 @Preview
 @Composable
 fun SummaryActionButtonsPreview() {
-    val summary = "This is a sample summary for preview purposes."
+    val summary = SummaryOutput(
+        title = "Sample Title",
+        author = "Sample Author",
+        summary = "This is a sample summary for preview purposes. It should be long enough to test the TTS functionality and also the layout of the card.",
+        sourceLink = "https://xxx.yyy",
+        isYoutubeLink = true,
+        length = SummaryLength.SHORT
+    )
     SummaryActionButtons(summary = summary, onShowSnackbar = {})
 }

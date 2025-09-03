@@ -10,13 +10,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import me.nanova.summaryexpressive.UserPreferencesRepository
-import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.llm.LLMHandler
 import me.nanova.summaryexpressive.llm.SummaryLength
 import me.nanova.summaryexpressive.llm.SummaryOutput
@@ -136,19 +135,16 @@ class SummaryViewModel @Inject constructor(
                 title = summaryOutput.title,
                 author = summaryOutput.author,
                 summary = summaryOutput.summary.trim(),
+                sourceLink = summaryOutput.sourceLink,
                 isYoutubeLink = summaryOutput.isYoutubeLink,
                 length = summaryLength,
                 createdOn = System.currentTimeMillis()
             )
             if (summary.summary.isNotBlank() && summary.summary != "invalid link") {
                 val currentSummariesJson = userPreferencesRepository.getTextSummaries().first()
-                val summaries = if (currentSummariesJson.isNotEmpty()) {
-                    kotlin.runCatching { Json.decodeFromString<List<HistorySummary>>(currentSummariesJson) }.getOrDefault(
-                        emptyList()
-                    )
-                } else {
-                    emptyList()
-                }
+                val summaries = kotlin.runCatching {
+                    Json.decodeFromString<List<HistorySummary>>(currentSummariesJson)
+                }.getOrDefault(emptyList())
                 val updatedSummaries = listOf(summary) + summaries
                 val updatedSummariesJson = Json.encodeToString(updatedSummaries)
                 userPreferencesRepository.setTextSummaries(updatedSummariesJson)

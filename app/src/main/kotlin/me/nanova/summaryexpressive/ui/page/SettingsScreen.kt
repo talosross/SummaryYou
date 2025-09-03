@@ -404,26 +404,6 @@ private fun SettingsContent(
                 ListItem(
                     modifier = Modifier
                         .clickable {
-                            val url = "https://github.com/kid1412621/SummaryExpressive"
-                            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                            context.startActivity(intent)
-                        }
-                        .fillMaxWidth(),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.repository)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Default.Info,
-                            contentDescription = "Codebase",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    supportingContent = { Text(stringResource(id = R.string.githubDescription)) },
-                )
-
-                ListItem(
-                    modifier = Modifier
-                        .clickable {
                             val url =
                                 "https://play.google.com/store/apps/details?id=me.nanova.SummaryExpressive"
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
@@ -440,6 +420,46 @@ private fun SettingsContent(
                         )
                     },
                     supportingContent = { Text(stringResource(id = R.string.googlePlayDescription)) },
+                )
+
+                ListItem(
+                    modifier = Modifier
+                        .clickable {
+                            val url = "https://discord.gg/WjN73wKTqd"
+                            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                            context.startActivity(intent)
+                        }
+                        .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    headlineContent = { Text(stringResource(id = R.string.discord)) },
+                    leadingContent = {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.discord),
+                            contentDescription = "Discord",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    supportingContent = { Text(stringResource(id = R.string.discordDescription)) },
+                )
+
+                ListItem(
+                    modifier = Modifier
+                        .clickable {
+                            val url = "https://github.com/kid1412621/SummaryExpressive"
+                            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                            context.startActivity(intent)
+                        }
+                        .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    headlineContent = { Text(stringResource(id = R.string.repository)) },
+                    leadingContent = {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.github),
+                            contentDescription = "Codebase",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    supportingContent = { Text(stringResource(id = R.string.githubDescription)) },
                 )
             }
         }
@@ -467,7 +487,7 @@ private fun SettingsContent(
                     text = stringResource(id = R.string.madeBy),
                     modifier = Modifier
                         .clickable {
-                            val url = "https://github.com/kid1412621"
+                            val url = "https://nanova.me"
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             context.startActivity(intent)
                         }
