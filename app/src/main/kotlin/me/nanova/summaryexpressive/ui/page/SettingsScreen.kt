@@ -30,11 +30,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.HelpCenter
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Link // Added for Auto Extract URL
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Translate
@@ -104,6 +104,7 @@ data class SettingsActions(
     val onUseOriginalLanguageChange: (Boolean) -> Unit,
     val onDynamicColorChange: (Boolean) -> Unit,
     val onShowLengthChange: (Boolean) -> Unit,
+    val onAutoExtractUrlChange: (Boolean) -> Unit,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,16 +122,18 @@ fun SettingsScreen(
     val actions = SettingsActions(
         onThemeChange = viewModel::setTheme,
         onApiKeyChange = viewModel::setApiKeyValue,
-        onModelChange = viewModel::setModelValue,
+        onModelChange = viewModel::setAIProviderValue,
         onBaseUrlChange = viewModel::setBaseUrlValue,
         onUseOriginalLanguageChange = viewModel::setUseOriginalLanguageValue,
         onDynamicColorChange = viewModel::setDynamicColorValue,
-        onShowLengthChange = viewModel::setShowLengthValue
+        onShowLengthChange = viewModel::setShowLengthValue,
+        onAutoExtractUrlChange = viewModel::setAutoExtractUrlValue
     )
 
     var showDialogTheme by remember { mutableStateOf(false) }
-    var showDialogKey by remember { mutableStateOf(false) }
-    var showDialogModel by remember { mutableStateOf(false) }
+    var showAIProviderDialog by remember { mutableStateOf(false) }
+    var showModelDialog by remember { mutableStateOf(false) }
+    var showApiKeyDialog by remember { mutableStateOf(false) }
 
     if (showDialogTheme) {
         ThemeSettingsDialog(
@@ -140,23 +143,27 @@ fun SettingsScreen(
         )
     }
 
-    if (showDialogKey) {
-        ApiKeySettingsDialog(
-            onDismissRequest = { showDialogKey = false },
-            currentApiKey = state.apiKey,
-            onApiKeyChange = actions.onApiKeyChange
-        )
-    }
-
-    if (showDialogModel) {
+    if (showAIProviderDialog) {
         ModelSettingsDialog(
-            onDismissRequest = { showDialogModel = false },
-            initialModel = state.model,
+            onDismissRequest = { showAIProviderDialog = false },
+            initialModel = state.aiProvider,
             initialBaseUrl = state.baseUrl,
             onConfirm = { model, baseUrl ->
                 actions.onModelChange(model.name)
                 actions.onBaseUrlChange(baseUrl)
             }
+        )
+    }
+
+    if (showModelDialog) {
+        TODO()
+    }
+
+    if (showApiKeyDialog) {
+        ApiKeySettingsDialog(
+            onDismissRequest = { showApiKeyDialog = false },
+            currentApiKey = state.apiKey,
+            onApiKeyChange = actions.onApiKeyChange
         )
     }
 
@@ -190,9 +197,10 @@ fun SettingsScreen(
             navController,
             state,
             actions,
-            onShowDialogTheme = { showDialogTheme = true },
-            onShowDialogKey = { showDialogKey = true },
-            onShowDialogModel = { showDialogModel = true },
+            onShowThemeDialog = { showDialogTheme = true },
+            onShowAIProviderDialog = { showAIProviderDialog = true },
+            onShowModelDialog = { showModelDialog = true },
+            onShowApiKeyDialog = { showApiKeyDialog = true },
             highlightSection = highlightSection
         )
     }
@@ -204,9 +212,10 @@ private fun SettingsContent(
     navController: NavHostController,
     state: SettingsUiState,
     actions: SettingsActions,
-    onShowDialogTheme: () -> Unit,
-    onShowDialogKey: () -> Unit,
-    onShowDialogModel: () -> Unit,
+    onShowThemeDialog: () -> Unit,
+    onShowAIProviderDialog: () -> Unit,
+    onShowModelDialog: () -> Unit,
+    onShowApiKeyDialog: () -> Unit,
     highlightSection: String?,
 ) {
     val context = LocalContext.current
@@ -217,7 +226,7 @@ private fun SettingsContent(
 
     LaunchedEffect(highlightSection) {
         if (highlightSection == "ai") {
-            lazyListState.animateScrollToItem(index = 2)
+            lazyListState.animateScrollToItem(index = 2) // Adjust index if new items are added before this group
         }
     }
 
@@ -253,34 +262,8 @@ private fun SettingsContent(
                 )
 
                 ListItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.useOriginalLanguage)) },
-                    supportingContent = { Text(stringResource(id = R.string.useOriginalLanguageDescription)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.Translate,
-                            contentDescription = "Language Settings",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = state.useOriginalLanguage,
-                            onCheckedChange = { newValue ->
-                                actions.onUseOriginalLanguageChange(newValue)
-                            }
-                        )
-                    }
-                )
-            }
-        }
-
-        item {
-            SettingsGroup {
-                ListItem(
                     modifier = Modifier
-                        .clickable(onClick = onShowDialogTheme)
+                        .clickable(onClick = onShowThemeDialog)
                         .fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.theme)) },
@@ -324,6 +307,68 @@ private fun SettingsContent(
                         )
                     }
                 )
+            }
+        }
+
+        item {
+            SettingsGroup(highlighted = highlightSection == "ai") {
+                ListItem(
+                    modifier = Modifier
+                        .clickable(onClick = onShowAIProviderDialog)
+                        .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    headlineContent = { Text(stringResource(id = R.string.setModel)) },
+                    supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
+                    leadingContent = {
+                        Icon(
+                            Icons.Default.AutoAwesome,
+                            contentDescription = "AI Model",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                )
+
+                ListItem(
+                    modifier = Modifier
+                        .clickable(onClick = onShowApiKeyDialog)
+                        .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    headlineContent = { Text(stringResource(id = R.string.setApiKey)) },
+                    supportingContent = { Text(stringResource(id = R.string.setApiKeyDescription)) },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.VpnKey,
+                            contentDescription = "API Key",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                )
+            }
+        }
+
+        item {
+            SettingsGroup {
+                ListItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    headlineContent = { Text(stringResource(id = R.string.useOriginalLanguage)) },
+                    supportingContent = { Text(stringResource(id = R.string.useOriginalLanguageDescription)) },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Translate,
+                            contentDescription = "Language Settings",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = state.useOriginalLanguage,
+                            onCheckedChange = { newValue ->
+                                actions.onUseOriginalLanguageChange(newValue)
+                            }
+                        )
+                    }
+                )
 
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
@@ -344,39 +389,25 @@ private fun SettingsContent(
                         )
                     }
                 )
-            }
-        }
 
-        item {
-            SettingsGroup(highlighted = highlightSection == "ai") {
                 ListItem(
-                    modifier = Modifier
-                        .clickable(onClick = onShowDialogModel)
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.setModel)) },
-                    supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
+                    headlineContent = { Text(stringResource(R.string.useAutoExtractUrl)) },
+                    supportingContent = { Text(stringResource(R.string.useAutoExtractUrlDescription)) },
                     leadingContent = {
                         Icon(
-                            Icons.Default.AutoAwesome,
-                            contentDescription = "AI Model",
+                            Icons.Rounded.Link,
+                            contentDescription = "Auto Extract URL", // TODO: Use stringResource
                             modifier = Modifier.size(24.dp)
                         )
-                    }
-                )
-
-                ListItem(
-                    modifier = Modifier
-                        .clickable(onClick = onShowDialogKey)
-                        .fillMaxWidth(),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.setApiKey)) },
-                    supportingContent = { Text(stringResource(id = R.string.setApiKeyDescription)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.VpnKey,
-                            contentDescription = "API Key",
-                            modifier = Modifier.size(24.dp)
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = state.autoExtractUrl, // Assumes state.autoExtractUrl exists in SettingsUiState
+                            onCheckedChange = { newValue ->
+                                actions.onAutoExtractUrlChange(newValue)
+                            }
                         )
                     }
                 )
@@ -684,7 +715,7 @@ private fun ModelSettingsDialog(
         title = { Text(stringResource(id = R.string.setModel)) },
         text = {
             Column {
-                AIProvider.entries.filter { it.enabled }.map {
+                AIProvider.entries.map {
                     AIProviderItem(it, selected = (selectedModel == it)) { selectedModel = it }
                 }
                 if (selectedModel.isBaseUrlCustomisable) {
@@ -846,7 +877,7 @@ private fun RadioButtonItemPreview() {
 private fun AIProviderItemPreview() {
     SummaryExpressiveTheme {
         Column(modifier = Modifier.padding(16.dp)) {
-            AIProvider.entries.filter { it.enabled }
+            AIProvider.entries
                 .map { AIProviderItem(it, selected = it == AIProvider.GEMINI) {} }
         }
     }
@@ -861,10 +892,11 @@ private fun ScrollContentPreview() {
             theme = 0,
             apiKey = "test_key",
             baseUrl = "",
-            model = AIProvider.OPENAI,
+            aiProvider = AIProvider.OPENAI,
             useOriginalLanguage = false,
             dynamicColor = true,
             showLength = true,
+            autoExtractUrl = true // Added for preview
         )
         val actions = SettingsActions(
             onThemeChange = {},
@@ -873,7 +905,8 @@ private fun ScrollContentPreview() {
             onBaseUrlChange = {},
             onUseOriginalLanguageChange = {},
             onDynamicColorChange = {},
-            onShowLengthChange = {}
+            onShowLengthChange = {},
+            onAutoExtractUrlChange = {}
         )
         Scaffold { innerPadding ->
             SettingsContent(
@@ -881,10 +914,11 @@ private fun ScrollContentPreview() {
                 navController = navController,
                 state = state,
                 actions = actions,
-                onShowDialogTheme = {},
-                onShowDialogKey = {},
-                onShowDialogModel = {},
-                highlightSection = null
+                onShowThemeDialog = {},
+                onShowAIProviderDialog = {},
+                onShowModelDialog = {},
+                onShowApiKeyDialog = {},
+                highlightSection = null,
             )
         }
     }

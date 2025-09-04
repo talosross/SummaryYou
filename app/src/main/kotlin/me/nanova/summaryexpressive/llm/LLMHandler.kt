@@ -89,7 +89,6 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
             AIProvider.OPENAI -> createOpenAIExecutor(apiKey, baseUrl)
             AIProvider.GEMINI -> createGeminiExecutor(apiKey, baseUrl)
             AIProvider.CLAUDE -> createClaudExecutor(apiKey, baseUrl)
-            AIProvider.GROQ -> createGroqExecutor(apiKey)
         }
     }
 
@@ -109,11 +108,6 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
 
             AIProvider.CLAUDE -> (modelName?.let { AnthropicModels.Sonnet_4 }
                 ?: AnthropicModels.Sonnet_3_5)
-
-            AIProvider.GROQ -> OpenAIModels.Chat.GPT4o
-//            (
-//                modelName ?: "llama3-8b-8192"
-//            )
         }
 
         return AIAgentConfig(

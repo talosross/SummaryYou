@@ -29,10 +29,11 @@ class UIViewModel @Inject constructor(
                 theme = prefs.theme,
                 apiKey = prefs.apiKey.takeIf { it.isNotBlank() },
                 baseUrl = prefs.baseUrl.takeIf { it.isNotBlank() },
-                model = AIProvider.valueOf(prefs.model),
-                showOnboarding = prefs.showOnboarding,
+                aiProvider = AIProvider.valueOf(prefs.aiProvider),
                 showLength = prefs.showLength,
-                summaryLength = SummaryLength.valueOf(prefs.summaryLength)
+                summaryLength = SummaryLength.valueOf(prefs.summaryLength),
+                autoExtractUrl = prefs.autoExtractUrl,
+                showOnboarding = prefs.showOnboarding,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -61,12 +62,8 @@ class UIViewModel @Inject constructor(
         savePreference(userPreferencesRepository::setBaseUrl, newValue)
 
     // AI-Model
-    fun setModelValue(newValue: String) =
-        savePreference(userPreferencesRepository::setModel, newValue)
-
-    // OnboardingScreen
-    fun setShowOnboardingScreenValue(newValue: Boolean) =
-        savePreference(userPreferencesRepository::setShowOnboarding, newValue)
+    fun setAIProviderValue(newValue: String) =
+        savePreference(userPreferencesRepository::setAIProvider, newValue)
 
     // Show length
     fun setShowLengthValue(newValue: Boolean) =
@@ -76,6 +73,13 @@ class UIViewModel @Inject constructor(
     fun setSummaryLength(newValue: SummaryLength) =
         savePreference(userPreferencesRepository::setSummaryLength, newValue.name)
 
+    // Auto extract url
+    fun setAutoExtractUrlValue(newValue: Boolean) =
+        savePreference(userPreferencesRepository::setAutoExtractUrl, newValue)
+
+    // OnboardingScreen
+    fun setShowOnboardingScreenValue(newValue: Boolean) =
+        savePreference(userPreferencesRepository::setShowOnboarding, newValue)
 
     // --- App Start Action ---
     private val _appStartAction = MutableStateFlow(AppStartAction())

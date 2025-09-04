@@ -42,18 +42,31 @@ class SummaryViewModel @Inject constructor(
         _summarizationState.update { it.copy(summaryResult = null, error = null) }
     }
 
-    fun summarize(text: String, settings: SettingsUiState) {
-        val source = when {
-            text.startsWith("http://", ignoreCase = true)
-                    || text.startsWith("https://", ignoreCase = true) ->
-                if (YouTubeTranscriptTool.isYouTubeLink(text)) SummarySource.Video(text)
-                else SummarySource.Article(text)
+    private fun extractHttpUrl(text: String): String {
+        val urlRegex = Regex(
+            "(?:^|\\W)((http|https)://)" + // Protocol
+                    "([\\w\\-]+\\.){1,}" + // Domain name
+                    "([\\w\\-]+)" + // Top-level domain
+                    "([^\\s<>\"#%{}|\\\\^`]*)" // Path, query, and fragment
+        )
+        return urlRegex.find(text)?.value?.trim() ?: ""
+    }
 
-            text.isNotBlank() -> SummarySource.Text(text)
-            else -> SummarySource.None
-        }
-        viewModelScope.launch {
-            summarizeInternal(source, settings)
+    fun summarize(text: String, settings: SettingsUiState) {
+        val processedText = if (settings.autoExtractUrl) extractHttpUrl(text) else text
+        processedText.let {
+            val source = when {
+                it.startsWith("http://", ignoreCase = true)
+                        || it.startsWith("https://", ignoreCase = true) ->
+                    if (YouTubeTranscriptTool.isYouTubeLink(it)) SummarySource.Video(it)
+                    else SummarySource.Article(it)
+
+                it.isNotBlank() -> SummarySource.Text(it)
+                else -> SummarySource.None
+            }
+            viewModelScope.launch {
+                summarizeInternal(source, settings)
+            }
         }
     }
 
@@ -77,7 +90,7 @@ class SummaryViewModel @Inject constructor(
             else application.resources.configuration.locales[0].getDisplayLanguage(Locale.ENGLISH)
 
             val agent = llmHandler.getSummarizationAgent(
-                provider = settings.model,
+                provider = settings.aiProvider,
                 apiKey = currentApiKey,
                 baseUrl = settings.baseUrl,
                 modelName = null, // TODO: user custom model selection

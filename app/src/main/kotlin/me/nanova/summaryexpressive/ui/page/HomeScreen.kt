@@ -164,9 +164,9 @@ fun HomeScreen(
         }
     }
 
-    val scope = rememberCoroutineScope() // Coroutine scope for async calls
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val clipboard = LocalClipboard.current // Clipboard
+    val clipboard = LocalClipboard.current
     val haptics = LocalHapticFeedback.current
 
     val options = listOf(

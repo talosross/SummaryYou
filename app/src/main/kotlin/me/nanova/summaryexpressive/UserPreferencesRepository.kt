@@ -25,10 +25,11 @@ data class UserPreferences(
     val theme: Int = 0,
     val baseUrl: String = "",
     val apiKey: String = "",
-    val model: String = AIProvider.OPENAI.name,
+    val aiProvider: String = AIProvider.OPENAI.name,
     val showOnboarding: Boolean = true,
     val showLength: Boolean = true,
     val summaryLength: String = SummaryLength.MEDIUM.name,
+    val autoExtractUrl: Boolean = true,
 )
 
 class UserPreferencesRepository(private val context: Context) {
@@ -71,7 +72,7 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun setApiKey(value: String) = updatePreferences { it.copy(apiKey = value) }
 
-    suspend fun setModel(value: String) = updatePreferences { it.copy(model = value) }
+    suspend fun setAIProvider(value: String) = updatePreferences { it.copy(aiProvider = value) }
 
     suspend fun setShowOnboarding(value: Boolean) =
         updatePreferences { it.copy(showOnboarding = value) }
@@ -80,6 +81,9 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun setSummaryLength(value: String) =
         updatePreferences { it.copy(summaryLength = value) }
+
+    suspend fun setAutoExtractUrl(value: Boolean) =
+        updatePreferences { it.copy(autoExtractUrl = value) }
 
     fun getTextSummaries(): Flow<String> =
         context.dataStore.data.map { it[history] ?: "[]" }

@@ -12,10 +12,11 @@ data class SettingsUiState(
     val theme: Int = 0,
     val apiKey: String? = null,
     val baseUrl: String? = null,
-    val model: AIProvider = AIProvider.OPENAI,
-    val showOnboarding: Boolean = false,
+    val aiProvider: AIProvider = AIProvider.OPENAI,
+    val autoExtractUrl: Boolean = true,
     val showLength: Boolean = true,
-    val summaryLength: SummaryLength = SummaryLength.MEDIUM
+    val summaryLength: SummaryLength = SummaryLength.MEDIUM,
+    val showOnboarding: Boolean = false,
 )
 
 data class SummarizationState(

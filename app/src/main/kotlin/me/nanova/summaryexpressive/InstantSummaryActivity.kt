@@ -150,7 +150,7 @@ fun InstantSummaryDialog(viewModel: SummaryViewModel, onDismiss: () -> Unit) {
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = error?.message ?: "An unknown error occurred.")
+                            Text(text = error.message ?: "An unknown error occurred.")
                         }
 
                         summaryResult != null -> {
@@ -161,7 +161,7 @@ fun InstantSummaryDialog(viewModel: SummaryViewModel, onDismiss: () -> Unit) {
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = summaryResult?.title ?: "Summary",
+                                        text = summaryResult.title,
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.weight(1f)
@@ -171,7 +171,7 @@ fun InstantSummaryDialog(viewModel: SummaryViewModel, onDismiss: () -> Unit) {
                                             clipboard.setClipEntry(
                                                 ClipData.newPlainText(
                                                     "User Input",
-                                                    summaryResult?.summary ?: ""
+                                                    summaryResult.summary
                                                 ).toClipEntry()
                                             )
                                         }
@@ -183,7 +183,7 @@ fun InstantSummaryDialog(viewModel: SummaryViewModel, onDismiss: () -> Unit) {
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(text = summaryResult?.summary ?: "")
+                                Text(text = summaryResult.summary)
                             }
                         }
                     }
