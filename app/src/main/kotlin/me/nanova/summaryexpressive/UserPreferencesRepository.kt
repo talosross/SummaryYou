@@ -20,13 +20,15 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 @Serializable
 data class UserPreferences(
+    // state
+    val isOnboarded: Boolean = false,
+    // settings
     val useOriginalLanguage: Boolean = true,
     val dynamicColor: Boolean = true,
     val theme: Int = 0,
     val baseUrl: String = "",
     val apiKey: String = "",
     val aiProvider: String = AIProvider.OPENAI.name,
-    val showOnboarding: Boolean = true,
     val showLength: Boolean = true,
     val summaryLength: String = SummaryLength.MEDIUM.name,
     val autoExtractUrl: Boolean = true,
@@ -74,8 +76,8 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun setAIProvider(value: String) = updatePreferences { it.copy(aiProvider = value) }
 
-    suspend fun setShowOnboarding(value: Boolean) =
-        updatePreferences { it.copy(showOnboarding = value) }
+    suspend fun setIsOnboarded(value: Boolean) =
+        updatePreferences { it.copy(isOnboarded = value) }
 
     suspend fun setShowLength(value: Boolean) = updatePreferences { it.copy(showLength = value) }
 

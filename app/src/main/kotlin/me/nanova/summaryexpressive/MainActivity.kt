@@ -14,7 +14,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
-import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import me.nanova.summaryexpressive.ui.AppNavigation
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
@@ -36,14 +35,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val settings by viewModel.settingsUiState.collectAsState()
+            val startDest by viewModel.startDestination.collectAsState()
 
-            SummaryExpressiveTheme(theme = settings.theme, dynamicColor = settings.dynamicColor) {
-                val navController = rememberNavController()
+            SummaryExpressiveTheme(
+                theme = settings.theme,
+                dynamicColor = settings.dynamicColor
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation(navController)
+                    startDest?.let {
+                        AppNavigation(startDestination = it)
+                    }
                 }
             }
         }

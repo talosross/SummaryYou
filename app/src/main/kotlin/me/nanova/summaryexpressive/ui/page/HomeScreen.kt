@@ -101,7 +101,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.navigation.NavHostController
+import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.SummaryLength
@@ -133,9 +133,9 @@ private object MimeTypes {
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    navController: NavHostController,
-    uiViewModel: UIViewModel,
-    summaryViewModel: SummaryViewModel,
+    onNav: (dest: Nav) -> Unit = {},
+    uiViewModel: UIViewModel = hiltViewModel<UIViewModel>(),
+    summaryViewModel: SummaryViewModel = hiltViewModel<SummaryViewModel>(),
 ) {
     var urlOrText by rememberSaveable { mutableStateOf("") }
     var documentFilename by remember { mutableStateOf<String?>(null) }
@@ -241,7 +241,7 @@ fun HomeScreen(
         modifier = modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { HomeTopAppBar(navController, scrollBehavior) },
+        topBar = { HomeTopAppBar(onNav, scrollBehavior) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButtons(
@@ -372,7 +372,7 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HomeTopAppBar(
-    navController: NavHostController,
+    onNav: (dest: Nav) -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior,
 ) {
     MediumFlexibleTopAppBar(
@@ -381,14 +381,14 @@ private fun HomeTopAppBar(
         title = { },
         navigationIcon = {
             IconButton(
-                onClick = { navController.navigate(Nav.Settings.name) }
+                onClick = { onNav(Nav.Settings) }
             ) {
                 Icon(Icons.Outlined.Settings, contentDescription = "Settings")
             }
         },
         actions = {
             IconButton(
-                onClick = { navController.navigate(Nav.History.name) }
+                onClick = { onNav(Nav.History) }
             ) {
                 Icon(
                     Icons.AutoMirrored.Outlined.LibraryBooks,

@@ -16,7 +16,6 @@ data class SettingsUiState(
     val autoExtractUrl: Boolean = true,
     val showLength: Boolean = true,
     val summaryLength: SummaryLength = SummaryLength.MEDIUM,
-    val showOnboarding: Boolean = false,
 )
 
 data class SummarizationState(

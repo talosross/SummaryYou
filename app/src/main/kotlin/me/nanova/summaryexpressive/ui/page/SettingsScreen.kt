@@ -34,7 +34,7 @@ import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.Link // Added for Auto Extract URL
+import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Translate
@@ -84,9 +84,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.BuildConfig
 import me.nanova.summaryexpressive.R
@@ -110,14 +107,14 @@ data class SettingsActions(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    navController: NavHostController,
+    onBack: () -> Unit = {},
+    onNav: (Nav) -> Unit = {},
     viewModel: UIViewModel = hiltViewModel(),
+    highlightSection: String?,
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    val backStackEntry by navController.currentBackStackEntryAsState()
-    val highlightSection = backStackEntry?.arguments?.getString("highlight")
     val state by viewModel.settingsUiState.collectAsState()
     val actions = SettingsActions(
         onThemeChange = viewModel::setTheme,
@@ -181,7 +178,7 @@ fun SettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = { onBack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Go Back"
@@ -194,9 +191,9 @@ fun SettingsScreen(
     ) { innerPadding ->
         SettingsContent(
             innerPadding,
-            navController,
             state,
             actions,
+            onNav = { onNav(it) },
             onShowThemeDialog = { showDialogTheme = true },
             onShowAIProviderDialog = { showAIProviderDialog = true },
             onShowModelDialog = { showModelDialog = true },
@@ -209,9 +206,9 @@ fun SettingsScreen(
 @Composable
 private fun SettingsContent(
     innerPadding: PaddingValues,
-    navController: NavHostController,
     state: SettingsUiState,
     actions: SettingsActions,
+    onNav: (Nav) -> Unit,
     onShowThemeDialog: () -> Unit,
     onShowAIProviderDialog: () -> Unit,
     onShowModelDialog: () -> Unit,
@@ -226,7 +223,7 @@ private fun SettingsContent(
 
     LaunchedEffect(highlightSection) {
         if (highlightSection == "ai") {
-            lazyListState.animateScrollToItem(index = 2) // Adjust index if new items are added before this group
+            lazyListState.animateScrollToItem(index = 1)
         }
     }
 
@@ -418,7 +415,7 @@ private fun SettingsContent(
             SettingsGroup {
                 ListItem(
                     modifier = Modifier
-                        .clickable(onClick = { navController.navigate(Nav.Onboarding.name) })
+                        .clickable(onClick = { onNav(Nav.Onboarding) })
                         .fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.tutorial)) },
@@ -887,7 +884,6 @@ private fun AIProviderItemPreview() {
 @Composable
 private fun ScrollContentPreview() {
     SummaryExpressiveTheme {
-        val navController = rememberNavController()
         val state = SettingsUiState(
             theme = 0,
             apiKey = "test_key",
@@ -911,7 +907,6 @@ private fun ScrollContentPreview() {
         Scaffold { innerPadding ->
             SettingsContent(
                 innerPadding = innerPadding,
-                navController = navController,
                 state = state,
                 actions = actions,
                 onShowThemeDialog = {},
@@ -919,6 +914,7 @@ private fun ScrollContentPreview() {
                 onShowModelDialog = {},
                 onShowApiKeyDialog = {},
                 highlightSection = null,
+                onNav = {},
             )
         }
     }

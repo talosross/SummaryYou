@@ -7,12 +7,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.UserPreferencesRepository
 import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.llm.SummaryLength
+import me.nanova.summaryexpressive.ui.Nav
 import javax.inject.Inject
 
 
@@ -20,6 +22,21 @@ import javax.inject.Inject
 class UIViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
+
+    private val _startDestination = MutableStateFlow<Nav?>(null)
+    val startDestination: StateFlow<Nav?> = _startDestination
+
+    init {
+        viewModelScope.launch {
+            val isOnboardingCompleted = userPreferencesRepository.preferencesFlow.map { it.isOnboarded}.first()
+
+            if (isOnboardingCompleted) {
+                _startDestination.value = Nav.Home
+            } else {
+                _startDestination.value = Nav.Onboarding
+            }
+        }
+    }
 
     val settingsUiState: StateFlow<SettingsUiState> =
         userPreferencesRepository.preferencesFlow.map { prefs ->
@@ -33,7 +50,6 @@ class UIViewModel @Inject constructor(
                 showLength = prefs.showLength,
                 summaryLength = SummaryLength.valueOf(prefs.summaryLength),
                 autoExtractUrl = prefs.autoExtractUrl,
-                showOnboarding = prefs.showOnboarding,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -78,8 +94,8 @@ class UIViewModel @Inject constructor(
         savePreference(userPreferencesRepository::setAutoExtractUrl, newValue)
 
     // OnboardingScreen
-    fun setShowOnboardingScreenValue(newValue: Boolean) =
-        savePreference(userPreferencesRepository::setShowOnboarding, newValue)
+    fun setIsOnboarded(newValue: Boolean) =
+        savePreference(userPreferencesRepository::setIsOnboarded, newValue)
 
     // --- App Start Action ---
     private val _appStartAction = MutableStateFlow(AppStartAction())
