@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.TweenSpec
@@ -215,7 +214,6 @@ private fun SettingsContent(
     highlightSection: String?,
 ) {
     val context = LocalContext.current
-    val activity = LocalActivity.current
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
@@ -298,7 +296,6 @@ private fun SettingsContent(
                             checked = state.dynamicColor,
                             onCheckedChange = {
                                 actions.onDynamicColorChange(it)
-                                activity?.recreate()
                             }
                         )
                     }
@@ -575,7 +572,6 @@ private fun ThemeSettingsDialog(
     currentTheme: Int,
     onThemeChange: (Int) -> Unit,
 ) {
-    val activity = LocalActivity.current
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(stringResource(id = R.string.theme)) },
@@ -585,7 +581,6 @@ private fun ThemeSettingsDialog(
                     selected = currentTheme == 0,
                     onSelectionChange = {
                         onThemeChange(0)
-                        activity?.recreate()
                     }
                 ) {
                     Text(
@@ -597,7 +592,6 @@ private fun ThemeSettingsDialog(
                     selected = currentTheme == 2,
                     onSelectionChange = {
                         onThemeChange(2)
-                        activity?.recreate()
                     }
                 ) {
                     Text(
@@ -609,7 +603,6 @@ private fun ThemeSettingsDialog(
                     selected = currentTheme == 1,
                     onSelectionChange = {
                         onThemeChange(1)
-                        activity?.recreate()
                     }
                 ) {
                     Text(
