@@ -20,7 +20,7 @@ import me.nanova.summaryexpressive.ui.page.HomeScreen
 import me.nanova.summaryexpressive.ui.page.OnboardingScreen
 import me.nanova.summaryexpressive.ui.page.SettingsScreen
 import me.nanova.summaryexpressive.vm.HistoryViewModel
-import me.nanova.summaryexpressive.vm.UIViewModel
+import me.nanova.summaryexpressive.vm.AppViewModel
 
 private fun slideIn(dir: SlideDirection): AnimatedContentTransitionScope<*>.() -> EnterTransition = {
     slideIntoContainer(
@@ -39,7 +39,7 @@ private fun slideOut(dir: SlideDirection): AnimatedContentTransitionScope<*>.() 
 @Composable
 fun AppNavigation(
     startDestination: Nav,
-    uiViewModel: UIViewModel = hiltViewModel(),
+    appViewModel: AppViewModel,
 ) {
     val navController = rememberNavController()
 
@@ -47,13 +47,14 @@ fun AppNavigation(
         composable(Nav.Home.name) {
             HomeScreen(
                 modifier = Modifier,
-                onNav = { navController.navigate(it.name) }
+                onNav = { navController.navigate(it.name) },
+                appViewModel = appViewModel
             )
         }
 
         composable(Nav.Onboarding.name) {
             fun handleOnboardingDone() {
-                uiViewModel.setIsOnboarded(true)
+                appViewModel.setIsOnboarded(true)
                 navController.navigate(Nav.Home.name) {
                     popUpTo(Nav.Onboarding.name) { inclusive = true }
                 }
@@ -84,7 +85,8 @@ fun AppNavigation(
             SettingsScreen(
                 onBack = { navController.navigateUp() },
                 onNav = { navController.navigate(it.name) },
-                highlightSection = highlightSection
+                highlightSection = highlightSection,
+                viewModel = appViewModel
             )
         }
 

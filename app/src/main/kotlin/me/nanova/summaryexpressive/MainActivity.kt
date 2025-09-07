@@ -18,12 +18,12 @@ import dagger.hilt.android.AndroidEntryPoint
 import me.nanova.summaryexpressive.ui.AppNavigation
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.AppStartAction
-import me.nanova.summaryexpressive.vm.UIViewModel
+import me.nanova.summaryexpressive.vm.AppViewModel
 
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val viewModel: UIViewModel by viewModels()
+    private val viewModel: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     startDest?.let {
-                        AppNavigation(startDestination = it)
+                        AppNavigation(startDestination = it, appViewModel = viewModel)
                     }
                 }
             }

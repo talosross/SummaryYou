@@ -110,7 +110,7 @@ import me.nanova.summaryexpressive.model.SummaryException
 import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.component.SummaryCard
 import me.nanova.summaryexpressive.vm.SummaryViewModel
-import me.nanova.summaryexpressive.vm.UIViewModel
+import me.nanova.summaryexpressive.vm.AppViewModel
 
 
 private object MimeTypes {
@@ -134,7 +134,7 @@ private object MimeTypes {
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onNav: (dest: Nav) -> Unit = {},
-    uiViewModel: UIViewModel = hiltViewModel<UIViewModel>(),
+    appViewModel: AppViewModel,
     summaryViewModel: SummaryViewModel = hiltViewModel<SummaryViewModel>(),
 ) {
     var urlOrText by rememberSaveable { mutableStateOf("") }
@@ -143,7 +143,7 @@ fun HomeScreen(
     val focusManager = LocalFocusManager.current // Hide cursor
     val focusRequester = remember { FocusRequester() } // Show cursor after removing
 
-    val settings by uiViewModel.settingsUiState.collectAsState()
+    val settings by appViewModel.settingsUiState.collectAsState()
 
     fun summarize() {
         focusManager.clearFocus()
@@ -151,7 +151,7 @@ fun HomeScreen(
         else summaryViewModel.summarize(urlOrText, settings)
     }
 
-    val appStartAction by uiViewModel.appStartAction.collectAsState()
+    val appStartAction by appViewModel.appStartAction.collectAsState()
     LaunchedEffect(appStartAction) {
         appStartAction.content?.let {
             summaryViewModel.clearCurrentSummary()
@@ -160,7 +160,7 @@ fun HomeScreen(
             if (appStartAction.autoTrigger) {
                 summarize()
             }
-            uiViewModel.onStartActionHandled()
+            appViewModel.onStartActionHandled()
         }
     }
 
@@ -326,7 +326,7 @@ fun HomeScreen(
                     if (showLength) {
                         LengthSelector(
                             selectedIndex = summaryLength.ordinal,
-                            onSelectedIndexChange = { uiViewModel.setSummaryLength(SummaryLength.entries[it]) },
+                            onSelectedIndexChange = { appViewModel.setSummaryLength(SummaryLength.entries[it]) },
                             options = options,
                             enabled = !isLoading,
                         )

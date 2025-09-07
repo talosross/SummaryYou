@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class UIViewModel @Inject constructor(
+class AppViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
 

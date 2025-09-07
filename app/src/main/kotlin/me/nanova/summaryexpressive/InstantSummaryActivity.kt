@@ -49,11 +49,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.SummaryViewModel
-import me.nanova.summaryexpressive.vm.UIViewModel
+import me.nanova.summaryexpressive.vm.AppViewModel
 
 @AndroidEntryPoint
 class InstantSummaryActivity : ComponentActivity() {
-    private val uiViewModel: UIViewModel by viewModels()
+    private val appViewModel: AppViewModel by viewModels()
     private val summaryViewModel: SummaryViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,7 +77,7 @@ class InstantSummaryActivity : ComponentActivity() {
         }
 
         setContent {
-            val settings by uiViewModel.settingsUiState.collectAsState()
+            val settings by appViewModel.settingsUiState.collectAsState()
             val summarizationState by summaryViewModel.summarizationState.collectAsState()
 
 

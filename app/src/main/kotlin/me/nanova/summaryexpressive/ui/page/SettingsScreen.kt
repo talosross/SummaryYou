@@ -83,7 +83,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.BuildConfig
 import me.nanova.summaryexpressive.R
@@ -91,7 +90,7 @@ import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.SettingsUiState
-import me.nanova.summaryexpressive.vm.UIViewModel
+import me.nanova.summaryexpressive.vm.AppViewModel
 
 data class SettingsActions(
     val onThemeChange: (Int) -> Unit,
@@ -109,7 +108,7 @@ data class SettingsActions(
 fun SettingsScreen(
     onBack: () -> Unit = {},
     onNav: (Nav) -> Unit = {},
-    viewModel: UIViewModel = hiltViewModel(),
+    viewModel: AppViewModel,
     highlightSection: String?,
 ) {
     val scrollBehavior =
