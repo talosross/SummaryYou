@@ -16,15 +16,10 @@ import androidx.core.view.WindowCompat
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SummaryExpressiveTheme(
-    theme: Int = 0,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val darkTheme = when (theme) {
-        1 -> true
-        2 -> false
-        else -> isSystemInDarkTheme()
-    }
 
     val colorScheme = when {
         dynamicColor -> {

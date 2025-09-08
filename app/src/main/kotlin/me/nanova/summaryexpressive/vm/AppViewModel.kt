@@ -101,7 +101,7 @@ class AppViewModel @Inject constructor(
     private val _appStartAction = MutableStateFlow(AppStartAction())
     val appStartAction: StateFlow<AppStartAction> = _appStartAction.asStateFlow()
 
-    fun setAppStartAction(action: AppStartAction) {
+    fun onEvent(action: AppStartAction) {
         _appStartAction.value = action
     }
 

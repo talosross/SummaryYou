@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,8 +49,8 @@ import androidx.compose.ui.window.DialogProperties
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
-import me.nanova.summaryexpressive.vm.SummaryViewModel
 import me.nanova.summaryexpressive.vm.AppViewModel
+import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 @AndroidEntryPoint
 class InstantSummaryActivity : ComponentActivity() {
@@ -87,7 +88,14 @@ class InstantSummaryActivity : ComponentActivity() {
                 }
             }
 
-            SummaryExpressiveTheme(theme = settings.theme, dynamicColor = settings.dynamicColor) {
+            SummaryExpressiveTheme(
+                darkTheme = when (settings.theme) {
+                    1 -> true
+                    2 -> false
+                    else -> isSystemInDarkTheme()
+                },
+                dynamicColor = settings.dynamicColor
+            ) {
                 InstantSummaryDialog(
                     viewModel = summaryViewModel,
                     onDismiss = { finish() }

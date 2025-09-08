@@ -9,17 +9,15 @@ import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import me.nanova.summaryexpressive.ui.page.HistoryScreen
 import me.nanova.summaryexpressive.ui.page.HomeScreen
 import me.nanova.summaryexpressive.ui.page.OnboardingScreen
 import me.nanova.summaryexpressive.ui.page.SettingsScreen
-import me.nanova.summaryexpressive.vm.HistoryViewModel
 import me.nanova.summaryexpressive.vm.AppViewModel
 
 private fun slideIn(dir: SlideDirection): AnimatedContentTransitionScope<*>.() -> EnterTransition = {
@@ -38,12 +36,16 @@ private fun slideOut(dir: SlideDirection): AnimatedContentTransitionScope<*>.() 
 
 @Composable
 fun AppNavigation(
-    startDestination: Nav,
+    navController: NavHostController,
+    startDestination: Nav?,
     appViewModel: AppViewModel,
 ) {
-    val navController = rememberNavController()
+    if (startDestination == null) return
 
-    NavHost(navController, startDestination = startDestination.name) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination.name
+    ) {
         composable(Nav.Home.name) {
             HomeScreen(
                 modifier = Modifier,
@@ -95,7 +97,7 @@ fun AppNavigation(
             enterTransition = slideIn(SlideDirection.Start),
             exitTransition = slideOut(SlideDirection.End)
         ) {
-            HistoryScreen(viewModel = hiltViewModel<HistoryViewModel>())
+            HistoryScreen()
         }
     }
 }

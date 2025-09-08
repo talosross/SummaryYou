@@ -7,19 +7,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
+import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import me.nanova.summaryexpressive.ui.AppNavigation
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.AppStartAction
 import me.nanova.summaryexpressive.vm.AppViewModel
-
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -34,21 +31,23 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
 
         setContent {
-            val settings by viewModel.settingsUiState.collectAsState()
-            val startDest by viewModel.startDestination.collectAsState()
+            val navController = rememberNavController()
+            val settingsState by viewModel.settingsUiState.collectAsState()
+            val startDestination by viewModel.startDestination.collectAsState()
 
             SummaryExpressiveTheme(
-                theme = settings.theme,
-                dynamicColor = settings.dynamicColor
+                darkTheme = when (settingsState.theme) {
+                    1 -> true
+                    2 -> false
+                    else -> isSystemInDarkTheme()
+                },
+                dynamicColor = settingsState.dynamicColor
             ) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    startDest?.let {
-                        AppNavigation(startDestination = it, appViewModel = viewModel)
-                    }
-                }
+                AppNavigation(
+                    navController = navController,
+                    startDestination = startDestination,
+                    appViewModel = viewModel
+                )
             }
         }
     }
@@ -59,20 +58,23 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
     }
 
-    private fun handleIntent(intent: Intent?) {
-        when {
-            intent?.action == Intent.ACTION_SEND && intent.type == "text/plain" -> {
-                viewModel.setAppStartAction(AppStartAction(content = intent.getStringExtra(Intent.EXTRA_TEXT)))
+    private fun handleIntent(intent: Intent) {
+        when (intent.action) {
+            Intent.ACTION_SEND -> {
+                if ("text/plain" == intent.type) {
+                    val content = intent.getStringExtra(Intent.EXTRA_TEXT)
+                    viewModel.onEvent(AppStartAction(content))
+                }
             }
-
-            intent?.action == Intent.ACTION_VIEW && intent.data?.host == "clipboard" -> {
+            Intent.ACTION_VIEW -> {
+                if (intent.data?.host != "clipboard") return
                 // To avoid re-triggering on configuration change, we clear the data.
                 intent.data = null
                 // Postpone clipboard access until the window has focus.
                 window.decorView.post {
                     val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                     clipboard.primaryClip?.getItemAt(0)?.text?.let {
-                        viewModel.setAppStartAction(
+                        viewModel.onEvent(
                             AppStartAction(
                                 content = it.toString(),
                                 autoTrigger = true
