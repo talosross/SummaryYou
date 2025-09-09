@@ -32,6 +32,8 @@ Compose + M3 Expressive
 [![Get it on Github](https://images.weserv.nl/?url=https://s1.ax1x.com/2023/01/12/pSu1a36.png&h=80)](https://github.com/kid1412621/SummaryExpressive/releases)
 [![Google Play badge](https://images.weserv.nl/?url=https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png&h=80)](https://play.google.com/store/apps/details?id=me.nanova.summaryexpressive)
 
+Minimal Android version: **13**
+
 ### Github Release
 
 There are 2 releases available:
@@ -50,7 +52,7 @@ package previously.
 
 ## 📖 Features
 
-- Summarize multiple media types
+- **Summarize multiple media types**
 
 | media        | supported types                          |
 |--------------|------------------------------------------|
@@ -68,16 +70,15 @@ package previously.
 | Gemini nano | Planed |
 | Claude      | TBD    |
 
-- [Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) style UI, with
-  dynamic color theme.
+- **[Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) style UI**: Engaging and easier to use, light/dark theme and dynamic color theme
 
-- Instant summarize via share sheet or text selection toolbar
+- **Instant summarize via share sheet or text selection toolbar**: Convenient to trigger summarization, show result in overlayer
 
-- Configurable summary length
+- **Configurable summary length**
 
-- Read-Out the summaries
+- **Read-Out the summaries**
 
-- History search
+- **History search**
 
 ## 🌟 Credits
 
