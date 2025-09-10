@@ -43,8 +43,6 @@
 
     <string name="useDynamicColorDescription">Usa i colori del tuo sfondo</string>
 
-    <string name="useMultiLines">Più righe per l\'URL</string>
-
     <string name="setApiKey">Imposta la chiave API</string>
 
     <string name="setApiKeyDescription">Imposta la chiave API OpenAI</string>

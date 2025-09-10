@@ -12,6 +12,9 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
@@ -54,7 +57,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         provider: AIProvider,
         apiKey: String,
         baseUrl: String? = null,
-        modelName: String? = null,
+        model: String? = null,
         summaryLength: SummaryLength = SummaryLength.MEDIUM,
         language: String,
     ): AIAgent<String, SummaryOutput> {
@@ -65,7 +68,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         val fileToolRegistry = ToolRegistry { tool(fileExtractorTool) }
         val tools = articleToolRegistry + videoToolRegistry + fileToolRegistry
 
-        val agentConfig = createAgentConfig(provider, modelName, summaryLength, language)
+        val agentConfig = createAgentConfig(provider, model, summaryLength, language)
 
         return AIAgent(
             promptExecutor = executor,
@@ -89,6 +92,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
             AIProvider.OPENAI -> createOpenAIExecutor(apiKey, baseUrl)
             AIProvider.GEMINI -> createGeminiExecutor(apiKey, baseUrl)
             AIProvider.CLAUDE -> createClaudExecutor(apiKey, baseUrl)
+            AIProvider.DEEPSEEK -> createDeepSeekExecutor(apiKey, baseUrl)
         }
     }
 
@@ -99,15 +103,17 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         language: String,
     ): AIAgentConfig {
         val llmModel = when (provider) {
-            // FIXME
-            AIProvider.OPENAI -> (modelName?.let { OpenAIModels.Chat.GPT4_1 }
-                ?: OpenAIModels.CostOptimized.GPT4oMini)
+            AIProvider.OPENAI -> modelName?.let { name -> provider.models.find { it.id == name } }
+                ?: OpenAIModels.CostOptimized.GPT4oMini
 
-            AIProvider.GEMINI -> (modelName?.let { GoogleModels.Gemini2_5Pro }
-                ?: GoogleModels.Gemini2_5Flash)
+            AIProvider.GEMINI -> modelName?.let { name -> provider.models.find { it.id == name } }
+                ?: GoogleModels.Gemini2_5Flash
 
-            AIProvider.CLAUDE -> (modelName?.let { AnthropicModels.Sonnet_4 }
-                ?: AnthropicModels.Sonnet_3_5)
+            AIProvider.CLAUDE -> modelName?.let { name -> provider.models.find { it.id == name } }
+                ?: AnthropicModels.Sonnet_3_5
+
+            AIProvider.DEEPSEEK -> modelName?.let { name -> provider.models.find { it.id == name } }
+                ?: DeepSeekModels.DeepSeekChat
         }
 
         return AIAgentConfig(
@@ -141,11 +147,11 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         return SingleLLMPromptExecutor(client)
     }
 
-    private fun createGroqExecutor(apiKey: String): PromptExecutor {
-        val client = OpenAILLMClient(
-            apiKey,
-            settings = OpenAIClientSettings(baseUrl = "https://api.groq.com/openai/v1")
-        )
+    private fun createDeepSeekExecutor(apiKey: String, baseUrl: String?): PromptExecutor {
+        val client = baseUrl?.takeIf { it.isNotBlank() }
+            ?.let { DeepSeekLLMClient(apiKey, settings = DeepSeekClientSettings(baseUrl = it)) }
+            ?: DeepSeekLLMClient(apiKey)
+
         return SingleLLMPromptExecutor(client)
     }
 

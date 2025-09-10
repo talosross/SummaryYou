@@ -46,8 +46,6 @@
 
     <string name="useDynamicColorDescription">Use cores do seu papel de parede</string>
 
-    <string name="useMultiLines">Mais linhas para URL</string>
-
     <string name="setApiKey">Definir chave de API</string>
 
     <string name="setApiKeyDescription">Defina sua chave de API OpenAI</string>

@@ -25,7 +25,6 @@
     <string name="madeBy">Made with ❤ by NanoNova</string>
     <string name="useDynamicColor">الألوان الديناميكية</string>
     <string name="useDynamicColorDescription">استخدم الألوان من خلفية الشاشة</string>
-    <string name="useMultiLines">مزيد من الأسطر لعنوان URL</string>
     <string name="setApiKey">ضبط مفتاح API</string>
     <string name="setApiKeyDescription">قم بضبط مفتاح API الخاص بك من OpenAI</string>
     <string name="theme">المظهر</string>

@@ -48,13 +48,14 @@
 
     <string name="useDynamicColorDescription">从壁纸中提取颜色</string>
 
-    <string name="useMultiLines">使用多行 URL</string>
-
+    <string name="useAutoExtractLinkDescription">从分享内容中自动提取链接</string>
     <string name="setApiKey">设置 API 密钥</string>
 
     <string name="setApiKeyDescription">设置您的 OpenAI API 密钥</string>
 
-    <string name="setModelDescription">设置 AI 模型进行总结</string>
+    <string name="setAIProviderDescription">设置 AI 服务商</string>
+    <string name="setModel">选择模型</string>
+    <string name="setModelDescription">选择 LLM 模型以供总结</string>
     <string name="theme">主题</string>
 
     <string name="cancel">取消</string>
@@ -87,7 +88,7 @@
     <string name="tutorialDescription">重看教程</string>
     <string name="noHistory">无历史记录</string>
     <string name="copied">已粘贴</string>
-    <string name="setModel">AI 模型</string>
+    <string name="setAIProvider">AI 服务商</string>
     <string name="stillLoading">文本正在处理中…</string>
     <string name="useLengthOptions">使用总结长度</string>
     <string name="tooLong">提供内容过长。</string>
@@ -95,4 +96,5 @@
     <string name="shortcut_summarize_clipboard_short">剪贴板</string>
     <string name="shortcut_summarize_clipboard_long">总结剪贴板内容</string>
     <string name="instant_summarize">即时总结</string>
+    <string name="useAutoExtractLink">自动提取链接</string>
 </resources>

@@ -23,7 +23,6 @@
     <string name="madeBy">Створено з ❤ NanoNova</string>
     <string name="useDynamicColor">Динамічний колір</string>
     <string name="useDynamicColorDescription">Використовуйте кольори зі своїх шпалер</string>
-    <string name="useMultiLines">Більше рядків для URL</string>
     <string name="setApiKey">Встановити ключ API</string>
     <string name="setApiKeyDescription">Встановіть свій ключ API OpenAI</string>
     <string name="theme">Тема</string>

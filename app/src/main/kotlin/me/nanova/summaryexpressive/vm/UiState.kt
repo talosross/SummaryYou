@@ -13,6 +13,7 @@ data class SettingsUiState(
     val apiKey: String? = null,
     val baseUrl: String? = null,
     val aiProvider: AIProvider = AIProvider.OPENAI,
+    val model: String? = null,
     val autoExtractUrl: Boolean = true,
     val showLength: Boolean = true,
     val summaryLength: SummaryLength = SummaryLength.MEDIUM,

@@ -1,13 +1,18 @@
 package me.nanova.summaryexpressive.ui.page
 
+import ai.koog.prompt.llm.LLModel
 import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.animation.Animatable
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,6 +35,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.HelpCenter
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.rounded.DarkMode
@@ -88,12 +95,17 @@ import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
-import me.nanova.summaryexpressive.vm.SettingsUiState
 import me.nanova.summaryexpressive.vm.AppViewModel
+import me.nanova.summaryexpressive.vm.SettingsUiState
+
+private enum class DialogState {
+    NONE, THEME, AI_PROVIDER, MODEL, API_KEY
+}
 
 data class SettingsActions(
     val onThemeChange: (Int) -> Unit,
     val onApiKeyChange: (String) -> Unit,
+    val onProviderChange: (String) -> Unit,
     val onModelChange: (String) -> Unit,
     val onBaseUrlChange: (String) -> Unit,
     val onUseOriginalLanguageChange: (Boolean) -> Unit,
@@ -107,59 +119,89 @@ data class SettingsActions(
 fun SettingsScreen(
     onBack: () -> Unit = {},
     onNav: (Nav) -> Unit = {},
-    viewModel: AppViewModel,
+    appViewModel: AppViewModel,
     highlightSection: String?,
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    val state by viewModel.settingsUiState.collectAsState()
+    val state by appViewModel.settingsUiState.collectAsState()
     val actions = SettingsActions(
-        onThemeChange = viewModel::setTheme,
-        onApiKeyChange = viewModel::setApiKeyValue,
-        onModelChange = viewModel::setAIProviderValue,
-        onBaseUrlChange = viewModel::setBaseUrlValue,
-        onUseOriginalLanguageChange = viewModel::setUseOriginalLanguageValue,
-        onDynamicColorChange = viewModel::setDynamicColorValue,
-        onShowLengthChange = viewModel::setShowLengthValue,
-        onAutoExtractUrlChange = viewModel::setAutoExtractUrlValue
+        onThemeChange = appViewModel::setTheme,
+        onApiKeyChange = appViewModel::setApiKeyValue,
+        onProviderChange = appViewModel::setAIProviderValue,
+        onModelChange = appViewModel::setModel,
+        onBaseUrlChange = appViewModel::setBaseUrlValue,
+        onUseOriginalLanguageChange = appViewModel::setUseOriginalLanguageValue,
+        onDynamicColorChange = appViewModel::setDynamicColorValue,
+        onShowLengthChange = appViewModel::setShowLengthValue,
+        onAutoExtractUrlChange = appViewModel::setAutoExtractUrlValue
     )
 
-    var showDialogTheme by remember { mutableStateOf(false) }
-    var showAIProviderDialog by remember { mutableStateOf(false) }
-    var showModelDialog by remember { mutableStateOf(false) }
-    var showApiKeyDialog by remember { mutableStateOf(false) }
+    var dialogState by remember { mutableStateOf(DialogState.NONE) }
 
-    if (showDialogTheme) {
-        ThemeSettingsDialog(
-            onDismissRequest = { showDialogTheme = false },
-            currentTheme = state.theme,
-            onThemeChange = actions.onThemeChange,
-        )
-    }
-
-    if (showAIProviderDialog) {
-        ModelSettingsDialog(
-            onDismissRequest = { showAIProviderDialog = false },
-            initialModel = state.aiProvider,
-            initialBaseUrl = state.baseUrl,
-            onConfirm = { model, baseUrl ->
-                actions.onModelChange(model.name)
-                actions.onBaseUrlChange(baseUrl)
+    AnimatedContent(
+        targetState = dialogState,
+        transitionSpec = {
+            if (targetState.ordinal > initialState.ordinal) {
+                slideInHorizontally { width -> width } togetherWith slideOutHorizontally { width -> -width }
+            } else {
+                slideInHorizontally { width -> -width } togetherWith slideOutHorizontally { width -> width }
             }
-        )
-    }
+        },
+        label = "dialog animation"
+    ) { targetDialog ->
+        when (targetDialog) {
+            DialogState.NONE -> {}
+            DialogState.THEME -> {
+                ThemeSettingsDialog(
+                    onDismissRequest = { dialogState = DialogState.NONE },
+                    currentTheme = state.theme,
+                    onThemeChange = actions.onThemeChange,
+                )
+            }
 
-    if (showModelDialog) {
-        TODO()
-    }
+            DialogState.AI_PROVIDER -> {
+                AIProviderSettingsDialog(
+                    onDismissRequest = { dialogState = DialogState.NONE },
+                    initialProvider = state.aiProvider,
+                    initialBaseUrl = state.baseUrl,
+                    onConfirm = { model, baseUrl ->
+                        actions.onProviderChange(model.name)
+                        actions.onBaseUrlChange(baseUrl)
+                    },
+                    onNext = { model, baseUrl ->
+                        actions.onProviderChange(model.name)
+                        actions.onBaseUrlChange(baseUrl)
+                        dialogState = DialogState.MODEL
+                    }
+                )
+            }
 
-    if (showApiKeyDialog) {
-        ApiKeySettingsDialog(
-            onDismissRequest = { showApiKeyDialog = false },
-            currentApiKey = state.apiKey,
-            onApiKeyChange = actions.onApiKeyChange
-        )
+            DialogState.MODEL -> {
+                ModelSettingsDialog(
+                    onDismissRequest = { dialogState = DialogState.NONE },
+                    provider = state.aiProvider,
+                    initialModel = state.aiProvider.models.find { it.id == state.model }
+                        ?: state.aiProvider.models.first(),
+                    onConfirm = { model ->
+                        actions.onModelChange(model.id)
+                    },
+                    onNext = { model ->
+                        actions.onModelChange(model.id)
+                        dialogState = DialogState.API_KEY
+                    }
+                )
+            }
+
+            DialogState.API_KEY -> {
+                ApiKeySettingsDialog(
+                    onDismissRequest = { dialogState = DialogState.NONE },
+                    currentApiKey = state.apiKey,
+                    onApiKeyChange = actions.onApiKeyChange
+                )
+            }
+        }
     }
 
     Scaffold(
@@ -192,10 +234,10 @@ fun SettingsScreen(
             state,
             actions,
             onNav = { onNav(it) },
-            onShowThemeDialog = { showDialogTheme = true },
-            onShowAIProviderDialog = { showAIProviderDialog = true },
-            onShowModelDialog = { showModelDialog = true },
-            onShowApiKeyDialog = { showApiKeyDialog = true },
+            onShowThemeDialog = { dialogState = DialogState.THEME },
+            onShowAIProviderDialog = { dialogState = DialogState.AI_PROVIDER },
+            onShowModelDialog = { dialogState = DialogState.MODEL },
+            onShowApiKeyDialog = { dialogState = DialogState.API_KEY },
             highlightSection = highlightSection
         )
     }
@@ -310,12 +352,28 @@ private fun SettingsContent(
                         .clickable(onClick = onShowAIProviderDialog)
                         .fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    headlineContent = { Text(stringResource(id = R.string.setAIProvider)) },
+                    supportingContent = { Text(stringResource(id = R.string.setAIProviderDescription)) },
+                    leadingContent = {
+                        Icon(
+                            Icons.Default.Cloud,
+                            contentDescription = "AI Provider",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                )
+
+                ListItem(
+                    modifier = Modifier
+                        .clickable(onClick = onShowModelDialog)
+                        .fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(id = R.string.setModel)) },
                     supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
                     leadingContent = {
                         Icon(
                             Icons.Default.AutoAwesome,
-                            contentDescription = "AI Model",
+                            contentDescription = "LLM Model",
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -386,8 +444,8 @@ private fun SettingsContent(
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(R.string.useAutoExtractUrl)) },
-                    supportingContent = { Text(stringResource(R.string.useAutoExtractUrlDescription)) },
+                    headlineContent = { Text(stringResource(R.string.useAutoExtractLink)) },
+                    supportingContent = { Text(stringResource(R.string.useAutoExtractLinkDescription)) },
                     leadingContent = {
                         Icon(
                             Icons.Rounded.Link,
@@ -397,10 +455,8 @@ private fun SettingsContent(
                     },
                     trailingContent = {
                         Switch(
-                            checked = state.autoExtractUrl, // Assumes state.autoExtractUrl exists in SettingsUiState
-                            onCheckedChange = { newValue ->
-                                actions.onAutoExtractUrlChange(newValue)
-                            }
+                            checked = state.autoExtractUrl,
+                            onCheckedChange = { actions.onAutoExtractUrlChange(it) }
                         )
                     }
                 )
@@ -429,7 +485,7 @@ private fun SettingsContent(
                     modifier = Modifier
                         .clickable {
                             val url =
-                                "https://play.google.com/store/apps/details?id=me.nanova.SummaryExpressive"
+                                "https://play.google.com/store/apps/details?id=${context.packageName}"
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             context.startActivity(intent)
                         }
@@ -622,6 +678,144 @@ private fun ThemeSettingsDialog(
 }
 
 @Composable
+private fun AIProviderSettingsDialog(
+    onDismissRequest: () -> Unit,
+    initialProvider: AIProvider,
+    initialBaseUrl: String?,
+    onConfirm: (model: AIProvider, baseUrl: String) -> Unit,
+    onNext: (model: AIProvider, baseUrl: String) -> Unit,
+) {
+    var selectedProvider by remember { mutableStateOf(initialProvider) }
+    var baseUrlTextFieldValue by remember { mutableStateOf(initialBaseUrl ?: "") }
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(stringResource(id = R.string.setAIProvider)) },
+        text = {
+            Column {
+                AIProvider.entries.map {
+                    AIProviderItem(it, selected = (selectedProvider == it)) {
+                        selectedProvider = it
+                    }
+                }
+                if (selectedProvider.isBaseUrlCustomisable) {
+                    Spacer(modifier = Modifier.height(9.dp))
+                    OutlinedTextField(
+                        value = baseUrlTextFieldValue,
+                        onValueChange = { baseUrlTextFieldValue = it },
+                        label = { Text("(Optional) Custom URL") },
+                        shape = MaterialTheme.shapes.large,
+                        trailingIcon = {
+                            if (baseUrlTextFieldValue.isBlank()) {
+                                IconButton(onClick = {
+                                    scope.launch {
+                                        clipboard.getClipEntry()?.let {
+                                            baseUrlTextFieldValue =
+                                                it.clipData.getItemAt(0).text.toString()
+                                        }
+                                    }
+                                }) {
+                                    Icon(
+                                        Icons.Outlined.ContentPaste,
+                                        contentDescription = "Paste",
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            } else {
+                                IconButton(onClick = { baseUrlTextFieldValue = "" }) {
+                                    Icon(
+                                        Icons.Outlined.Clear,
+                                        contentDescription = "Clear",
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Row(horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = {
+                    onConfirm(selectedProvider, baseUrlTextFieldValue)
+                    onDismissRequest()
+                }) {
+                    Text(stringResource(id = R.string.ok))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                TextButton(
+                    onClick = {
+                        onNext(selectedProvider, baseUrlTextFieldValue)
+                    }
+                ) {
+                    Text(stringResource(id = R.string.next))
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(id = R.string.cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun ModelSettingsDialog(
+    onDismissRequest: () -> Unit,
+    provider: AIProvider,
+    initialModel: LLModel,
+    onConfirm: (model: LLModel) -> Unit,
+    onNext: (model: LLModel) -> Unit,
+) {
+    var selectedModel by remember { mutableStateOf(initialModel) }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(stringResource(id = R.string.setModel) + " (${provider.displayName})") },
+        text = {
+            LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                items(provider.models.size) { index ->
+                    val model = provider.models[index]
+                    RadioButtonItem(
+                        selected = selectedModel.id == model.id,
+                        onSelectionChange = { selectedModel = model }
+                    ) {
+                        Text(text = model.id)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Row(horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = {
+                    onConfirm(selectedModel)
+                    onDismissRequest()
+                }) {
+                    Text(stringResource(id = R.string.ok))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                TextButton(
+                    onClick = {
+                        onNext(selectedModel)
+                    }
+                ) {
+                    Text(stringResource(id = R.string.next))
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(stringResource(id = R.string.cancel))
+            }
+        },
+    )
+}
+
+@Composable
 private fun ApiKeySettingsDialog(
     onDismissRequest: () -> Unit,
     currentApiKey: String?,
@@ -684,81 +878,6 @@ private fun ApiKeySettingsDialog(
                 Text(stringResource(id = R.string.cancel))
             }
         }
-    )
-}
-
-@Composable
-private fun ModelSettingsDialog(
-    onDismissRequest: () -> Unit,
-    initialModel: AIProvider,
-    initialBaseUrl: String?,
-    onConfirm: (model: AIProvider, baseUrl: String) -> Unit,
-) {
-    var selectedModel by remember { mutableStateOf(initialModel) }
-    var baseUrlTextFieldValue by remember { mutableStateOf(initialBaseUrl ?: "") }
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
-
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(id = R.string.setModel)) },
-        text = {
-            Column {
-                AIProvider.entries.map {
-                    AIProviderItem(it, selected = (selectedModel == it)) { selectedModel = it }
-                }
-                if (selectedModel.isBaseUrlCustomisable) {
-                    Spacer(modifier = Modifier.height(9.dp))
-                    OutlinedTextField(
-                        value = baseUrlTextFieldValue,
-                        onValueChange = { baseUrlTextFieldValue = it },
-                        label = { Text("(Optional) Custom URL") },
-                        shape = MaterialTheme.shapes.large,
-                        trailingIcon = {
-                            if (baseUrlTextFieldValue.isBlank()) {
-                                IconButton(onClick = {
-                                    scope.launch {
-                                        clipboard.getClipEntry()?.let {
-                                            baseUrlTextFieldValue =
-                                                it.clipData.getItemAt(0).text.toString()
-                                        }
-                                    }
-                                }) {
-                                    Icon(
-                                        Icons.Outlined.ContentPaste,
-                                        contentDescription = "Paste",
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            } else {
-                                IconButton(onClick = { baseUrlTextFieldValue = "" }) {
-                                    Icon(
-                                        Icons.Outlined.Clear,
-                                        contentDescription = "Clear",
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-                        }
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onConfirm(selectedModel, baseUrlTextFieldValue)
-                    onDismissRequest()
-                }
-            ) {
-                Text(stringResource(id = R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(stringResource(id = R.string.cancel))
-            }
-        },
     )
 }
 
@@ -835,13 +954,28 @@ private fun ApiKeySettingsDialogPreview() {
 
 @Preview
 @Composable
+private fun AIProviderSettingsDialogPreview() {
+    SummaryExpressiveTheme {
+        AIProviderSettingsDialog(
+            onDismissRequest = {},
+            initialProvider = AIProvider.OPENAI,
+            initialBaseUrl = "",
+            onConfirm = { _, _ -> },
+            onNext = { _, _ -> },
+        )
+    }
+}
+
+@Preview
+@Composable
 private fun ModelSettingsDialogPreview() {
     SummaryExpressiveTheme {
         ModelSettingsDialog(
             onDismissRequest = {},
-            initialModel = AIProvider.OPENAI,
-            initialBaseUrl = "",
-            onConfirm = { _, _ -> }
+            provider = AIProvider.OPENAI,
+            initialModel = AIProvider.OPENAI.models.first(),
+            onConfirm = { _ -> },
+            onNext = { _ -> },
         )
     }
 }
@@ -889,6 +1023,7 @@ private fun ScrollContentPreview() {
         val actions = SettingsActions(
             onThemeChange = {},
             onApiKeyChange = {},
+            onProviderChange = {},
             onModelChange = {},
             onBaseUrlChange = {},
             onUseOriginalLanguageChange = {},

@@ -93,7 +93,7 @@ class SummaryViewModel @Inject constructor(
                 provider = settings.aiProvider,
                 apiKey = currentApiKey,
                 baseUrl = settings.baseUrl,
-                modelName = null, // TODO: user custom model selection
+                model = settings.model,
                 summaryLength = settings.summaryLength,
                 language = language
             )

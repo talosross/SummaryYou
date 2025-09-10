@@ -47,6 +47,7 @@ class AppViewModel @Inject constructor(
                 apiKey = prefs.apiKey.takeIf { it.isNotBlank() },
                 baseUrl = prefs.baseUrl.takeIf { it.isNotBlank() },
                 aiProvider = AIProvider.valueOf(prefs.aiProvider),
+                model = prefs.model.takeIf { it.isNotBlank() },
                 showLength = prefs.showLength,
                 summaryLength = SummaryLength.valueOf(prefs.summaryLength),
                 autoExtractUrl = prefs.autoExtractUrl,
@@ -77,9 +78,13 @@ class AppViewModel @Inject constructor(
     fun setBaseUrlValue(newValue: String) =
         savePreference(userPreferencesRepository::setBaseUrl, newValue)
 
-    // AI-Model
+    // AI provider
     fun setAIProviderValue(newValue: String) =
         savePreference(userPreferencesRepository::setAIProvider, newValue)
+
+    // Model
+    fun setModel(newValue: String) =
+        savePreference(userPreferencesRepository::setModel, newValue)
 
     // Show length
     fun setShowLengthValue(newValue: Boolean) =

@@ -88,7 +88,7 @@ fun AppNavigation(
                 onBack = { navController.navigateUp() },
                 onNav = { navController.navigate(it.name) },
                 highlightSection = highlightSection,
-                viewModel = appViewModel
+                appViewModel = appViewModel
             )
         }
 

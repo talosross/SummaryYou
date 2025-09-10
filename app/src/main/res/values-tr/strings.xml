@@ -1,4 +1,5 @@
 <resources>
+    <string name="app_name">Yapay Zeka Modeli</string>
     <string name="short_length">Kısa</string>
     <string name="middle_length">Orta</string>
     <string name="long_length">Uzun</string>
@@ -25,10 +26,9 @@
     <string name="madeBy">NanoNova tarafından ❤ ile yapılmıştır</string>
     <string name="useDynamicColor">Dinamik Renk</string>
     <string name="useDynamicColorDescription">Duvar kağıdınızdan renkleri kullanın</string>
-    <string name="useMultiLines">URL için Daha Fazla Satır</string>
     <string name="setApiKey">API Anahtarını Ayarla</string>
     <string name="setApiKeyDescription">OpenAI API Anahtarınızı ayarlayın</string>
-    <string name="setModel">Yapay Zeka Modeli</string>
+    <string name="setAIProvider">Yapay Zeka Modeli</string>
     <string name="setModelDescription">Özet için modeli ayarlayın</string>
     <string name="theme">Tema</string>
     <string name="cancel">İptal</string>

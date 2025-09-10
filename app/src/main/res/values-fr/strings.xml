@@ -44,8 +44,6 @@
 
     <string name="useDynamicColorDescription">Utilisez les couleurs de votre fond d\'écran</string>
 
-    <string name="useMultiLines">Plus de lignes pour l\'URL</string>
-
     <string name="setApiKey">Définir la clé API</string>
 
     <string name="setApiKeyDescription">Définissez votre clé API OpenAI</string>

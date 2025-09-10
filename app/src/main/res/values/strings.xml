@@ -10,7 +10,7 @@
     <string name="noTranscript">No Transcript found</string>
     <string name="noContent">No Content</string>
     <string name="tooShort">Provided medium is too short.</string>
-    <string name="noInternet">No Internet-Connection</string>
+    <string name="noInternet">No Internet Connection</string>
     <string name="paywallDetected">Paywall detected, summarizing not possible.</string>
     <string name="incorrectKey">Error with server, you have to update the App.</string>
     <string name="incorrectKeyOpenSource">Incorrect API key</string>
@@ -26,13 +26,14 @@
     <string name="madeBy">Made with ❤ by NanoNova</string>
     <string name="useDynamicColor">Dynamic Color</string>
     <string name="useDynamicColorDescription">Use colors from your wallpaper</string>
-    <string name="useMultiLines">More Lines for URL</string>
-    <string name="useAutoExtractUrl">Auto Extract URL</string>
-    <string name="useAutoExtractUrlDescription">Automatically extract URL from shared content</string>
-    <string name="setApiKey">Set API-Key</string>
+    <string name="useAutoExtractLink">Auto Extract Web Link</string>
+    <string name="useAutoExtractLinkDescription">Automatically extract web link from shared content</string>
+    <string name="setApiKey">Set API Key</string>
     <string name="setApiKeyDescription">Set your OpenAI API Key</string>
-    <string name="setModel">AI Model</string>
-    <string name="setModelDescription">Set the model for the summary</string>
+    <string name="setAIProvider">AI Provider</string>
+    <string name="setAIProviderDescription">Set the AI provider</string>
+    <string name="setModel">Select Model</string>
+    <string name="setModelDescription">Select the LLM model for the summary</string>
     <string name="theme">Theme</string>
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
@@ -66,4 +67,5 @@
     <string name="instant_summarize">Instant Summarize</string>
     <string name="discord">Discord Group</string>
     <string name="discordDescription">Join our community</string>
+    <string name="next">Next</string>
 </resources>

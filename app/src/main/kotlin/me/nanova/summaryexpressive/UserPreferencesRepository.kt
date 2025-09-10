@@ -29,6 +29,7 @@ data class UserPreferences(
     val baseUrl: String = "",
     val apiKey: String = "",
     val aiProvider: String = AIProvider.OPENAI.name,
+    val model: String = "",
     val showLength: Boolean = true,
     val summaryLength: String = SummaryLength.MEDIUM.name,
     val autoExtractUrl: Boolean = true,
@@ -75,6 +76,8 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun setApiKey(value: String) = updatePreferences { it.copy(apiKey = value) }
 
     suspend fun setAIProvider(value: String) = updatePreferences { it.copy(aiProvider = value) }
+
+    suspend fun setModel(value: String) = updatePreferences { it.copy(model = value) }
 
     suspend fun setIsOnboarded(value: Boolean) =
         updatePreferences { it.copy(isOnboarded = value) }

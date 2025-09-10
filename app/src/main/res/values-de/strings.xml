@@ -26,7 +26,6 @@
     <string name="madeBy">Made with ❤ by NanoNova</string>
     <string name="useDynamicColor">Dynamische Farben</string>
     <string name="useDynamicColorDescription">Benutze Farben von deinem Hintergrundbild</string>
-    <string name="useMultiLines">Mehrere Linien für URL</string>
     <string name="setApiKey">API-Schlüssel</string>
     <string name="setApiKeyDescription">Setze deinen API Schlüssel</string>
     <string name="theme">Thema</string>

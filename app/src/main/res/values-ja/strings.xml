@@ -46,8 +46,6 @@
 
     <string name="useDynamicColorDescription">壁紙から色を使用する</string>
 
-    <string name="useMultiLines">URL の行数を増やす</string>
-
     <string name="setApiKey">API キーの設定</string>
 
     <string name="setApiKeyDescription">OpenAI API キーを設定する</string>

@@ -69,6 +69,7 @@ package previously.
 | Gemini      | TBD    |
 | Gemini nano | Planed |
 | Claude      | TBD    |
+| DeepSeek    | TBD    |
 
 - **[Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) style UI**: Engaging and easier to use, light/dark theme and dynamic color theme
 
