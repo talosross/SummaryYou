@@ -16,8 +16,7 @@
 
 Summarize YouTube-Videos, Articles, Images and Documents with AI
 
-[MAD](https://developer.android.com/courses/pathways/android-architecture): Kotlin + Jetpack
-Compose + M3 Expressive
+[MAD](https://developer.android.com/courses/pathways/android-architecture): pure Kotlin + Jetpack Compose + M3 Expressive
 
 ## 📱 Screenshots
 
@@ -63,13 +62,13 @@ package previously.
 
 - Multiple LLM models supported
 
-| provider    | models |
-|-------------|--------|
-| OpenAI      | TBD    |
-| Gemini      | TBD    |
-| Gemini nano | Planed |
-| Claude      | TBD    |
-| DeepSeek    | TBD    |
+| provider      | models                                                                                                                     |
+|---------------|----------------------------------------------------------------------------------------------------------------------------|
+| OpenAI        | gpt-4.1, gpt-4.1-mini, gpt-4.1-nano, gpt-40, gpt-4o-mini, gpt-5, gpt-5-mini, gpt-5-nano, o1, o3, o3-mini, o4-mini          |
+| Gemini        | gemini-2.0-flash, gemini-2.0-flash-001, gemini-2.0-flash-lite, gemini-2.0-flash-lite-001, gemini-2.5-flash, gemini-2.5-pro |
+| *Gemini nano* | Planed                                                                                                                     |
+| Claude        | claude-3-haiku, claude-3-opus, claude-3-5-haiku, claude-3-5-sonnet, claude-3-7-sonnet, claude-opus-4-0, claude-sonnet-4-0  |
+| DeepSeek      | deepseek-chat, deepseek-reasoner                                                                                           |
 
 - **[Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) style UI**: Engaging and easier to use, light/dark theme and dynamic color theme
 

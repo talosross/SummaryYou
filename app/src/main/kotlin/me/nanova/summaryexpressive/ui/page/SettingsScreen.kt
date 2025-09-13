@@ -45,6 +45,7 @@ import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarRate
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.VpnKey
 import androidx.compose.material3.AlertDialog
@@ -475,7 +476,7 @@ private fun SettingsContent(
                     headlineContent = { Text(stringResource(id = R.string.googlePlay)) },
                     leadingContent = {
                         Icon(
-                            Icons.Rounded.Star,
+                            Icons.Rounded.StarRate,
                             contentDescription = "Rate app",
                             modifier = Modifier.size(24.dp)
                         )

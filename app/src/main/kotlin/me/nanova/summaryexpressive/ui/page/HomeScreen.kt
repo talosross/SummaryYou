@@ -29,10 +29,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.Check
@@ -109,8 +109,8 @@ import me.nanova.summaryexpressive.llm.tools.getFileName
 import me.nanova.summaryexpressive.model.SummaryException
 import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.component.SummaryCard
-import me.nanova.summaryexpressive.vm.SummaryViewModel
 import me.nanova.summaryexpressive.vm.AppViewModel
+import me.nanova.summaryexpressive.vm.SummaryViewModel
 
 
 private object MimeTypes {
@@ -391,7 +391,7 @@ private fun HomeTopAppBar(
                 onClick = { onNav(Nav.History) }
             ) {
                 Icon(
-                    Icons.AutoMirrored.Outlined.LibraryBooks,
+                    Icons.Outlined.History,
                     contentDescription = "History",
                     modifier = Modifier.size(24.dp)
                 )

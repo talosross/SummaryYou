@@ -95,7 +95,7 @@ jobs:
           files: |
             ${{ env.APK_DIR }}/*.apk
 
-      - name: Generate release notes
+      - name: Generate and format release notes
         env:
           WHATS_NEW_DIR: whatsnew
           WHATS_NEW_FILENAME: whatsnew-en-US
@@ -103,10 +103,15 @@ jobs:
           WHATS_NEW_FILE="${{ env.WHATS_NEW_DIR }}/${{ env.WHATS_NEW_FILENAME }}"
           mkdir -p "${{ env.WHATS_NEW_DIR }}"
           
+          # Extract release notes from CHANGELOG.md
           awk -v version="${{ env.VERSION_NAME }}" '$0 ~ "^## \\[" version "\\]" {p=1; next} /^## / {p=0} p && NF' CHANGELOG.md > "${WHATS_NEW_FILE}"
           
+          # If no specific notes found, use a generic message
           if [[ ! -s "${WHATS_NEW_FILE}" ]]; then
             echo "Bug fixes and improvements." > "${WHATS_NEW_FILE}"
+          else
+            # Format for Google Play: remove '###', convert '- ' to '• '
+            sed -i -e 's/^### //g' -e 's/^- /• /g' "${WHATS_NEW_FILE}"
           fi
 
       - name: Release to Google Play

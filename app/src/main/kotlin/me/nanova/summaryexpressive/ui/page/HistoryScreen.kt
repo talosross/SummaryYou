@@ -51,7 +51,7 @@ import me.nanova.summaryexpressive.vm.HistoryViewModel
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HistoryScreen(
-    viewModel: HistoryViewModel = hiltViewModel(),
+    viewModel: HistoryViewModel = hiltViewModel<HistoryViewModel>(),
 ) {
     val haptics = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()

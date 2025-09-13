@@ -24,6 +24,7 @@ enum class AIProvider(
                 it.supports(LLMCapability.Completion)
                         && !it.supports(LLMCapability.Audio)
             }
+            .distinct()
             .sortedBy { it.id }
     ),
     GEMINI(
