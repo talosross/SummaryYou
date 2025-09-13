@@ -51,8 +51,6 @@
     <string name="useAutoExtractLinkDescription">从分享内容中自动提取链接</string>
     <string name="setApiKey">设置 API 密钥</string>
 
-    <string name="setApiKeyDescription">设置您的 OpenAI API 密钥</string>
-
     <string name="setAIProviderDescription">设置 AI 服务商</string>
     <string name="setModel">选择模型</string>
     <string name="setModelDescription">选择 LLM 模型以供总结</string>

@@ -25,7 +25,6 @@
     <string name="useDynamicColor">Dynamické barvy</string>
     <string name="useDynamicColorDescription">Použít barvy z tapety</string>
     <string name="setApiKey">Definovat API klíč</string>
-    <string name="setApiKeyDescription">Nastavit svůj OpenAI API klíč</string>
     <string name="theme">Motiv</string>
     <string name="cancel">Zrušit</string>
     <string name="ok">OK</string>

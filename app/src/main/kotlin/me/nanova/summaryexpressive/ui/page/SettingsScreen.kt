@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.HelpCenter
@@ -75,15 +77,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -99,7 +107,7 @@ import me.nanova.summaryexpressive.vm.AppViewModel
 import me.nanova.summaryexpressive.vm.SettingsUiState
 
 private enum class DialogState {
-    NONE, THEME, AI_PROVIDER, MODEL, API_KEY
+    NONE, THEME, AI_PROVIDER, MODEL
 }
 
 data class SettingsActions(
@@ -163,16 +171,19 @@ fun SettingsScreen(
 
             DialogState.AI_PROVIDER -> {
                 AIProviderSettingsDialog(
-                    onDismissRequest = { dialogState = DialogState.NONE },
                     initialProvider = state.aiProvider,
                     initialBaseUrl = state.baseUrl,
-                    onConfirm = { model, baseUrl ->
-                        actions.onProviderChange(model.name)
+                    initialApiKey = state.apiKey,
+                    onDismissRequest = { dialogState = DialogState.NONE },
+                    onConfirm = { provider, baseUrl, apiKey ->
+                        actions.onProviderChange(provider.name)
                         actions.onBaseUrlChange(baseUrl)
+                        actions.onApiKeyChange(apiKey)
                     },
-                    onNext = { model, baseUrl ->
-                        actions.onProviderChange(model.name)
+                    onNext = { provider, baseUrl, apiKey ->
+                        actions.onProviderChange(provider.name)
                         actions.onBaseUrlChange(baseUrl)
+                        actions.onApiKeyChange(apiKey)
                         dialogState = DialogState.MODEL
                     }
                 )
@@ -187,18 +198,6 @@ fun SettingsScreen(
                     onConfirm = { model ->
                         actions.onModelChange(model.id)
                     },
-                    onNext = { model ->
-                        actions.onModelChange(model.id)
-                        dialogState = DialogState.API_KEY
-                    }
-                )
-            }
-
-            DialogState.API_KEY -> {
-                ApiKeySettingsDialog(
-                    onDismissRequest = { dialogState = DialogState.NONE },
-                    currentApiKey = state.apiKey,
-                    onApiKeyChange = actions.onApiKeyChange
                 )
             }
         }
@@ -237,7 +236,6 @@ fun SettingsScreen(
             onShowThemeDialog = { dialogState = DialogState.THEME },
             onShowAIProviderDialog = { dialogState = DialogState.AI_PROVIDER },
             onShowModelDialog = { dialogState = DialogState.MODEL },
-            onShowApiKeyDialog = { dialogState = DialogState.API_KEY },
             highlightSection = highlightSection
         )
     }
@@ -252,7 +250,6 @@ private fun SettingsContent(
     onShowThemeDialog: () -> Unit,
     onShowAIProviderDialog: () -> Unit,
     onShowModelDialog: () -> Unit,
-    onShowApiKeyDialog: () -> Unit,
     highlightSection: String?,
 ) {
     val context = LocalContext.current
@@ -374,22 +371,6 @@ private fun SettingsContent(
                         Icon(
                             Icons.Default.AutoAwesome,
                             contentDescription = "LLM Model",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                )
-
-                ListItem(
-                    modifier = Modifier
-                        .clickable(onClick = onShowApiKeyDialog)
-                        .fillMaxWidth(),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.setApiKey)) },
-                    supportingContent = { Text(stringResource(id = R.string.setApiKeyDescription)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Rounded.VpnKey,
-                            contentDescription = "API Key",
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -682,13 +663,33 @@ private fun AIProviderSettingsDialog(
     onDismissRequest: () -> Unit,
     initialProvider: AIProvider,
     initialBaseUrl: String?,
-    onConfirm: (model: AIProvider, baseUrl: String) -> Unit,
-    onNext: (model: AIProvider, baseUrl: String) -> Unit,
+    initialApiKey: String?,
+    onConfirm: (provider: AIProvider, baseUrl: String, apiKey: String) -> Unit,
+    onNext: (provider: AIProvider, baseUrl: String, apiKey: String) -> Unit,
 ) {
+    val clipboard = LocalClipboard.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val scope = rememberCoroutineScope()
+    val apiKeyFocusRequester = remember { FocusRequester() }
     var selectedProvider by remember { mutableStateOf(initialProvider) }
     var baseUrlTextFieldValue by remember { mutableStateOf(initialBaseUrl ?: "") }
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
+    var apiKeyTextFieldValue by remember { mutableStateOf(initialApiKey ?: "") }
+
+    val formValid = apiKeyTextFieldValue.isNotBlank()
+    val providerChanged = selectedProvider != initialProvider
+
+    val submit = {
+        if (formValid) {
+            if (providerChanged) {
+                onNext(selectedProvider, baseUrlTextFieldValue, apiKeyTextFieldValue)
+            } else {
+                onConfirm(selectedProvider, baseUrlTextFieldValue, apiKeyTextFieldValue)
+                onDismissRequest()
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -700,6 +701,7 @@ private fun AIProviderSettingsDialog(
                         selectedProvider = it
                     }
                 }
+
                 if (selectedProvider.isBaseUrlCustomisable) {
                     Spacer(modifier = Modifier.height(9.dp))
                     OutlinedTextField(
@@ -707,6 +709,7 @@ private fun AIProviderSettingsDialog(
                         onValueChange = { baseUrlTextFieldValue = it },
                         label = { Text("(Optional) Custom URL") },
                         shape = MaterialTheme.shapes.large,
+                        leadingIcon = { Icon(Icons.Rounded.Link, contentDescription = "Base Url") },
                         trailingIcon = {
                             if (baseUrlTextFieldValue.isBlank()) {
                                 IconButton(onClick = {
@@ -717,43 +720,73 @@ private fun AIProviderSettingsDialog(
                                         }
                                     }
                                 }) {
-                                    Icon(
-                                        Icons.Outlined.ContentPaste,
-                                        contentDescription = "Paste",
-                                        modifier = Modifier.size(24.dp)
-                                    )
+                                    Icon(Icons.Outlined.ContentPaste, contentDescription = "Paste")
                                 }
                             } else {
                                 IconButton(onClick = { baseUrlTextFieldValue = "" }) {
-                                    Icon(
-                                        Icons.Outlined.Clear,
-                                        contentDescription = "Clear",
-                                        modifier = Modifier.size(24.dp)
-                                    )
+                                    Icon(Icons.Outlined.Clear, contentDescription = "Clear")
                                 }
                             }
-                        }
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { apiKeyFocusRequester.requestFocus() }
+                        ),
                     )
                 }
+
+                Spacer(modifier = Modifier.height(9.dp))
+
+                OutlinedTextField(
+                    modifier = Modifier.focusRequester(apiKeyFocusRequester),
+                    value = apiKeyTextFieldValue,
+                    onValueChange = { apiKeyTextFieldValue = it },
+                    leadingIcon = { Icon(Icons.Rounded.VpnKey, contentDescription = "API Key") },
+                    label = { Text(stringResource(R.string.setApiKey)) },
+                    shape = MaterialTheme.shapes.large,
+                    trailingIcon = {
+                        if (apiKeyTextFieldValue.isBlank()) {
+                            IconButton(onClick = {
+                                scope.launch {
+                                    clipboard.getClipEntry()?.let {
+                                        apiKeyTextFieldValue =
+                                            it.clipData.getItemAt(0).text.toString()
+                                    }
+                                }
+                            }) {
+                                Icon(Icons.Outlined.ContentPaste, contentDescription = "Paste")
+                            }
+                        } else {
+                            IconButton(onClick = { apiKeyTextFieldValue = "" }) {
+                                Icon(Icons.Outlined.Clear, contentDescription = "Clear")
+                            }
+                        }
+                    },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                            submit()
+                        }
+                    ),
+                )
             }
         },
         confirmButton = {
-            Row(horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = {
-                    onConfirm(selectedProvider, baseUrlTextFieldValue)
-                    onDismissRequest()
-                }) {
-                    Text(stringResource(id = R.string.ok))
-                }
-                Spacer(modifier = Modifier.width(8.dp))
                 TextButton(
-                    onClick = {
-                        onNext(selectedProvider, baseUrlTextFieldValue)
-                    }
+                    enabled = formValid,
+                    onClick = { submit() }
                 ) {
-                    Text(stringResource(id = R.string.next))
+                    Text(stringResource(id = if (providerChanged) R.string.next else R.string.ok))
                 }
-            }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
@@ -769,7 +802,6 @@ private fun ModelSettingsDialog(
     provider: AIProvider,
     initialModel: LLModel,
     onConfirm: (model: LLModel) -> Unit,
-    onNext: (model: LLModel) -> Unit,
 ) {
     var selectedModel by remember { mutableStateOf(initialModel) }
 
@@ -790,86 +822,10 @@ private fun ModelSettingsDialog(
             }
         },
         confirmButton = {
-            Row(horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = {
-                    onConfirm(selectedModel)
-                    onDismissRequest()
-                }) {
-                    Text(stringResource(id = R.string.ok))
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                TextButton(
-                    onClick = {
-                        onNext(selectedModel)
-                    }
-                ) {
-                    Text(stringResource(id = R.string.next))
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(stringResource(id = R.string.cancel))
-            }
-        },
-    )
-}
-
-@Composable
-private fun ApiKeySettingsDialog(
-    onDismissRequest: () -> Unit,
-    currentApiKey: String?,
-    onApiKeyChange: (String) -> Unit,
-) {
-    var apiTextFieldValue by remember { mutableStateOf(currentApiKey ?: "") }
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
-
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(id = R.string.setApiKey)) },
-        text = {
-            OutlinedTextField(
-                value = apiTextFieldValue,
-                onValueChange = { apiTextFieldValue = it },
-                label = { Text("API Key") },
-                shape = MaterialTheme.shapes.large,
-                trailingIcon = {
-                    if (apiTextFieldValue.isBlank()) {
-                        IconButton(onClick = {
-                            scope.launch {
-                                clipboard.getClipEntry()?.let {
-                                    apiTextFieldValue =
-                                        it.clipData.getItemAt(0).text.toString()
-                                }
-                            }
-                        }) {
-                            Icon(
-                                Icons.Outlined.ContentPaste,
-                                contentDescription = "Paste",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    } else {
-                        IconButton(onClick = { apiTextFieldValue = "" }) {
-                            Icon(
-                                Icons.Outlined.Clear,
-                                contentDescription = "Clear",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                },
-                visualTransformation = PasswordVisualTransformation()
-            )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onApiKeyChange(apiTextFieldValue)
-                    onDismissRequest()
-                }
-            ) {
+            TextButton(onClick = {
+                onConfirm(selectedModel)
+                onDismissRequest()
+            }) {
                 Text(stringResource(id = R.string.ok))
             }
         },
@@ -877,9 +833,10 @@ private fun ApiKeySettingsDialog(
             TextButton(onClick = onDismissRequest) {
                 Text(stringResource(id = R.string.cancel))
             }
-        }
+        },
     )
 }
+
 
 @Composable
 private fun RadioButtonItem(
@@ -928,29 +885,6 @@ private fun AIProviderItem(
     }
 }
 
-@Preview
-@Composable
-private fun ThemeSettingsDialogPreview() {
-    SummaryExpressiveTheme {
-        ThemeSettingsDialog(
-            onDismissRequest = {},
-            currentTheme = 0,
-            onThemeChange = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun ApiKeySettingsDialogPreview() {
-    SummaryExpressiveTheme {
-        ApiKeySettingsDialog(
-            onDismissRequest = {},
-            currentApiKey = "test_api_key",
-            onApiKeyChange = {}
-        )
-    }
-}
 
 @Preview
 @Composable
@@ -959,9 +893,10 @@ private fun AIProviderSettingsDialogPreview() {
         AIProviderSettingsDialog(
             onDismissRequest = {},
             initialProvider = AIProvider.OPENAI,
-            initialBaseUrl = "",
-            onConfirm = { _, _ -> },
-            onNext = { _, _ -> },
+            initialBaseUrl = "https://example.com",
+            initialApiKey = "test_api_key",
+            onConfirm = { _, _, _ -> },
+            onNext = { _, _, _ -> },
         )
     }
 }
@@ -975,7 +910,6 @@ private fun ModelSettingsDialogPreview() {
             provider = AIProvider.OPENAI,
             initialModel = AIProvider.OPENAI.models.first(),
             onConfirm = { _ -> },
-            onNext = { _ -> },
         )
     }
 }
@@ -1039,7 +973,6 @@ private fun ScrollContentPreview() {
                 onShowThemeDialog = {},
                 onShowAIProviderDialog = {},
                 onShowModelDialog = {},
-                onShowApiKeyDialog = {},
                 highlightSection = null,
                 onNav = {},
             )

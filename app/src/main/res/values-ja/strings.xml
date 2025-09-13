@@ -48,8 +48,6 @@
 
     <string name="setApiKey">API キーの設定</string>
 
-    <string name="setApiKeyDescription">OpenAI API キーを設定する</string>
-
     <string name="theme">テーマ</string>
 
     <string name="cancel">キャンセル</string>

@@ -48,8 +48,6 @@
 
     <string name="setApiKey">Establecer clave API</string>
 
-    <string name="setApiKeyDescription">Configure su clave API de OpenAI</string>
-
     <string name="theme">Tema</string>
 
     <string name="cancel">Cancelar</string>

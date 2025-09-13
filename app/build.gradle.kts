@@ -3,39 +3,25 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    kotlin("android")
+    kotlin("plugin.serialization")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
-    kotlin("plugin.serialization")
 }
 
 android {
     namespace = "me.nanova.summaryexpressive"
     compileSdk = 36
-    flavorDimensions += "distribution"
-    androidResources {
-        generateLocaleConfig = true
-    }
+
     defaultConfig {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 31
-        versionName = "0.7.0"
+        versionCode = 32
+        versionName = "0.7.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    productFlavors {
-        create("gms") {
-            dimension = "distribution"
-        }
-        create("standalone") {
-            dimension = "distribution"
-            applicationIdSuffix = ".standalone"
-            versionNameSuffix = "-standalone"
-        }
     }
 
     signingConfigs {
@@ -69,19 +55,23 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("gms") {
+            dimension = "distribution"
+        }
+        create("standalone") {
+            dimension = "distribution"
+            applicationIdSuffix = ".standalone"
+            versionNameSuffix = "-standalone"
         }
     }
+
     buildFeatures {
         compose = true
         buildConfig = true
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -89,6 +79,23 @@ android {
             excludes += "/META-INF/INDEX.LIST"
         }
     }
+
+    java {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        }
+    }
+
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        }
+    }
+
+    androidResources {
+        generateLocaleConfig = true
+    }
+
     lint {
         disable.add("MissingTranslation")
     }
@@ -96,11 +103,11 @@ android {
 
 dependencies {
     // https://developer.android.com/develop/ui/compose/bom/bom-mapping
-    val composeBomVersion = "2025.08.01"
+    val composeBomVersion = "2025.09.00"
 
     // Core & Lifecycle
     implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.activity:activity-compose:1.10.1")
+    implementation("androidx.activity:activity-compose:1.11.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.3")
 
@@ -109,8 +116,8 @@ dependencies {
     ksp("com.google.dagger:hilt-compiler:2.57.1")
 
     // Navigation
-    implementation("androidx.navigation:navigation-compose:2.9.3")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("androidx.navigation:navigation-compose:2.9.4")
+    implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
 
     // Jetpack Compose
     implementation(platform("androidx.compose:compose-bom:$composeBomVersion"))
@@ -119,7 +126,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     // Keep alpha override for material expressive features, as intended
     // https://developer.android.com/jetpack/androidx/releases/compose-material3#compose_material3_version_15_2
-    implementation("androidx.compose.material3:material3:1.5.0-alpha03")
+    implementation("androidx.compose.material3:material3:1.5.0-alpha04")
 
     // Data Persistence
     implementation("androidx.datastore:datastore-preferences:1.1.7")

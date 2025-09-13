@@ -29,7 +29,6 @@
     <string name="useAutoExtractLink">Auto Extract Web Link</string>
     <string name="useAutoExtractLinkDescription">Automatically extract web link from shared content</string>
     <string name="setApiKey">Set API Key</string>
-    <string name="setApiKeyDescription">Set your OpenAI API Key</string>
     <string name="setAIProvider">AI Provider</string>
     <string name="setAIProviderDescription">Set the AI provider</string>
     <string name="setModel">Select Model</string>

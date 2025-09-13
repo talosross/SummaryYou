@@ -26,7 +26,6 @@
     <string name="useDynamicColor">الألوان الديناميكية</string>
     <string name="useDynamicColorDescription">استخدم الألوان من خلفية الشاشة</string>
     <string name="setApiKey">ضبط مفتاح API</string>
-    <string name="setApiKeyDescription">قم بضبط مفتاح API الخاص بك من OpenAI</string>
     <string name="theme">المظهر</string>
     <string name="cancel">إلغاء</string>
     <string name="ok">موافق</string>

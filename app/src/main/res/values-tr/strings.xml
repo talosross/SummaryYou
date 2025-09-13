@@ -27,7 +27,6 @@
     <string name="useDynamicColor">Dinamik Renk</string>
     <string name="useDynamicColorDescription">Duvar kağıdınızdan renkleri kullanın</string>
     <string name="setApiKey">API Anahtarını Ayarla</string>
-    <string name="setApiKeyDescription">OpenAI API Anahtarınızı ayarlayın</string>
     <string name="setAIProvider">Yapay Zeka Modeli</string>
     <string name="setModelDescription">Özet için modeli ayarlayın</string>
     <string name="theme">Tema</string>

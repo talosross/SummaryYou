@@ -75,8 +75,11 @@ class AppViewModel @Inject constructor(
         savePreference(userPreferencesRepository::setApiKey, newValue)
 
     // API base url
-    fun setBaseUrlValue(newValue: String) =
-        savePreference(userPreferencesRepository::setBaseUrl, newValue)
+    fun setBaseUrlValue(newValue: String) {
+        val baseUrlWithProtocol =
+            if (newValue.startsWith("http")) newValue else "https://$newValue"
+        savePreference(userPreferencesRepository::setBaseUrl, baseUrlWithProtocol)
+    }
 
     // AI provider
     fun setAIProviderValue(newValue: String) =

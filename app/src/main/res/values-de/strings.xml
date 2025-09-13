@@ -27,7 +27,6 @@
     <string name="useDynamicColor">Dynamische Farben</string>
     <string name="useDynamicColorDescription">Benutze Farben von deinem Hintergrundbild</string>
     <string name="setApiKey">API-Schlüssel</string>
-    <string name="setApiKeyDescription">Setze deinen API Schlüssel</string>
     <string name="theme">Thema</string>
     <string name="cancel">Abbrechen</string>
     <string name="ok">OK</string>
