@@ -18,8 +18,8 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 33
-        versionName = "0.7.2"
+        versionCode = 34
+        versionName = "0.7.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -138,9 +138,11 @@ dependencies {
     // Uses Google Play Services
     "gmsImplementation"("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-    implementation("ai.koog:koog-agents:0.4.1") {
+    implementation("ai.koog:koog-agents:0.4.2") {
         // Exclude CIO engine to use the Android engine provided below
         exclude(group = "io.ktor", module = "ktor-client-cio")
+        // temp fix https://github.com/JetBrains/koog/issues/804
+        exclude(group = "io.modelcontextprotocol", module = "kotlin-sdk-client-jvm")
     }
 
     // Networking

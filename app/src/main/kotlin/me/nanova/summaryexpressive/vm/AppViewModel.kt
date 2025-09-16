@@ -76,8 +76,8 @@ class AppViewModel @Inject constructor(
 
     // API base url
     fun setBaseUrlValue(newValue: String) {
-        val baseUrlWithProtocol =
-            if (newValue.startsWith("http")) newValue else "https://$newValue"
+        val baseUrlWithProtocol = if (newValue.isBlank() || newValue.startsWith("http")) newValue
+        else "https://$newValue"
         savePreference(userPreferencesRepository::setBaseUrl, baseUrlWithProtocol)
     }
 
