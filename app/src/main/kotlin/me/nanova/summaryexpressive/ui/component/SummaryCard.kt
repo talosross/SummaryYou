@@ -92,6 +92,12 @@ fun SummaryCard(
                             contentDescription = "Youtube Icon",
                             modifier = Modifier.padding(top = 1.dp)
                         )
+                    } else if (summary.isBiliBiliLink) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.bilibili),
+                            contentDescription = "BiliBili Icon",
+                            modifier = Modifier.padding(top = 1.dp)
+                        )
                     }
                 }
             }
@@ -119,7 +125,9 @@ fun SummaryCardPreview() {
         author = "Sample Author",
         summary = "This is a sample summary for preview purposes. It should be long enough to test the TTS functionality and also the layout of the card.",
         isYoutubeLink = true,
-        length = SummaryLength.SHORT
+        length = SummaryLength.SHORT,
+        sourceLink = "",
+        isBiliBiliLink = false
     )
     SummaryCard(
         summary = summary,
@@ -319,7 +327,8 @@ fun SummaryActionButtonsPreview() {
         summary = "This is a sample summary for preview purposes. It should be long enough to test the TTS functionality and also the layout of the card.",
         sourceLink = "https://xxx.yyy",
         isYoutubeLink = true,
-        length = SummaryLength.SHORT
+        length = SummaryLength.SHORT,
+        isBiliBiliLink = false
     )
     SummaryActionButtons(summary = summary, onShowSnackbar = {})
 }

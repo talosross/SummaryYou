@@ -83,7 +83,7 @@ class SummaryViewModel @Inject constructor(
         try {
             val currentApiKey = settings.apiKey
             if (currentApiKey.isNullOrEmpty()) {
-                throw SummaryException.NoKeyException
+                throw SummaryException.NoKeyException()
             }
 
             val language = if (settings.useOriginalLanguage) "the same language as the content"
@@ -95,6 +95,7 @@ class SummaryViewModel @Inject constructor(
                 baseUrl = settings.baseUrl,
                 model = settings.model,
                 summaryLength = settings.summaryLength,
+                useOriginalLanguage = settings.useOriginalLanguage,
                 language = language
             )
 
@@ -130,12 +131,12 @@ class SummaryViewModel @Inject constructor(
         }
 
         if (inputString.isBlank()) {
-            throw SummaryException.NoContentException
+            throw SummaryException.NoContentException()
         }
 
         if (source is SummarySource.Article || source is SummarySource.Video) {
             if (runCatching { URL(inputString).host }.getOrNull().isNullOrEmpty()) {
-                throw SummaryException.InvalidLinkException
+                throw SummaryException.InvalidLinkException()
             }
         }
         return inputString
@@ -150,12 +151,13 @@ class SummaryViewModel @Inject constructor(
                 summary = summaryOutput.summary.trim(),
                 sourceLink = summaryOutput.sourceLink,
                 isYoutubeLink = summaryOutput.isYoutubeLink,
+                isBiliBiliLink = summaryOutput.isBiliBiliLink,
                 length = summaryLength,
-                createdOn = System.currentTimeMillis()
+                createdOn = System.currentTimeMillis(),
             )
             if (summary.summary.isNotBlank() && summary.summary != "invalid link") {
                 val currentSummariesJson = userPreferencesRepository.getTextSummaries().first()
-                val summaries = kotlin.runCatching {
+                val summaries = runCatching {
                     Json.decodeFromString<List<HistorySummary>>(currentSummariesJson)
                 }.getOrDefault(emptyList())
                 val updatedSummaries = listOf(summary) + summaries

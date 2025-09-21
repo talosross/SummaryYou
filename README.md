@@ -55,7 +55,7 @@ package previously.
 
 | media        | supported types                          |
 |--------------|------------------------------------------|
-| Video (Link) | Youtube, BiliBili (Planed)               |
+| Video (Link) | Youtube, BiliBili                        |
 | Document     | MS Word, PDF (very long contents planed) |
 | Image        | Jpg, Png, Webp (Latin only for now)      |
 | Text         | Article link, Plain text                 |

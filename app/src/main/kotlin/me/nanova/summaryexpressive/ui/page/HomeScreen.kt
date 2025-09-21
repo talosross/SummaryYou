@@ -133,7 +133,7 @@ private object MimeTypes {
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    onNav: (dest: Nav) -> Unit = {},
+    onNav: (dest: Nav, args: Map<String, String>?) -> Unit =  {dest, args-> {}},
     appViewModel: AppViewModel,
     summaryViewModel: SummaryViewModel = hiltViewModel<SummaryViewModel>(),
 ) {
@@ -179,6 +179,16 @@ fun HomeScreen(
     val isLoading = summarizationState.isLoading
     val summaryResult = summarizationState.summaryResult
     val error = summarizationState.error
+    LaunchedEffect(error) {
+        error?.let { when(it){
+            is SummaryException.BiliBiliLoginRequiredException -> {
+                onNav(Nav.Settings, mapOf("highlight" to "3rd-party-service"))
+                summaryViewModel.clearCurrentSummary()
+            }
+        } }
+
+    }
+
     val apiKey = settings.apiKey
     val showLength = settings.showLength
     val summaryLength = settings.summaryLength
@@ -241,7 +251,7 @@ fun HomeScreen(
         modifier = modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { HomeTopAppBar(onNav, scrollBehavior) },
+        topBar = { HomeTopAppBar(onNav = {onNav(it, mapOf())}, scrollBehavior) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButtons(
@@ -435,7 +445,7 @@ private fun InputSection(
         keyboardActions = KeyboardActions(onDone = { onSummarize() }),
         supportingText = {
             if (error != null) {
-                ErrorMessage(error.message, apiKey)
+                ErrorMessage(error, apiKey)
             } else if (hasText && !isDocument && !isUrl) {
                 Column {
                     // Based on the rule of thumb that 100 tokens is about 75 words.
@@ -658,26 +668,14 @@ private fun FloatingActionButtons(
 }
 
 @Composable
-private fun ErrorMessage(errorMessage: String?, apiKey: String?) {
-    val errMsg = when (errorMessage) {
-        SummaryException.NoInternetException.message -> stringResource(id = R.string.noInternet)
-        SummaryException.InvalidLinkException.message -> stringResource(id = R.string.invalidURL)
-        SummaryException.NoTranscriptException.message -> stringResource(id = R.string.noTranscript)
-        SummaryException.NoContentException.message -> stringResource(id = R.string.noContent)
-        SummaryException.TooShortException.message -> stringResource(id = R.string.tooShort)
-        SummaryException.PaywallException.message -> stringResource(id = R.string.paywallDetected)
-        SummaryException.TooLongException.message -> stringResource(id = R.string.tooLong)
-        SummaryException.IncorrectKeyException.message -> {
-            if (apiKey.isNullOrBlank()) {
-                stringResource(id = R.string.incorrectKeyOpenSource)
-            } else {
-                stringResource(id = R.string.incorrectKey)
-            }
+private fun ErrorMessage(error: Throwable?, apiKey: String?) {
+    val errMsg = when (error) {
+        is SummaryException -> {
+            val resId = error.getUserMessageResId(apiKey)
+            if (resId != null) stringResource(id = resId) else error.message ?: "unknown error"
         }
 
-        SummaryException.RateLimitException.message -> stringResource(id = R.string.rateLimit)
-        SummaryException.NoKeyException.message -> stringResource(id = R.string.noKey)
-        else -> errorMessage ?: "unknown error"
+        else -> error?.message ?: "unknown error"
     }
     Text(
         modifier = Modifier.fillMaxWidth(),
@@ -712,7 +710,7 @@ private fun InputSectionPreview() {
             urlOrText = "uri://for/some/file",
             onUrlChange = {},
             onSummarize = {},
-            error = SummaryException.InvalidLinkException,
+            error = SummaryException.InvalidLinkException(),
             apiKey = "test_api_key",
             onClear = {},
             focusRequester = focusRequester,

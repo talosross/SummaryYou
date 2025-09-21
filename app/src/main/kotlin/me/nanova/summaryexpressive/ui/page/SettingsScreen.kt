@@ -14,7 +14,9 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -44,7 +46,6 @@ import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarRate
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.VpnKey
@@ -59,18 +60,22 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -88,6 +93,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.toClipEntry
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
@@ -106,6 +112,9 @@ import me.nanova.summaryexpressive.ui.Nav
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.AppViewModel
 import me.nanova.summaryexpressive.vm.SettingsUiState
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private enum class DialogState {
     NONE, THEME, AI_PROVIDER, MODEL
@@ -121,9 +130,11 @@ data class SettingsActions(
     val onDynamicColorChange: (Boolean) -> Unit,
     val onShowLengthChange: (Boolean) -> Unit,
     val onAutoExtractUrlChange: (Boolean) -> Unit,
+    val onSessDataChange: (String, Long) -> Unit,
+    val onSessDataClear: () -> Unit,
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit = {},
@@ -144,10 +155,56 @@ fun SettingsScreen(
         onUseOriginalLanguageChange = appViewModel::setUseOriginalLanguageValue,
         onDynamicColorChange = appViewModel::setDynamicColorValue,
         onShowLengthChange = appViewModel::setShowLengthValue,
-        onAutoExtractUrlChange = appViewModel::setAutoExtractUrlValue
+        onAutoExtractUrlChange = appViewModel::setAutoExtractUrlValue,
+        onSessDataChange = appViewModel::setSessData,
+        onSessDataClear = appViewModel::clearSessData
     )
 
     var dialogState by remember { mutableStateOf(DialogState.NONE) }
+    var showBiliBiliLoginSheet by remember { mutableStateOf(false) }
+    var showClearSessDataDialog by remember { mutableStateOf(false) }
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+
+    if (showClearSessDataDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearSessDataDialog = false },
+            title = { Text("Clear BiliBili Login") },
+            text = { Text("Are you sure you want to clear your BiliBili login information?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    actions.onSessDataClear()
+                    showClearSessDataDialog = false
+                }) { Text("Clear") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearSessDataDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showBiliBiliLoginSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBiliBiliLoginSheet = false },
+            sheetState = sheetState
+        ) {
+            fun hide() {
+                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                    if (sheetState.currentValue == SheetValue.Hidden) {
+                        showBiliBiliLoginSheet = false
+                    }
+                }
+            }
+            BiliBiliLoginSheetContent(
+                onDismiss = { hide() },
+                onSessDataFound = { sessData, expires ->
+                    actions.onSessDataChange(sessData, expires)
+                    hide()
+                }
+            )
+        }
+    }
 
     AnimatedContent(
         targetState = dialogState,
@@ -237,6 +294,8 @@ fun SettingsScreen(
             onShowThemeDialog = { dialogState = DialogState.THEME },
             onShowAIProviderDialog = { dialogState = DialogState.AI_PROVIDER },
             onShowModelDialog = { dialogState = DialogState.MODEL },
+            onShowBiliBiliLoginSheet = { showBiliBiliLoginSheet = true },
+            onShowClearSessDataDialog = { showClearSessDataDialog = true },
             highlightSection = highlightSection
         )
     }
@@ -251,6 +310,8 @@ private fun SettingsContent(
     onShowThemeDialog: () -> Unit,
     onShowAIProviderDialog: () -> Unit,
     onShowModelDialog: () -> Unit,
+    onShowBiliBiliLoginSheet: () -> Unit,
+    onShowClearSessDataDialog: () -> Unit,
     highlightSection: String?,
 ) {
     val context = LocalContext.current
@@ -261,6 +322,8 @@ private fun SettingsContent(
     LaunchedEffect(highlightSection) {
         if (highlightSection == "ai") {
             lazyListState.animateScrollToItem(index = 1)
+        } else if (highlightSection == "3rd-party-service") {
+            lazyListState.animateScrollToItem(index = 2)
         }
     }
 
@@ -373,6 +436,52 @@ private fun SettingsContent(
                             Icons.Default.AutoAwesome,
                             contentDescription = "LLM Model",
                             modifier = Modifier.size(24.dp)
+                        )
+                    }
+                )
+            }
+        }
+
+        item {
+            SettingsGroup(highlighted = highlightSection == "3rd-party-service") {
+                val sessDataValid =
+                    state.sessData.isNotBlank() && state.sessDataExpires > System.currentTimeMillis()
+                val itemColor =
+                    if (sessDataValid) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f) else LocalContentColor.current
+
+                ListItem(
+                    modifier = Modifier.combinedClickable(
+                        onClick = {
+                            if (!sessDataValid) {
+                                onShowBiliBiliLoginSheet()
+                            }
+                        },
+                        onLongClick = {
+                            if (sessDataValid) {
+                                onShowClearSessDataDialog()
+                            }
+                        }
+                    ),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    headlineContent = { Text("BiliBili Account", color = itemColor) },
+                    supportingContent = {
+                        if (sessDataValid) {
+                            val expiryDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                .format(Date(state.sessDataExpires))
+                            Text(
+                                "Logged in, expires on $expiryDate. Long press to clear.",
+                                color = itemColor
+                            )
+                        } else {
+                            Text("BiliBili required login to get transcripts which used for video summary")
+                        }
+                    },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.bilibili),
+                            contentDescription = "BiliBili",
+                            modifier = Modifier.size(24.dp),
+                            tint = itemColor
                         )
                     }
                 )
@@ -610,16 +719,16 @@ private fun ThemeSettingsDialog(
     currentTheme: Int,
     onThemeChange: (Int) -> Unit,
 ) {
+    var theme by remember { mutableIntStateOf(currentTheme) }
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(stringResource(id = R.string.theme)) },
         text = {
             Column {
                 RadioButtonItem(
-                    selected = currentTheme == 0,
-                    onSelectionChange = {
-                        onThemeChange(0)
-                    }
+                    selected = theme == 0,
+                    onSelectionChange = { theme = 0 }
                 ) {
                     Text(
                         text = stringResource(id = R.string.systemTheme),
@@ -627,10 +736,8 @@ private fun ThemeSettingsDialog(
                     )
                 }
                 RadioButtonItem(
-                    selected = currentTheme == 2,
-                    onSelectionChange = {
-                        onThemeChange(2)
-                    }
+                    selected = theme == 2,
+                    onSelectionChange = { theme = 2 }
                 ) {
                     Text(
                         text = stringResource(id = R.string.lightTheme),
@@ -638,10 +745,8 @@ private fun ThemeSettingsDialog(
                     )
                 }
                 RadioButtonItem(
-                    selected = currentTheme == 1,
-                    onSelectionChange = {
-                        onThemeChange(1)
-                    }
+                    selected = theme == 1,
+                    onSelectionChange = { theme = 1 }
                 ) {
                     Text(
                         text = stringResource(id = R.string.darkTheme),
@@ -650,7 +755,14 @@ private fun ThemeSettingsDialog(
                 }
             }
         },
-        confirmButton = {},
+        confirmButton = {
+            TextButton(onClick = {
+                onThemeChange(theme)
+                onDismissRequest()
+            }) {
+                Text(stringResource(id = R.string.ok))
+            }
+        },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
                 Text(stringResource(id = R.string.cancel))
@@ -964,7 +1076,9 @@ private fun ScrollContentPreview() {
             onUseOriginalLanguageChange = {},
             onDynamicColorChange = {},
             onShowLengthChange = {},
-            onAutoExtractUrlChange = {}
+            onAutoExtractUrlChange = {},
+            onSessDataChange = { _, _ -> },
+            onSessDataClear = {}
         )
         Scaffold { innerPadding ->
             SettingsContent(
@@ -976,6 +1090,8 @@ private fun ScrollContentPreview() {
                 onShowModelDialog = {},
                 highlightSection = null,
                 onNav = {},
+                onShowBiliBiliLoginSheet = {},
+                onShowClearSessDataDialog = {}
             )
         }
     }

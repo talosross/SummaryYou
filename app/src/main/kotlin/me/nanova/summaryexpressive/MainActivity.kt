@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
@@ -22,6 +23,7 @@ import me.nanova.summaryexpressive.vm.AppViewModel
 class MainActivity : ComponentActivity() {
     private val viewModel: AppViewModel by viewModels()
 
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -43,9 +45,12 @@ class MainActivity : ComponentActivity() {
                 },
                 dynamicColor = settingsState.dynamicColor
             ) {
+                if (startDestination == null) {
+                    return@SummaryExpressiveTheme
+                }
                 AppNavigation(
                     navController = navController,
-                    startDestination = startDestination,
+                    startDestination = startDestination!!,
                     appViewModel = viewModel
                 )
             }

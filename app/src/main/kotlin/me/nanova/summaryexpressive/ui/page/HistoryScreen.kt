@@ -121,7 +121,8 @@ fun HistoryScreen(
                                 author = it.author,
                                 sourceLink = it.sourceLink,
                                 isYoutubeLink = it.isYoutubeLink,
-                                length = it.length
+                                isBiliBiliLink = it.isBiliBiliLink,
+                                length = it.length,
                             ),
                             cardColors = CardDefaults.elevatedCardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant

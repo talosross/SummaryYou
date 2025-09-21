@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -58,9 +59,9 @@ fun OnboardingScreen(
         }
         .build()
 
-    Box(
-        modifier = modifier
-            .fillMaxSize(),
+    Surface {
+        Box(
+            modifier = modifier.fillMaxSize(),
     ) {
         HorizontalPager(
             state = pagerState,
@@ -110,6 +111,7 @@ fun OnboardingScreen(
                 )
             }
         }
+    }
     }
 }
 
@@ -214,7 +216,7 @@ private fun OnboardingStepContent(
 }
 
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun OnboardingStepContentPreview() {
     val context = LocalContext.current
@@ -231,7 +233,7 @@ fun OnboardingStepContentPreview() {
 }
 
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun OnboardingScreenPreview() {
     OnboardingScreen(onDone = {}, onDoneAndNavigate = {})

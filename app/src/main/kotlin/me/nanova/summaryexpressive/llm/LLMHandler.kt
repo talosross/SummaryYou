@@ -27,8 +27,11 @@ import ai.koog.prompt.message.Message
 import android.content.Context
 import io.ktor.client.HttpClient
 import kotlinx.serialization.Serializable
+import me.nanova.summaryexpressive.UserPreferencesRepository
 import me.nanova.summaryexpressive.llm.tools.Article
 import me.nanova.summaryexpressive.llm.tools.ArticleExtractorTool
+import me.nanova.summaryexpressive.llm.tools.BiliBiliSubtitleTool
+import me.nanova.summaryexpressive.llm.tools.BiliBiliVideo
 import me.nanova.summaryexpressive.llm.tools.File
 import me.nanova.summaryexpressive.llm.tools.FileExtractorTool
 import me.nanova.summaryexpressive.llm.tools.YouTubeTranscript
@@ -45,13 +48,16 @@ data class SummaryOutput(
     val sourceLink: String? = null,
     // TODO: just use SummarySource
     val isYoutubeLink: Boolean,
+    val isBiliBiliLink: Boolean,
     val length: SummaryLength,
 ) : SummaryData
 
 class LLMHandler(context: Context, httpClient: HttpClient) {
+    private val userPreferencesRepository = UserPreferencesRepository(context)
     private val fileExtractorTool: FileExtractorTool = FileExtractorTool(context)
     private val articleExtractorTool = ArticleExtractorTool(httpClient)
     private val youTubeTranscriptTool = YouTubeTranscriptTool(httpClient)
+    private val bilibiliSubtitleTool = BiliBiliSubtitleTool(httpClient, userPreferencesRepository)
 
     fun getSummarizationAgent(
         provider: AIProvider,
@@ -59,16 +65,20 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         baseUrl: String? = null,
         model: String? = null,
         summaryLength: SummaryLength = SummaryLength.MEDIUM,
+        useOriginalLanguage: Boolean,
         language: String,
     ): AIAgent<String, SummaryOutput> {
         val executor = createExecutor(provider, apiKey, baseUrl)
 
         val articleToolRegistry = ToolRegistry { tool(articleExtractorTool) }
         val videoToolRegistry = ToolRegistry { tool(youTubeTranscriptTool) }
+        val bilibiliToolRegistry = ToolRegistry { tool(bilibiliSubtitleTool) }
         val fileToolRegistry = ToolRegistry { tool(fileExtractorTool) }
-        val tools = articleToolRegistry + videoToolRegistry + fileToolRegistry
+        val tools =
+            articleToolRegistry + videoToolRegistry + bilibiliToolRegistry + fileToolRegistry
 
-        val agentConfig = createAgentConfig(provider, model, summaryLength, language)
+        val agentConfig =
+            createAgentConfig(provider, model, summaryLength, useOriginalLanguage, language)
 
         return AIAgent(
             promptExecutor = executor,
@@ -100,6 +110,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         provider: AIProvider,
         modelName: String?,
         summaryLength: SummaryLength,
+        useOriginalLanguage: Boolean,
         language: String,
     ): AIAgentConfig {
         val llmModel = when (provider) {
@@ -117,7 +128,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         }
 
         return AIAgentConfig(
-            prompt = createSummarizationPrompt(summaryLength, language),
+            prompt = createSummarizationPrompt(summaryLength, useOriginalLanguage, language),
             model = llmModel,
             maxAgentIterations = 10,
         )
@@ -156,7 +167,9 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
     }
 
     private val isYouTubeUrl = { input: String -> YouTubeTranscriptTool.isYouTubeLink(input) }
-    private val isWebUrl = { input: String -> input.startsWith("http") && !isYouTubeUrl(input) }
+    private val isBiliBiliUrl = { input: String -> BiliBiliSubtitleTool.isBiliBiliLink(input) }
+    private val isWebUrl =
+        { input: String -> input.startsWith("http") && !isYouTubeUrl(input) && !isBiliBiliUrl(input) }
     private val isFileUri =
         { input: String -> input.startsWith("content://") || input.startsWith("file://") }
     private val isPlainText =
@@ -172,10 +185,12 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         {
             var extractedContent: ExtractedContent? = null
             var isYoutube = false
+            var isBiliBili = false
             var sourceLink = ""
 
             val nodeExtractArticle by nodeExecuteSingleTool(tool = articleExtractorTool)
             val nodeExtractVideo by nodeExecuteSingleTool(tool = youTubeTranscriptTool)
+            val nodeExtractBiliBili by nodeExecuteSingleTool(tool = bilibiliSubtitleTool)
             val nodeExtractFile by nodeExecuteSingleTool(tool = fileExtractorTool)
 
             val nodePreparePlainText by node<String, ExtractedContent>("prepare_plain_text") { text ->
@@ -198,16 +213,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
                 when (it) {
                     is SafeTool.Result.Success -> it.result
                     is SafeTool.Result.Failure -> {
-                        val errorMessage = it.message
-                        throw when {
-                            errorMessage.contains("Paywall detected") -> SummaryException.PaywallException
-                            errorMessage.contains("Could not extract video ID") -> SummaryException.InvalidLinkException
-                            errorMessage.contains("Could not get transcript") -> SummaryException.NoTranscriptException
-                            errorMessage.contains("Could not extract text from URL") -> SummaryException.NoContentException
-                            errorMessage.contains("Unsupported file type") -> SummaryException.InvalidLinkException // Or a more specific FileTypeException
-                            errorMessage.contains("Extracted text from file is empty") -> SummaryException.NoContentException
-                            else -> SummaryException.UnknownException(errorMessage)
-                        }
+                        throw SummaryException.fromMessage(it.message)
                     }
                 }
             }
@@ -215,11 +221,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
             val nodeCombineResult by node<Message.Response, SummaryOutput>("combine_result") { response ->
                 val content = response.content
                 if (content.isBlank() || content.startsWith("Error:", ignoreCase = true)) {
-                    if (content.contains("API key", ignoreCase = true))
-                        throw SummaryException.IncorrectKeyException
-                    if (content.contains("rate limit", ignoreCase = true))
-                        throw SummaryException.RateLimitException
-                    throw SummaryException.UnknownException(content)
+                    throw SummaryException.fromMessage(content)
                 }
                 val ec = extractedContent!!
                 SummaryOutput(
@@ -228,7 +230,8 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
                     summary = content,
                     sourceLink = sourceLink,
                     isYoutubeLink = isYoutube,
-                    length = summaryLength
+                    isBiliBiliLink = isBiliBili,
+                    length = summaryLength,
                 )
             }
 
@@ -250,6 +253,15 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
                 }
             )
             edge(
+                nodeStart forwardTo nodeExtractBiliBili
+                        onCondition { isBiliBiliUrl(it) }
+                        transformed {
+                    isBiliBili = true
+                    sourceLink = it
+                    BiliBiliVideo(it)
+                }
+            )
+            edge(
                 nodeStart forwardTo nodeExtractFile
                         onCondition { isFileUri(it) }
                         transformed { File(it) }
@@ -261,6 +273,11 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
             // Tool-based paths
             edge(nodeExtractArticle forwardTo nodeTriggerSummaryFromTool transformed { processToolResult(it) })
             edge(nodeExtractVideo forwardTo nodeTriggerSummaryFromTool transformed { processToolResult(it) })
+            edge(nodeExtractBiliBili forwardTo nodeTriggerSummaryFromTool transformed {
+                processToolResult(
+                    it
+                )
+            })
             edge(nodeExtractFile forwardTo nodeTriggerSummaryFromTool transformed { processToolResult(it) })
             edge(nodeTriggerSummaryFromTool forwardTo nodeSummarizeText)
 

@@ -17,6 +17,8 @@ data class SettingsUiState(
     val autoExtractUrl: Boolean = true,
     val showLength: Boolean = true,
     val summaryLength: SummaryLength = SummaryLength.MEDIUM,
+    val sessData: String = "",
+    val sessDataExpires: Long = 0L,
 )
 
 data class SummarizationState(

@@ -37,10 +37,9 @@ private fun slideOut(dir: SlideDirection): AnimatedContentTransitionScope<*>.() 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    startDestination: Nav?,
+    startDestination: Nav,
     appViewModel: AppViewModel,
 ) {
-    if (startDestination == null) return
 
     NavHost(
         navController = navController,
@@ -49,7 +48,13 @@ fun AppNavigation(
         composable(Nav.Home.name) {
             HomeScreen(
                 modifier = Modifier,
-                onNav = { navController.navigate(it.name) },
+                onNav = { dest, args ->
+                    navController.navigate(
+                        "${dest.name}?${
+                            args?.entries?.joinToString("&") { "${it.key}=${it.value}" }
+                        }"
+                    )
+                },
                 appViewModel = appViewModel
             )
         }
@@ -85,7 +90,7 @@ fun AppNavigation(
         ) { backStackEntry ->
             val highlightSection = backStackEntry.arguments?.getString("highlight")
             SettingsScreen(
-                onBack = { navController.navigateUp() },
+                onBack = { navController.popBackStack() },
                 onNav = { navController.navigate(it.name) },
                 highlightSection = highlightSection,
                 appViewModel = appViewModel

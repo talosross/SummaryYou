@@ -33,6 +33,8 @@ data class UserPreferences(
     val showLength: Boolean = true,
     val summaryLength: String = SummaryLength.MEDIUM.name,
     val autoExtractUrl: Boolean = true,
+    val sessData: String = "",
+    val sessDataExpires: Long = 0L,
 )
 
 class UserPreferencesRepository(private val context: Context) {
@@ -89,6 +91,12 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun setAutoExtractUrl(value: Boolean) =
         updatePreferences { it.copy(autoExtractUrl = value) }
+
+    suspend fun setSessData(data: String, expires: Long) =
+        updatePreferences { it.copy(sessData = data, sessDataExpires = expires) }
+
+    suspend fun clearSessData() =
+        updatePreferences { it.copy(sessData = "", sessDataExpires = 0L) }
 
     fun getTextSummaries(): Flow<String> =
         context.dataStore.data.map { it[history] ?: "[]" }

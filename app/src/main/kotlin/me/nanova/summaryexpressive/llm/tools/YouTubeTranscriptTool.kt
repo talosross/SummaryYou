@@ -92,16 +92,21 @@ private class YouTubeExtractor(private val client: HttpClient) {
     private val json = Json { ignoreUnknownKeys = true }
 
     companion object {
+        private const val TAG = "YouTubeExtractor"
         private const val INNERTUBE_CONTEXT_JSON =
             """{"client": {"clientName": "ANDROID", "clientVersion": "20.10.38"}}"""
 
+        private fun ensureScheme(url: String): String {
+            return if (!url.matches(Regex("^https?://.*"))) {
+                "https://$url"
+            } else {
+                url
+            }
+        }
+
         fun extractVideoId(urlInput: String): String? {
             try {
-                val urlString = if (!urlInput.matches(Regex("^https?://.*"))) {
-                    "https://$urlInput"
-                } else {
-                    urlInput
-                }
+                val urlString = ensureScheme(urlInput)
                 val url = Url(urlString)
                 val host = url.host.lowercase()
                 val pathSegments = url.segments
@@ -132,24 +137,20 @@ private class YouTubeExtractor(private val client: HttpClient) {
                 // Standard YouTube video IDs are 11 characters long and use alphanumeric characters, underscores, and hyphens.
                 return vid?.takeIf { it.matches(Regex("[a-zA-Z0-9_-]{11}")) }
             } catch (e: Exception) {
-                Log.e("YouTube", "Error parsing URL to extract video ID: $urlInput", e)
+                Log.e(TAG, "Error parsing URL to extract video ID: $urlInput", e)
                 return null
             }
         }
 
         fun isYouTubeLink(input: String): Boolean {
             try {
-                val urlString = if (!input.matches(Regex("^https?://.*"))) {
-                    "https://$input"
-                } else {
-                    input
-                }
+                val urlString = ensureScheme(input)
                 val url = Url(urlString)
                 val host = url.host.lowercase()
                 // Valid hosts: youtu.be, youtube.com, or any subdomain of youtube.com (e.g., www.youtube.com, m.youtube.com)
                 return host == "youtu.be" || host == "youtube.com" || host.endsWith(".youtube.com")
             } catch (e: Exception) {
-                Log.e("YouTube", "Exception in isYouTubeLink", e)
+                Log.e(TAG, "Exception in isYouTubeLink", e)
                 return false
             }
         }
@@ -166,11 +167,11 @@ private class YouTubeExtractor(private val client: HttpClient) {
             if (watchPageResponse.status.isSuccess()) {
                 return@withContext watchPageResponse.bodyAsText()
             } else {
-                Log.e("YouTube", "Failed to fetch watch page: ${watchPageResponse.status}")
+                Log.e(TAG, "Failed to fetch watch page: ${watchPageResponse.status}")
                 return@withContext null
             }
         } catch (e: Exception) {
-            Log.e("YouTube", "Exception in getWatchPageHtml for video $videoId", e)
+            Log.e(TAG, "Exception in getWatchPageHtml for video $videoId", e)
             return@withContext null
         }
     }
@@ -180,7 +181,7 @@ private class YouTubeExtractor(private val client: HttpClient) {
             val apiKey =
                 Regex("\"INNERTUBE_API_KEY\"\\s*:\\s*\"([^\"]+)\"").find(html)?.groupValues?.get(1)
             if (apiKey == null) {
-                Log.e("YouTube", "Could not find INNERTUBE_API_KEY in watch page HTML.")
+                Log.e(TAG, "Could not find INNERTUBE_API_KEY in watch page HTML.")
                 return@withContext null
             }
 
@@ -201,13 +202,13 @@ private class YouTubeExtractor(private val client: HttpClient) {
                     return@withContext json.parseToJsonElement(response.bodyAsText()).jsonObject
                 } else {
                     Log.e(
-                        "YouTube",
+                        TAG,
                         "Failed to fetch from /player API: ${response.status}. Body: ${response.bodyAsText()}"
                     )
                     return@withContext null
                 }
             } catch (e: Exception) {
-                Log.e("YouTube", "Exception in getPlayerResponseFromApi for video $videoId", e)
+                Log.e(TAG, "Exception in getPlayerResponseFromApi for video $videoId", e)
                 return@withContext null
             }
         }
@@ -232,13 +233,13 @@ private class YouTubeExtractor(private val client: HttpClient) {
                     return@withContext Pair(VideoDetails(title, author), playerResponse)
                 } else {
                     Log.w(
-                        "YouTube",
+                        TAG,
                         "Could not extract video details from 'videoDetails' for $videoId"
                     )
                     return@withContext null
                 }
             } catch (e: Exception) {
-                Log.e("YouTube", "Exception in getVideoDetails for video $videoId", e)
+                Log.e(TAG, "Exception in getVideoDetails for video $videoId", e)
                 return@withContext null
             }
         }
@@ -256,7 +257,7 @@ private class YouTubeExtractor(private val client: HttpClient) {
                     val reason =
                         playabilityStatus["reason"]?.jsonPrimitive?.contentOrNull ?: status
                     Log.e(
-                        "YouTube",
+                        TAG,
                         "Cannot get transcript for $videoId. Status: $status, Reason: $reason"
                     )
                     return@withContext null
@@ -268,14 +269,14 @@ private class YouTubeExtractor(private val client: HttpClient) {
                 ?.get("captionTracks")?.jsonArray
 
             if (captionTracksJson == null) {
-                Log.w("YouTube", "No caption tracks found for video $videoId.")
+                Log.w(TAG, "No caption tracks found for video $videoId.")
                 return@withContext null
             }
 
             val tracks = json.decodeFromJsonElement<List<CaptionTrack>>(captionTracksJson)
 
             if (tracks.isEmpty()) {
-                Log.w("YouTube", "No caption tracks found for video $videoId.")
+                Log.w(TAG, "No caption tracks found for video $videoId.")
                 return@withContext null
             }
 
@@ -288,7 +289,7 @@ private class YouTubeExtractor(private val client: HttpClient) {
                     ?: tracks.firstOrNull() // Any available track
 
             if (track == null) {
-                Log.w("YouTube", "Could not select a suitable caption track for video $videoId.")
+                Log.w(TAG, "Could not select a suitable caption track for video $videoId.")
                 return@withContext null
             }
 
@@ -306,7 +307,7 @@ private class YouTubeExtractor(private val client: HttpClient) {
 
             if (!transcriptResponse.status.isSuccess()) {
                 Log.e(
-                    "YouTube",
+                    TAG,
                     "Failed to download transcript from $transcriptUrl: ${transcriptResponse.status}"
                 )
                 return@withContext null
@@ -314,14 +315,14 @@ private class YouTubeExtractor(private val client: HttpClient) {
 
             val transcriptJson = transcriptResponse.bodyAsText()
             if (transcriptJson.isEmpty()) {
-                Log.e("YouTube", "Transcript response body is empty for $transcriptUrl")
+                Log.e(TAG, "Transcript response body is empty for $transcriptUrl")
                 return@withContext null
             }
 
             val transcriptText = parseJsonTranscript(transcriptJson)
             return@withContext Pair(transcriptText, track.languageCode)
         } catch (e: Exception) {
-            Log.e("YouTube", "Exception in getTranscript for video $videoId", e)
+            Log.e(TAG, "Exception in getTranscript for video $videoId", e)
             return@withContext null
         }
     }
@@ -348,7 +349,7 @@ private class YouTubeExtractor(private val client: HttpClient) {
             // Joining with empty string and then replacing newline with space is the safest bet.
             texts.joinToString("").replace('\n', ' ').trim()
         } catch (e: Exception) {
-            Log.e("YouTube", "Failed to parse JSON transcript", e)
+            Log.e(TAG, "Failed to parse JSON transcript", e)
             ""
         }
     }

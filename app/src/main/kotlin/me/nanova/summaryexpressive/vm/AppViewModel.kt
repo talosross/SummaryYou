@@ -51,6 +51,8 @@ class AppViewModel @Inject constructor(
                 showLength = prefs.showLength,
                 summaryLength = SummaryLength.valueOf(prefs.summaryLength),
                 autoExtractUrl = prefs.autoExtractUrl,
+                sessData = prefs.sessData,
+                sessDataExpires = prefs.sessDataExpires,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -104,6 +106,19 @@ class AppViewModel @Inject constructor(
     // OnboardingScreen
     fun setIsOnboarded(newValue: Boolean) =
         savePreference(userPreferencesRepository::setIsOnboarded, newValue)
+
+    // BiliBili SESSDATA
+    fun setSessData(data: String, expires: Long) {
+        viewModelScope.launch {
+            userPreferencesRepository.setSessData(data, expires)
+        }
+    }
+
+    fun clearSessData() {
+        viewModelScope.launch {
+            userPreferencesRepository.clearSessData()
+        }
+    }
 
     // --- App Start Action ---
     private val _appStartAction = MutableStateFlow(AppStartAction())

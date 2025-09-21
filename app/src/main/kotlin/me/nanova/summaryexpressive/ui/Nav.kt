@@ -4,5 +4,5 @@ enum class Nav {
     Home,
     Onboarding,
     History,
-    Settings
+    Settings,
 }
