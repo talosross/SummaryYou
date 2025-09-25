@@ -139,6 +139,7 @@ fun HomeScreen(
 ) {
     var urlOrText by rememberSaveable { mutableStateOf("") }
     var documentFilename by remember { mutableStateOf<String?>(null) }
+    var isPlaying by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current // Hide cursor
     val focusRequester = remember { FocusRequester() } // Show cursor after removing
@@ -179,6 +180,12 @@ fun HomeScreen(
     val isLoading = summarizationState.isLoading
     val summaryResult = summarizationState.summaryResult
     val error = summarizationState.error
+    LaunchedEffect(summaryResult) {
+        isPlaying = false
+    }
+    LaunchedEffect(error) {
+        isPlaying = false
+    }
     LaunchedEffect(error) {
         error?.let { when(it){
             is SummaryException.BiliBiliLoginRequiredException -> {
@@ -356,6 +363,7 @@ fun HomeScreen(
                     summaryResult?.takeIf { it.summary.isNotEmpty() }?.let { summaryOutput ->
                         SummaryCard(
                             modifier = Modifier.padding(vertical = 15.dp),
+                            isExpandedByDefault = true,
                             summary = summaryOutput,
                             onLongClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -370,7 +378,9 @@ fun HomeScreen(
                             },
                             onShowSnackbar = {
                                 scope.launch { snackbarHostState.showSnackbar(it) }
-                            }
+                            },
+                            isPlaying = isPlaying,
+                            onPlayRequest = { isPlaying = !isPlaying }
                         )
                     }
                 }

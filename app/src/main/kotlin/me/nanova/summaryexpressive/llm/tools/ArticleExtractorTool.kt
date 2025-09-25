@@ -68,7 +68,7 @@ private fun extractArticleContent(htmlContent: String, sourceUrl: String): Extra
         ?: doc.select("main").first()
         // For section and divs, look for the one with the most content
         ?: doc.select("section").maxByOrNull { it.text().length }
-        ?: doc.select("#content, .content, #main, .main, #main-content, #article, .article, #post-body, .post-body")
+        ?: doc.select("#content, .content, #main, .main, #main-content, #article, .article, #post-body, .post-body, [class~=content]")
             .maxByOrNull { it.text().length }
 
     // Get text from the found element, or fall back to the whole body

@@ -18,8 +18,8 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 35
-        versionName = "0.8.0"
+        versionCode = 36
+        versionName = "0.9.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -103,7 +103,7 @@ android {
 
 dependencies {
     // https://developer.android.com/develop/ui/compose/bom/bom-mapping
-    val composeBomVersion = "2025.09.00"
+    val composeBomVersion = "2025.09.01"
 
     // Core & Lifecycle
     implementation("androidx.core:core-ktx:1.17.0")
@@ -117,7 +117,7 @@ dependencies {
     ksp("com.google.dagger:hilt-compiler:2.57.1")
 
     // Navigation
-    implementation("androidx.navigation:navigation-compose:2.9.4")
+    implementation("androidx.navigation:navigation-compose:2.9.5")
     implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
 
     // Jetpack Compose

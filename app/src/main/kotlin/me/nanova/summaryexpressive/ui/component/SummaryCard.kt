@@ -6,8 +6,11 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,13 +30,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +49,7 @@ import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -50,7 +57,11 @@ import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.SummaryLength
 import me.nanova.summaryexpressive.llm.SummaryOutput
+import me.nanova.summaryexpressive.util.getLanguageCode
+import java.util.Locale
 import java.util.UUID
+
+private const val MAX_LINES_WHEN_COLLAPSE = 7
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -58,34 +69,51 @@ fun SummaryCard(
     modifier: Modifier = Modifier,
     summary: SummaryOutput,
     cardColors: CardColors = CardDefaults.cardColors(),
+    isExpandedByDefault: Boolean = false,
     onLongClick: (() -> Unit)? = null,
     onShowSnackbar: (String) -> Unit,
+    isPlaying: Boolean = false,
+    onPlayRequest: () -> Unit = {},
 ) {
+    var isExpanded by remember { mutableStateOf(isExpandedByDefault) }
+    var isTextOverflowing by remember { mutableStateOf(false) }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .combinedClickable(
-                onClick = {},
-                onLongClick = onLongClick
+            .then(
+                if (onLongClick != null) {
+                    Modifier.combinedClickable(
+                        onClick = { if (isTextOverflowing) isExpanded = !isExpanded },
+                        onLongClick = onLongClick
+                    )
+                } else {
+                    Modifier.clickable { if (isTextOverflowing) isExpanded = !isExpanded }
+                }
             ),
         colors = cardColors,
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
     ) {
-        if (summary.title.isNotEmpty()) {
-            Text(
-                text = summary.title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .padding(top = 12.dp, start = 12.dp, end = 12.dp)
-            )
-            if (summary.author.isNotEmpty()) {
+        Column(
+            modifier = Modifier.animateContentSize()
+        ) {
+            if (summary.title.isNotBlank()) {
+                Text(
+                    text = summary.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .padding(top = 12.dp, start = 12.dp, end = 12.dp)
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = summary.author,
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    )
+                    if (summary.author.isNotBlank()) {
+                        Text(
+                            text = summary.author,
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.padding(horizontal = 12.dp)
+                        )
+                    }
+
                     if (summary.isYoutubeLink) {
                         Icon(
                             painter = painterResource(id = R.drawable.youtube),
@@ -101,19 +129,43 @@ fun SummaryCard(
                     }
                 }
             }
+
+            Text(
+                text = summary.summary,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = if (isExpanded) Int.MAX_VALUE else MAX_LINES_WHEN_COLLAPSE,
+                overflow = TextOverflow.Ellipsis,
+                onTextLayout = { textLayoutResult ->
+                    isTextOverflowing =
+                        textLayoutResult.lineCount > MAX_LINES_WHEN_COLLAPSE || textLayoutResult.hasVisualOverflow
+                },
+                modifier = Modifier
+                    .padding(
+                        start = 12.dp,
+                        end = 12.dp,
+                        top = 10.dp,
+                        bottom = if (isTextOverflowing) 0.dp else 12.dp
+                    )
+            )
+
+            AnimatedVisibility(visible = isTextOverflowing) {
+                TextButton(
+                    onClick = { isExpanded = !isExpanded },
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(end = 8.dp)
+                ) {
+                    Text(if (isExpanded) "Show Less" else "Show More")
+                }
+            }
         }
-        Text(
-            text = summary.summary,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .padding(
-                    start = 12.dp,
-                    end = 12.dp,
-                    top = 10.dp,
-                    bottom = 12.dp
-                )
+
+        SummaryActionButtons(
+            summary = summary,
+            onShowSnackbar = onShowSnackbar,
+            isPlaying = isPlaying,
+            onPlayRequest = onPlayRequest
         )
-        SummaryActionButtons(summary = summary, onShowSnackbar = onShowSnackbar)
     }
 }
 
@@ -136,10 +188,14 @@ fun SummaryCardPreview() {
 }
 
 
+private const val TAG = "TTS"
+
 @Composable
 private fun SummaryActionButtons(
     summary: SummaryOutput,
     onShowSnackbar: (String) -> Unit,
+    isPlaying: Boolean,
+    onPlayRequest: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -147,24 +203,26 @@ private fun SummaryActionButtons(
     val summaryText = summary.summary
 
     var tts: TextToSpeech? by remember { mutableStateOf(null) }
-    var isSpeaking by remember { mutableStateOf(false) }
     var isPaused by remember { mutableStateOf(false) }
     var currentPosition by remember { mutableIntStateOf(0) }
+    var resumeOffset by remember { mutableIntStateOf(0) }
     var utteranceId by remember { mutableStateOf("") }
     val copied = stringResource(id = R.string.copied)
+
+    val updatedOnPlayRequest by rememberUpdatedState(onPlayRequest)
+    val updatedIsPlaying by rememberUpdatedState(isPlaying)
 
     val utteranceProgressListener =
         remember {
             object : UtteranceProgressListener() {
-                override fun onStart(utteranceId: String) {
-                    // Is called when an utterance starts
-                }
+                override fun onStart(utteranceId: String) {}
 
                 override fun onDone(utteranceId: String) {
-                    // Is called when an utterance is done
-                    currentPosition = 0
-                    isSpeaking = false
-                    isPaused = false
+                    scope.launch {
+                        if (updatedIsPlaying) {
+                            updatedOnPlayRequest()
+                        }
+                    }
                 }
 
                 override fun onError(utteranceId: String) {
@@ -178,59 +236,78 @@ private fun SummaryActionButtons(
                     frame: Int,
                 ) {
                     // Is called when a new range of text is being spoken
-                    currentPosition = end
+                    currentPosition = resumeOffset + end
                 }
             }
         }
 
     DisposableEffect(Unit) {
         var textToSpeech: TextToSpeech? = null
-        textToSpeech = TextToSpeech(context) { status ->
+        val onInitListener = TextToSpeech.OnInitListener { status ->
             if (status == TextToSpeech.SUCCESS) {
-                Log.d("TTS", "TTS engine initialized.")
+                Log.d(TAG, "TTS engine initialized.")
                 textToSpeech?.setOnUtteranceProgressListener(utteranceProgressListener)
+                tts = textToSpeech
             } else {
-                Log.d("TTS", "TTS engine init error.")
+                Log.e(TAG, "TTS engine init error.")
+                onShowSnackbar("Text-to-speech engine failed to initialize.")
             }
         }
-        tts = textToSpeech
+        textToSpeech = TextToSpeech(context, onInitListener)
+
         onDispose {
             textToSpeech.stop()
             textToSpeech.shutdown()
         }
     }
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(
-            onClick = {
-                if (isSpeaking) {
-                    tts?.stop()
-                    isSpeaking = false
-                    isPaused = false
-                    currentPosition = 0
-                } else if (summaryText.isNotEmpty()) {
-                    utteranceId = UUID.randomUUID().toString()
-                    tts?.speak(
-                        summaryText,
-                        TextToSpeech.QUEUE_FLUSH,
-                        null,
-                        utteranceId
-                    )
-                    isSpeaking = true
+    LaunchedEffect(isPlaying) {
+        if (tts == null) return@LaunchedEffect
+
+        if (isPlaying) {
+            scope.launch {
+                val langCode = getLanguageCode(context, summaryText)
+                val locale = langCode?.let { Locale.forLanguageTag(it) } ?: Locale.getDefault()
+                val result = tts?.setLanguage(locale)
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Log.w(TAG, "Language '$locale' is not supported. Falling back to default.")
+                    val defaultResult = tts?.setLanguage(Locale.getDefault())
+                    if (defaultResult == TextToSpeech.LANG_MISSING_DATA || defaultResult == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Log.e(TAG, "Default language is also not supported.")
+                        onShowSnackbar("Text-to-speech language not supported.")
+                    } else {
+                        Log.d(TAG, "Language set to default: ${Locale.getDefault()}")
+                    }
+                } else {
+                    Log.d(TAG, "Language set successfully to: $locale")
                 }
+
+                resumeOffset = 0
+                utteranceId = UUID.randomUUID().toString()
+                tts?.speak(summaryText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
             }
-        ) {
+        } else {
+            tts?.stop()
+            isPaused = false
+            currentPosition = 0
+            resumeOffset = 0
+        }
+    }
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = onPlayRequest) {
             Icon(
                 Icons.AutoMirrored.Outlined.VolumeUp,
-                contentDescription = if (isSpeaking) "Finish" else "Read",
+                contentDescription = if (isPlaying) "Finish" else "Read",
                 modifier = Modifier.size(24.dp)
             )
         }
 
-        AnimatedVisibility(visible = isSpeaking) {
+        AnimatedVisibility(visible = isPlaying) {
             IconButton(
                 onClick = {
                     if (isPaused) {
+                        resumeOffset = currentPosition
                         val remainingText =
                             summaryText.substring(currentPosition)
                         utteranceId =
@@ -330,5 +407,9 @@ fun SummaryActionButtonsPreview() {
         length = SummaryLength.SHORT,
         isBiliBiliLink = false
     )
-    SummaryActionButtons(summary = summary, onShowSnackbar = {})
+    SummaryActionButtons(
+        summary = summary,
+        onShowSnackbar = {},
+        isPlaying = true,
+        onPlayRequest = {})
 }

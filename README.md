@@ -76,7 +76,7 @@ package previously.
 
 - **Configurable summary length**
 
-- **Read-Out the summaries**
+- **Read-Out the summaries with multilingual support**
 
 - **History search**
 
