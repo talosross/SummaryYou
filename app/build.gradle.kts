@@ -113,8 +113,8 @@ dependencies {
     implementation("androidx.webkit:webkit:1.14.0")
 
     // DI (Hilt)
-    implementation("com.google.dagger:hilt-android:2.57.1")
-    ksp("com.google.dagger:hilt-compiler:2.57.1")
+    implementation("com.google.dagger:hilt-android:2.57.2")
+    ksp("com.google.dagger:hilt-compiler:2.57.2")
 
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.9.5")
@@ -129,8 +129,16 @@ dependencies {
     // https://developer.android.com/jetpack/androidx/releases/compose-material3#compose_material3_version_15_2
     implementation("androidx.compose.material3:material3:1.5.0-alpha04")
 
+    // Paging
+    implementation("androidx.paging:paging-compose:3.3.6")
+    implementation("androidx.paging:paging-runtime-ktx:3.3.6")
+
     // Data Persistence
     implementation("androidx.datastore:datastore-preferences:1.1.7")
+    implementation("androidx.room:room-runtime:2.8.1")
+    implementation("androidx.room:room-paging:2.8.1")
+    implementation("androidx.room:room-ktx:2.8.1")
+    ksp("androidx.room:room-compiler:2.8.1")
 
     // ML & AI
     // Custom configurations for build flavors to manage ML model packaging

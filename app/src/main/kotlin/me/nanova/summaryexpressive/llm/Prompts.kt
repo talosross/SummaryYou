@@ -21,8 +21,7 @@ fun createSummarizationPrompt(
         """
         **Mandatory Procedure:**
         1.  **Identify Content Language:** First, determine the original language of the 'content' field in the user's request. This is the SOLE source for language identification. Ignore tool call details for this step.
-        2.  **Summarize in Identified Language:** Generate the summary STRICTLY in the language identified in step 1.
-        The summary should be written in $language.
+        2.  **Use the identified language for summarization**".
         """
     } else "The summary should be written in $language."
 

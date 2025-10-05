@@ -39,7 +39,6 @@ data class UserPreferences(
 
 class UserPreferencesRepository(private val context: Context) {
     private val userPreferencesKey = stringPreferencesKey("user_preferences")
-    private val history = stringPreferencesKey("text_summaries_json")
 
     val preferencesFlow: Flow<UserPreferences> = context.dataStore.data
         .catch { exception ->
@@ -97,10 +96,4 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun clearSessData() =
         updatePreferences { it.copy(sessData = "", sessDataExpires = 0L) }
-
-    fun getTextSummaries(): Flow<String> =
-        context.dataStore.data.map { it[history] ?: "[]" }
-
-    suspend fun setTextSummaries(json: String) =
-        context.dataStore.edit { it[history] = json }
 }

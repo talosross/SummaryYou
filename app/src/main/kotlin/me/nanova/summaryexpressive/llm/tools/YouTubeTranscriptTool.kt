@@ -30,7 +30,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.serializer
 import me.nanova.summaryexpressive.model.ExtractedContent
-import java.util.regex.Pattern
 
 @Serializable
 data class YouTubeTranscript(val url: String) : ToolArgs

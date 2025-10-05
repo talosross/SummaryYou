@@ -2,93 +2,61 @@ package me.nanova.summaryexpressive.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import me.nanova.summaryexpressive.UserPreferencesRepository
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
+import me.nanova.summaryexpressive.data.HistoryRepository
 import me.nanova.summaryexpressive.model.HistorySummary
+import me.nanova.summaryexpressive.model.SummaryType
 import javax.inject.Inject
+
+private const val SEARCH_DEBOUNCE_MILLIS = 300L
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val historyRepository: HistoryRepository,
 ) : ViewModel() {
-    private val _historySummaries = MutableStateFlow<List<HistorySummary>>(emptyList())
-    val historySummaries: StateFlow<List<HistorySummary>> = _historySummaries.asStateFlow()
 
     private val _searchText = MutableStateFlow("")
     val searchText: StateFlow<String> = _searchText.asStateFlow()
 
-    val summariesToShow: StateFlow<List<HistorySummary>> = searchText
-        .combine(_historySummaries) { text, summaries ->
-            if (text.isBlank()) {
-                summaries
-            } else {
-                summaries.filter {
-                    it.title.contains(text, ignoreCase = true) || it.author.contains(
-                        text,
-                        ignoreCase = true
-                    ) || it.summary.contains(text, ignoreCase = true)
-                }
-            }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = _historySummaries.value
-        )
+    private val _filterType = MutableStateFlow<SummaryType?>(null)
+    val filterType: StateFlow<SummaryType?> = _filterType.asStateFlow()
 
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    private val debouncedSearchText = _searchText.debounce(SEARCH_DEBOUNCE_MILLIS)
 
-    init {
-        loadSummaries()
-    }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val historySummaries: Flow<PagingData<HistorySummary>> =
+        combine(debouncedSearchText, _filterType) { text, type ->
+            Pair(text, type)
+        }.flatMapLatest { (text, type) ->
+            historyRepository.getSummaries(text, type)
+        }.cachedIn(viewModelScope)
 
-    private fun loadSummaries() {
-        viewModelScope.launch {
-            userPreferencesRepository.getTextSummaries().collect { summariesJson ->
-                if (summariesJson.isNotEmpty()) {
-                    val summaries =
-                        kotlin.runCatching { Json.decodeFromString<List<HistorySummary>>(summariesJson) }
-                            .getOrNull()
-                    _historySummaries.value = summaries?.sortedByDescending { it.createdOn } ?: emptyList()
-                } else {
-                    _historySummaries.value = emptyList()
-                }
-            }
-        }
-    }
-
-    private fun saveHistorySummaries() {
-        viewModelScope.launch {
-            val historySummariesJson = Json.encodeToString(_historySummaries.value)
-            userPreferencesRepository.setTextSummaries(historySummariesJson)
-        }
-    }
 
     fun onSearchTextChanged(text: String) {
         _searchText.value = text
     }
 
-    fun addHistorySummary(summary: HistorySummary) {
-        val currentList = _historySummaries.value.toMutableList()
-        currentList.add(summary)
-        _historySummaries.value = currentList.sortedByDescending { it.createdOn }
-        saveHistorySummaries()
+    fun onFilterChanged(type: SummaryType) {
+        _filterType.value = if (_filterType.value == type) null else type
     }
 
-    fun removeHistorySummary(id: String) {
-        val currentList = _historySummaries.value.toMutableList()
-        val summaryToRemove = currentList.firstOrNull { it.id == id }
-        summaryToRemove?.let {
-            currentList.remove(it)
-            _historySummaries.value = currentList
-            saveHistorySummaries()
-        }
+    suspend fun addHistorySummary(summary: HistorySummary) {
+        historyRepository.addSummary(summary)
+    }
+
+    suspend fun removeHistorySummary(id: String) {
+        historyRepository.deleteSummary(id)
     }
 }

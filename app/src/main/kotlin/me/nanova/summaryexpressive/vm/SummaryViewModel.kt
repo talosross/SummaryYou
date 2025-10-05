@@ -10,12 +10,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import me.nanova.summaryexpressive.UserPreferencesRepository
+import me.nanova.summaryexpressive.data.HistoryRepository
 import me.nanova.summaryexpressive.llm.LLMHandler
 import me.nanova.summaryexpressive.llm.SummaryLength
 import me.nanova.summaryexpressive.llm.SummaryOutput
@@ -23,17 +21,26 @@ import me.nanova.summaryexpressive.llm.tools.YouTubeTranscriptTool
 import me.nanova.summaryexpressive.llm.tools.getFileName
 import me.nanova.summaryexpressive.model.HistorySummary
 import me.nanova.summaryexpressive.model.SummaryException
+import me.nanova.summaryexpressive.model.SummaryType
+import me.nanova.summaryexpressive.model.VideoSubtype
 import java.net.URL
 import java.util.Locale
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class SummaryViewModel @Inject constructor(
     private val llmHandler: LLMHandler,
     private val application: Application,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val historyRepository: HistoryRepository,
 ) : ViewModel() {
+
+    private sealed class SummarySource {
+        data class Video(val url: String) : SummarySource()
+        data class Article(val url: String) : SummarySource()
+        data class Text(val content: String) : SummarySource()
+        data class Document(val filename: String, val uri: String) : SummarySource()
+        object None : SummarySource()
+    }
 
     private val _summarizationState = MutableStateFlow(SummarizationState())
     val summarizationState: StateFlow<SummarizationState> = _summarizationState.asStateFlow()
@@ -49,7 +56,7 @@ class SummaryViewModel @Inject constructor(
                     "([\\w\\-]+)" + // Top-level domain
                     "([^\\s<>\"#%{}|\\\\^`]*)" // Path, query, and fragment
         )
-        return urlRegex.find(text)?.value?.trim() ?: ""
+        return urlRegex.find(text)?.value?.trim() ?: text
     }
 
     fun summarize(text: String, settings: SettingsUiState) {
@@ -58,7 +65,9 @@ class SummaryViewModel @Inject constructor(
             val source = when {
                 it.startsWith("http://", ignoreCase = true)
                         || it.startsWith("https://", ignoreCase = true) ->
-                    if (YouTubeTranscriptTool.isYouTubeLink(it)) SummarySource.Video(it)
+                    if (YouTubeTranscriptTool.isYouTubeLink(it) || it.contains("bilibili.com")) SummarySource.Video(
+                        it
+                    )
                     else SummarySource.Article(it)
 
                 it.isNotBlank() -> SummarySource.Text(it)
@@ -106,7 +115,7 @@ class SummaryViewModel @Inject constructor(
             }
 
             _summarizationState.update { it.copy(summaryResult = summaryOutput) }
-            addHistorySummary(summaryOutput, settings.summaryLength)
+            saveSummaryToHistory(summaryOutput, settings.summaryLength, source)
 
         } catch (e: Exception) {
             Log.e("LLMViewModel", "Failed to summarize", e)
@@ -142,28 +151,59 @@ class SummaryViewModel @Inject constructor(
         return inputString
     }
 
-    private fun addHistorySummary(summaryOutput: SummaryOutput, summaryLength: SummaryLength) {
-        viewModelScope.launch {
-            val summary = HistorySummary(
-                id = UUID.randomUUID().toString(),
-                title = summaryOutput.title,
-                author = summaryOutput.author,
-                summary = summaryOutput.summary.trim(),
-                sourceLink = summaryOutput.sourceLink,
-                isYoutubeLink = summaryOutput.isYoutubeLink,
-                isBiliBiliLink = summaryOutput.isBiliBiliLink,
-                length = summaryLength,
-                createdOn = System.currentTimeMillis(),
-            )
-            if (summary.summary.isNotBlank() && summary.summary != "invalid link") {
-                val currentSummariesJson = userPreferencesRepository.getTextSummaries().first()
-                val summaries = runCatching {
-                    Json.decodeFromString<List<HistorySummary>>(currentSummariesJson)
-                }.getOrDefault(emptyList())
-                val updatedSummaries = listOf(summary) + summaries
-                val updatedSummariesJson = Json.encodeToString(updatedSummaries)
-                userPreferencesRepository.setTextSummaries(updatedSummariesJson)
+    private suspend fun saveSummaryToHistory(
+        summaryOutput: SummaryOutput,
+        summaryLength: SummaryLength,
+        source: SummarySource
+    ) {
+        if (source is SummarySource.None) return
+
+        val type: SummaryType
+        var subtype: VideoSubtype? = null
+        var sourceLink: String? = null
+        var sourceText: String? = null
+
+        when (source) {
+            is SummarySource.Article -> {
+                type = SummaryType.ARTICLE
+                sourceLink = source.url
             }
+
+            is SummarySource.Document -> {
+                type = SummaryType.DOCUMENT
+                sourceLink = source.uri
+            }
+
+            is SummarySource.Text -> {
+                type = SummaryType.TEXT
+                sourceText = source.content
+            }
+
+            is SummarySource.Video -> {
+                type = SummaryType.VIDEO
+                sourceLink = source.url
+                subtype = when {
+                    YouTubeTranscriptTool.isYouTubeLink(source.url) -> VideoSubtype.YOUTUBE
+                    source.url.contains("bilibili.com") -> VideoSubtype.BILIBILI
+                    else -> null
+                }
+            }
+
+            is SummarySource.None -> return
+        }
+
+        val summary = HistorySummary(
+            title = summaryOutput.title,
+            author = summaryOutput.author,
+            summary = summaryOutput.summary.trim(),
+            length = summaryLength,
+            type = type,
+            subtype = subtype,
+            sourceLink = sourceLink,
+            sourceText = sourceText
+        )
+        if (summary.summary.isNotBlank() && summary.summary != "invalid link") {
+            historyRepository.addSummary(summary)
         }
     }
 }

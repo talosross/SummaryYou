@@ -6,29 +6,33 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -51,192 +55,289 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.SummaryOutput
+import me.nanova.summaryexpressive.model.HistorySummary
+import me.nanova.summaryexpressive.model.SummaryType
 import me.nanova.summaryexpressive.ui.component.SummaryCard
 import me.nanova.summaryexpressive.vm.HistoryViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel<HistoryViewModel>(),
 ) {
-    val scope = rememberCoroutineScope()
-    val lazyListState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val deletedMessage = stringResource(id = R.string.deleted)
-//    val undoMessage = stringResource(id = R.string.undo)
-    val haptics = LocalHapticFeedback.current
-
     val searchText by viewModel.searchText.collectAsState()
-    var currentlyPlayingSummaryText by remember { mutableStateOf<String?>(null) }
+    val selectedFilter by viewModel.filterType.collectAsState()
     val focusManager = LocalFocusManager.current
 
-    Box(Modifier.fillMaxSize()) {
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-        ) { innerPadding ->
-            val summariesToShow by viewModel.summariesToShow.collectAsState()
-            val allSummaries by viewModel.historySummaries.collectAsState()
-
-            LaunchedEffect(searchText) {
-                if (searchText.isBlank() && summariesToShow.isNotEmpty()) {
-                    lazyListState.animateScrollToItem(0)
-                }
-            }
-
-            if (summariesToShow.isEmpty()) {
-                val message = if (allSummaries.isEmpty()) stringResource(id = R.string.noHistory)
-                else stringResource(id = R.string.nothingFound)
-                Column(
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            Column(
+                Modifier.background(
+                    color = MaterialTheme.colorScheme.surface,
+                )
+            ) {
+                SearchBar(
                     modifier = Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize()
-                ) {
-                    Spacer(modifier = Modifier.height(80.dp)) // space for search bar
-                    Text(
-                        text = message,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp)
-                    )
-                }
-            } else {
-                LazyColumn(
-                    state = lazyListState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp),
-                    contentPadding = PaddingValues(
-                        top = innerPadding.calculateTopPadding() + 80.dp, // For SearchBar
-                        bottom = innerPadding.calculateBottomPadding()
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(items = summariesToShow, key = { it.id }) { summaryItem ->
-                        val dismissState = rememberSwipeToDismissBoxState()
-
-                        SwipeToDismissBox(
-                            state = dismissState,
-                            modifier = Modifier
-                                .animateItem()
-                                .clip(CardDefaults.shape),
-                            enableDismissFromEndToStart = true,
-                            enableDismissFromStartToEnd = false,
-                            onDismiss = { direction ->
-                                if (direction == SwipeToDismissBoxValue.EndToStart) {
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    viewModel.removeHistorySummary(summaryItem.id)
-
-                                    scope.launch {
-                                        val result = snackbarHostState.showSnackbar(
-                                            message = deletedMessage,
-//                                            actionLabel = undoMessage,
-//                                            duration = SnackbarDuration.Long
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 20.dp, top = 15.dp),
+                    inputField = {
+                        SearchBarDefaults.InputField(
+                            query = searchText,
+                            onQueryChange = { viewModel.onSearchTextChanged(it) },
+                            onSearch = { focusManager.clearFocus() },
+                            expanded = false,
+                            onExpandedChange = {},
+                            placeholder = { Text(stringResource(id = R.string.search)) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Outlined.Search,
+                                    contentDescription = stringResource(id = R.string.search)
+                                )
+                            },
+                            trailingIcon = {
+                                if (searchText.isNotBlank()) {
+                                    IconButton(onClick = { viewModel.onSearchTextChanged("") }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Clear,
+                                            contentDescription = "Clear"
                                         )
-                                        // todo
-//                                        when (result) {
-//                                            SnackbarResult.ActionPerformed -> {
-//                                                viewModel.addHistorySummary(summaryItem)
-//                                            }
-//
-//                                            SnackbarResult.Dismissed -> {
-//                                            }
-//                                        }
                                     }
                                 }
                             },
-                            backgroundContent = {
-                                val color by animateColorAsState(
-                                    targetValue = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-                                        MaterialTheme.colorScheme.errorContainer
-                                    } else {
-                                        Color.Transparent
-                                    }, label = "background color"
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(color, shape = CardDefaults.shape)
-                                        .padding(horizontal = 20.dp),
-                                    contentAlignment = Alignment.CenterEnd
-                                ) {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        contentDescription = "Delete",
-                                        tint = MaterialTheme.colorScheme.onErrorContainer
-                                    )
-                                }
-                            }) {
-                            SummaryCard(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                summary = SummaryOutput(
-                                    title = summaryItem.title,
-                                    summary = summaryItem.summary,
-                                    author = summaryItem.author,
-                                    sourceLink = summaryItem.sourceLink,
-                                    isYoutubeLink = summaryItem.isYoutubeLink,
-                                    isBiliBiliLink = summaryItem.isBiliBiliLink,
-                                    length = summaryItem.length,
-                                ),
-                                cardColors = CardDefaults.elevatedCardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                ),
-                                onShowSnackbar = { message ->
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(message)
-                                    }
-                                },
-                                isPlaying = currentlyPlayingSummaryText == summaryItem.id,
-                                onPlayRequest = {
-                                    currentlyPlayingSummaryText =
-                                        if (currentlyPlayingSummaryText == summaryItem.id) null
-                                        else summaryItem.id
-                                }
-                            )
-                        }
+                        )
+                    },
+                    expanded = false,
+                    onExpandedChange = {},
+                    content = {},
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SummaryType.entries.forEach { filter ->
+                        FilterChip(
+                            selected = selectedFilter == filter,
+                            onClick = { viewModel.onFilterChanged(filter) },
+                            label = {
+                                Text(
+                                    text = filter.name.lowercase()
+                                        .replaceFirstChar { it.titlecase() })
+                            },
+                        )
                     }
+                }
+            }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { innerPadding ->
+        val historySummaries = viewModel.historySummaries.collectAsLazyPagingItems()
+        val haptics = LocalHapticFeedback.current
+
+        var playingSummaryId by remember { mutableStateOf<String?>(null) }
+        val lazyListState = rememberLazyListState()
+
+        LaunchedEffect(historySummaries.loadState.refresh, historySummaries.itemCount) {
+            if (historySummaries.loadState.refresh is LoadState.NotLoading && historySummaries.itemCount > 0) {
+                lazyListState.animateScrollToItem(0)
+            }
+        }
+
+        val deletedMessage = stringResource(id = R.string.deleted)
+        val undoMessage = stringResource(id = R.string.undo)
+        val scope = rememberCoroutineScope()
+        val onShowSnackbar: (String) -> Unit = { message ->
+            scope.launch {
+                snackbarHostState.showSnackbar(message)
+            }
+        }
+
+        when (historySummaries.loadState.refresh) {
+            is LoadState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(70.dp))
+                }
+                return@Scaffold
+            }
+
+            is LoadState.Error -> {
+                // TODO: error handling
+            }
+
+            is LoadState.NotLoading -> {
+                if (historySummaries.itemCount == 0) {
+                    val message = stringResource(
+                        id = if (searchText.isBlank() && selectedFilter == null) R.string.noHistory
+                        else R.string.nothingFound
+                    )
+                    Column(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize()
+                    ) {
+                        Text(
+                            text = message,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp)
+                        )
+                    }
+                    return@Scaffold
                 }
             }
         }
 
-        SearchBar(
+        LazyColumn(
+            state = lazyListState,
             modifier = Modifier
-                .align(Alignment.TopCenter)
+                .fillMaxSize()
                 .padding(horizontal = 20.dp),
-            inputField = {
-                SearchBarDefaults.InputField(
-                    query = searchText,
-                    onQueryChange = { viewModel.onSearchTextChanged(it) },
-                    onSearch = {
-                        focusManager.clearFocus()
-                    },
-                    expanded = false,
-                    onExpandedChange = {},
-                    placeholder = { Text(stringResource(id = R.string.search)) },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Outlined.Search,
-                            contentDescription = stringResource(id = R.string.search)
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchText.isNotBlank()) {
-                            IconButton(onClick = { viewModel.onSearchTextChanged("") }) {
-                                Icon(
-                                    imageVector = Icons.Default.Clear,
-                                    contentDescription = "Clear"
+            contentPadding = innerPadding,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(
+                count = historySummaries.itemCount,
+                key = historySummaries.itemKey { it.id }
+            ) { index ->
+                val summary = historySummaries[index]
+                if (summary != null) {
+                    SwipeableSummaryCard(
+                        summary = summary,
+                        isPlaying = playingSummaryId == summary.id,
+                        onPlayRequest = {
+                            playingSummaryId =
+                                if (playingSummaryId == summary.id) null else summary.id
+                        },
+                        onShowSnackbar = onShowSnackbar,
+                        onDismiss = {
+                            scope.launch {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                viewModel.removeHistorySummary(summary.id)
+
+                                val result = snackbarHostState.showSnackbar(
+                                    message = deletedMessage,
+                                    actionLabel = undoMessage,
+                                    duration = SnackbarDuration.Long
                                 )
+                                when (result) {
+                                    SnackbarResult.ActionPerformed -> {
+                                        viewModel.addHistorySummary(summary)
+                                        snackbarHostState.currentSnackbarData?.dismiss()
+                                    }
+
+                                    SnackbarResult.Dismissed -> {}
+                                }
                             }
-                        }
-                    },
+                        },
+                        modifier = Modifier.animateItem()
+                    )
+                }
+            }
+
+            if (historySummaries.loadState.append is LoadState.Loading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        LinearWavyProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 5.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+private fun SwipeableSummaryCard(
+    summary: HistorySummary,
+    isPlaying: Boolean,
+    onPlayRequest: () -> Unit,
+    onShowSnackbar: (String) -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    @Suppress("Deprecation")
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = {
+            if (it == SwipeToDismissBoxValue.EndToStart) {
+                onDismiss()
+            }
+            false
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = modifier.clip(CardDefaults.shape),
+        enableDismissFromEndToStart = true,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            val color by animateColorAsState(
+                targetValue = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                    MaterialTheme.colorScheme.errorContainer
+                } else {
+                    Color.Transparent
+                }, label = "background color"
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color, shape = CardDefaults.shape)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.onErrorContainer
                 )
-            },
-            expanded = false,
-            onExpandedChange = {},
-            content = {},
+            }
+        }) {
+        SummaryCard(
+            modifier = Modifier
+                .fillMaxWidth(),
+            summary = SummaryOutput(
+                title = summary.title,
+                summary = summary.summary,
+                author = summary.author,
+                sourceLink = summary.sourceLink,
+                isYoutubeLink = summary.isYoutubeLink,
+                isBiliBiliLink = summary.isBiliBiliLink,
+                length = summary.length,
+            ),
+            cardColors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            ),
+            onShowSnackbar = onShowSnackbar,
+            isPlaying = isPlaying,
+            onPlayRequest = onPlayRequest
         )
     }
 }

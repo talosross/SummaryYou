@@ -110,8 +110,7 @@ class BiliBiliSubtitleTool(
     }
 
     private suspend fun extractBvid(url: String): String? {
-        val urlString = Companion.ensureScheme(url)
-
+        val urlString = ensureScheme(url)
         val parsedUrl = Url(urlString)
         val finalUrl = if (parsedUrl.host == "b23.tv") {
             // For b23.tv short links, we need to resolve the redirect to get the full URL.
