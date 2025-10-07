@@ -1,10 +1,7 @@
 package me.nanova.summaryexpressive.llm.tools
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -18,10 +15,10 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import me.nanova.summaryexpressive.UserPreferencesRepository
 import me.nanova.summaryexpressive.model.ExtractedContent
 import me.nanova.summaryexpressive.model.SummaryException
@@ -65,7 +62,10 @@ private data class BiliSubtitleContentResponse(val body: List<BiliSubtitleConten
 private data class BiliSubtitleContentItem(val content: String)
 
 @Serializable
-data class BiliBiliVideo(val url: String) : ToolArgs
+data class BiliBiliVideo(
+    @property:LLMDescription("The full URL of the BiliBili video.")
+    val url: String,
+)
 
 /**
  * ref: https://github.com/Nemo2011/bilibili-api/blob/49b47197adb29f5ae9a974f090165dfe69ed0bba/bilibili_api/video.py#L1526C15-L1526C27
@@ -77,18 +77,10 @@ class BiliBiliSubtitleTool(
     private val json = Json { ignoreUnknownKeys = true }
     private val bvidRegex = "(BV[1-9A-HJ-NP-Za-km-z]{10})".toRegex()
 
-    override val argsSerializer = serializer<BiliBiliVideo>()
-    override val descriptor = ToolDescriptor(
-        name = "extract_subtitle_from_bilibili_url",
-        description = "Fetches the subtitle for a given BiliBili video URL.",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "url",
-                description = "The full URL of the BiliBili video.",
-                type = ToolParameterType.String
-            )
-        )
-    )
+    override val argsSerializer = BiliBiliVideo.serializer()
+    override val resultSerializer: KSerializer<ExtractedContent> = ExtractedContent.serializer()
+    override val name = "extract_subtitle_from_bilibili_url"
+    override val description = "Fetches the subtitle for a given BiliBili video URL."
 
     companion object {
         private const val TAG = "BiliBiliSubtitleTool"

@@ -1,10 +1,7 @@
 package me.nanova.summaryexpressive.llm.tools
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import android.content.Context
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
@@ -18,8 +15,8 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.serializer
 import me.nanova.summaryexpressive.model.ExtractedContent
 import org.xmlpull.v1.XmlPullParser
 import java.io.FileNotFoundException
@@ -134,21 +131,15 @@ private object ImageTextExtractor : TextExtractor {
 }
 
 @Serializable
-data class File(val fileUriString: String) : ToolArgs
+data class File(
+    @property:LLMDescription("The content URI of the file.") val fileUriString: String,
+)
 
 class FileExtractorTool(private val context: Context) : Tool<File, ExtractedContent>() {
-    override val argsSerializer = serializer<File>()
-    override val descriptor = ToolDescriptor(
-        name = "extract_text_from_file_uri",
-        description = "Extracts text from a file (PDF, DOCX, image) given its content URI.",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "fileUriString",
-                description = "The content URI of the file.",
-                type = ToolParameterType.String
-            )
-        )
-    )
+    override val argsSerializer = File.serializer()
+    override val resultSerializer: KSerializer<ExtractedContent> = ExtractedContent.serializer()
+    override val name = "extract_text_from_file_uri"
+    override val description = "Extracts text from a file (PDF, DOCX, image) given its content URI."
 
     public override suspend fun execute(args: File): ExtractedContent {
         val uri = args.fileUriString.toUri()

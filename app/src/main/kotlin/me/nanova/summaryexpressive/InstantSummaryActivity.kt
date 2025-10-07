@@ -3,6 +3,7 @@ package me.nanova.summaryexpressive
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -64,7 +65,16 @@ class InstantSummaryActivity : ComponentActivity() {
             Intent.ACTION_PROCESS_TEXT ->
                 intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString()
 
-            Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)
+            Intent.ACTION_SEND -> {
+                val type = intent.type ?: ""
+                if (type.startsWith("application/") || type.startsWith("image/")) {
+                    val contentUri: Uri? =
+                        intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                    contentUri?.toString()
+                } else {
+                    intent.getStringExtra(Intent.EXTRA_TEXT)
+                }
+            }
 
             else -> {
                 val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager

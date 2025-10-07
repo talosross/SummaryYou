@@ -1,10 +1,7 @@
 package me.nanova.summaryexpressive.llm.tools
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -14,23 +11,19 @@ import me.nanova.summaryexpressive.model.ExtractedContent
 import org.jsoup.Jsoup
 
 @Serializable
-data class Article(val url: String) : ToolArgs
+data class Article(
+    @property:LLMDescription("The full URL of the web article to be parsed.")
+    val url: String,
+)
 
 class ArticleExtractorTool(private val client: HttpClient) : Tool<Article, ExtractedContent>() {
     override val argsSerializer: KSerializer<Article>
         get() = Article.serializer()
 
-    override val descriptor = ToolDescriptor(
-        name = "extract_article_text_from_url",
-        description = "Fetches the content of a web article from a given URL and extracts its main textual content.",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "url",
-                description = "The full URL of the web article to be parsed.",
-                type = ToolParameterType.String
-            )
-        )
-    )
+    override val resultSerializer: KSerializer<ExtractedContent> = ExtractedContent.serializer()
+    override val name = "extract_article_text_from_url"
+    override val description =
+        "Fetches the content of a web article from a given URL and extracts its main textual content."
 
     public override suspend fun execute(args: Article): ExtractedContent {
         return extractTextFromArticleUrl(args.url)

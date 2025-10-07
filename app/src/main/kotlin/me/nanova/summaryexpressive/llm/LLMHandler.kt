@@ -2,7 +2,7 @@ package me.nanova.summaryexpressive.llm
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteSingleTool
@@ -39,6 +39,7 @@ import me.nanova.summaryexpressive.llm.tools.YouTubeTranscriptTool
 import me.nanova.summaryexpressive.model.ExtractedContent
 import me.nanova.summaryexpressive.model.SummaryData
 import me.nanova.summaryexpressive.model.SummaryException
+import me.nanova.summaryexpressive.vm.SummaryViewModel.SummarySource
 
 @Serializable
 data class SummaryOutput(
@@ -67,15 +68,15 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         summaryLength: SummaryLength = SummaryLength.MEDIUM,
         useOriginalLanguage: Boolean,
         language: String,
-    ): AIAgent<String, SummaryOutput> {
+    ): AIAgent<SummarySource, SummaryOutput> {
         val executor = createExecutor(provider, apiKey, baseUrl)
 
         val articleToolRegistry = ToolRegistry { tool(articleExtractorTool) }
-        val videoToolRegistry = ToolRegistry { tool(youTubeTranscriptTool) }
+        val youtubeToolRegistry = ToolRegistry { tool(youTubeTranscriptTool) }
         val bilibiliToolRegistry = ToolRegistry { tool(bilibiliSubtitleTool) }
         val fileToolRegistry = ToolRegistry { tool(fileExtractorTool) }
         val tools =
-            articleToolRegistry + videoToolRegistry + bilibiliToolRegistry + fileToolRegistry
+            articleToolRegistry + youtubeToolRegistry + bilibiliToolRegistry + fileToolRegistry
 
         val agentConfig =
             createAgentConfig(provider, model, summaryLength, useOriginalLanguage, language)
@@ -166,21 +167,12 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         return SingleLLMPromptExecutor(client)
     }
 
-    private val isYouTubeUrl = { input: String -> YouTubeTranscriptTool.isYouTubeLink(input) }
-    private val isBiliBiliUrl = { input: String -> BiliBiliSubtitleTool.isBiliBiliLink(input) }
-    private val isWebUrl =
-        { input: String -> input.startsWith("http") && !isYouTubeUrl(input) && !isBiliBiliUrl(input) }
-    private val isFileUri =
-        { input: String -> input.startsWith("content://") || input.startsWith("file://") }
-    private val isPlainText =
-        { input: String -> !isWebUrl(input) && !isYouTubeUrl(input) && !isFileUri(input) && input.isNotBlank() }
-
     private fun createSummarizationStrategy(
         articleExtractorTool: ArticleExtractorTool,
         youTubeTranscriptTool: YouTubeTranscriptTool,
         fileExtractorTool: FileExtractorTool,
         summaryLength: SummaryLength,
-    ): AIAgentStrategy<String, SummaryOutput> =
+    ): AIAgentGraphStrategy<SummarySource, SummaryOutput> =
         strategy("summarization_router_strategy")
         {
             var extractedContent: ExtractedContent? = null
@@ -188,20 +180,79 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
             var isBiliBili = false
             var sourceLink = ""
 
-            val nodeExtractArticle by nodeExecuteSingleTool(tool = articleExtractorTool)
-            val nodeExtractVideo by nodeExecuteSingleTool(tool = youTubeTranscriptTool)
-            val nodeExtractBiliBili by nodeExecuteSingleTool(tool = bilibiliSubtitleTool)
-            val nodeExtractFile by nodeExecuteSingleTool(tool = fileExtractorTool)
+            val contentExtractorSubgraph by subgraph<SummarySource, String>("content_extractor") {
+                val nodeExtractArticle by nodeExecuteSingleTool(tool = articleExtractorTool)
+                val nodeExtractYoutube by nodeExecuteSingleTool(tool = youTubeTranscriptTool)
+                val nodeExtractBiliBili by nodeExecuteSingleTool(tool = bilibiliSubtitleTool)
+                val nodeExtractFile by nodeExecuteSingleTool(tool = fileExtractorTool)
 
-            val nodePreparePlainText by node<String, ExtractedContent>("prepare_plain_text") { text ->
-                ExtractedContent("Text Input", "Unknown", text)
-            }
+                val nodePreparePlainText by node<String, ExtractedContent>("prepare_plain_text") { text ->
+                    ExtractedContent("Text Input", "Unknown", text)
+                }
 
-            // TODO: this is not necessary if the compress history is working
-            // see: https://github.com/JetBrains/koog/issues/706
-            val nodeTriggerSummaryFromTool by node<ExtractedContent, String>("trigger_summary_from_tool") {
-                extractedContent = it
-                "Content has been extracted. Please summarize it based on the instructions."
+                val nodePreLLMRequest by node<ExtractedContent, String>("trigger_summary_from_tool") {
+                    extractedContent = it
+                    "Content has been extracted. Summarize it based on the instructions."
+                }
+
+                val processToolResult = { it: SafeTool.Result<out ExtractedContent> ->
+                    when (it) {
+                        is SafeTool.Result.Success -> it.result
+                        is SafeTool.Result.Failure -> throw SummaryException.fromMessage(it.message)
+                    }
+                }
+
+                edge(
+                    nodeStart forwardTo nodeExtractArticle
+                            onCondition { it is SummarySource.Article }
+                            transformed { source ->
+                                val url = (source as SummarySource.Article).url
+                                sourceLink = url
+                                Article(url)
+                            }
+                )
+                edge(
+                    nodeStart forwardTo nodeExtractYoutube
+                            onCondition { it is SummarySource.Video && YouTubeTranscriptTool.isYouTubeLink((it).url) }
+                            transformed { source ->
+                                val url = (source as SummarySource.Video).url
+                                isYoutube = true
+                                sourceLink = url
+                                YouTubeTranscript(url)
+                            }
+                )
+                edge(
+                    nodeStart forwardTo nodeExtractBiliBili
+                            onCondition { it is SummarySource.Video && BiliBiliSubtitleTool.isBiliBiliLink((it).url) }
+                            transformed { source ->
+                                val url = (source as SummarySource.Video).url
+                                isBiliBili = true
+                                sourceLink = url
+                                BiliBiliVideo(url)
+                            }
+                )
+                edge(
+                    nodeStart forwardTo nodeExtractFile
+                            onCondition { it is SummarySource.Document }
+                            transformed { source -> File((source as SummarySource.Document).uri) }
+                )
+                edge(
+                    nodeStart forwardTo nodePreparePlainText
+                            onCondition { it is SummarySource.Text }
+                            transformed { (it as SummarySource.Text).content })
+
+                // Tool-based paths
+                edge(nodeExtractArticle forwardTo nodePreLLMRequest transformed { processToolResult(it) })
+                edge(nodeExtractYoutube forwardTo nodePreLLMRequest transformed { processToolResult(it) })
+                edge(nodeExtractBiliBili forwardTo nodePreLLMRequest transformed { processToolResult(it) })
+                edge(nodeExtractFile forwardTo nodePreLLMRequest transformed { processToolResult(it) })
+                edge(nodePreLLMRequest forwardTo nodeFinish)
+
+                // Plain text path
+                edge(nodePreparePlainText forwardTo nodeFinish transformed {
+                    extractedContent = it
+                    it.content
+                })
             }
 
             val nodeSummarizeText by nodeLLMRequest(
@@ -209,83 +260,27 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
                 allowToolCalls = false,
             )
 
-            val processToolResult = { it: SafeTool.Result<out ExtractedContent> ->
-                when (it) {
-                    is SafeTool.Result.Success -> it.result
-                    is SafeTool.Result.Failure -> {
-                        throw SummaryException.fromMessage(it.message)
-                    }
-                }
-            }
-
             val nodeCombineResult by node<Message.Response, SummaryOutput>("combine_result") { response ->
                 val content = response.content
                 if (content.isBlank() || content.startsWith("Error:", ignoreCase = true)) {
                     throw SummaryException.fromMessage(content)
                 }
-                val ec = extractedContent!!
                 SummaryOutput(
-                    title = ec.title,
-                    author = ec.author,
+                    title = extractedContent?.title ?: "",
+                    author = extractedContent?.author ?: "",
                     summary = content,
                     sourceLink = sourceLink,
+
                     isYoutubeLink = isYoutube,
                     isBiliBiliLink = isBiliBili,
                     length = summaryLength,
                 )
             }
 
-            edge(
-                nodeStart forwardTo nodeExtractArticle
-                        onCondition { isWebUrl(it) }
-                        transformed {
-                    sourceLink = it
-                    Article(it)
-                }
-            )
-            edge(
-                nodeStart forwardTo nodeExtractVideo
-                        onCondition { isYouTubeUrl(it) }
-                        transformed {
-                    isYoutube = true
-                    sourceLink = it
-                    YouTubeTranscript(it)
-                }
-            )
-            edge(
-                nodeStart forwardTo nodeExtractBiliBili
-                        onCondition { isBiliBiliUrl(it) }
-                        transformed {
-                    isBiliBili = true
-                    sourceLink = it
-                    BiliBiliVideo(it)
-                }
-            )
-            edge(
-                nodeStart forwardTo nodeExtractFile
-                        onCondition { isFileUri(it) }
-                        transformed { File(it) }
-            )
-            edge(
-                nodeStart forwardTo nodePreparePlainText
-                        onCondition { isPlainText(it) })
 
-            // Tool-based paths
-            edge(nodeExtractArticle forwardTo nodeTriggerSummaryFromTool transformed { processToolResult(it) })
-            edge(nodeExtractVideo forwardTo nodeTriggerSummaryFromTool transformed { processToolResult(it) })
-            edge(nodeExtractBiliBili forwardTo nodeTriggerSummaryFromTool transformed {
-                processToolResult(
-                    it
-                )
-            })
-            edge(nodeExtractFile forwardTo nodeTriggerSummaryFromTool transformed { processToolResult(it) })
-            edge(nodeTriggerSummaryFromTool forwardTo nodeSummarizeText)
+            edge(nodeStart forwardTo contentExtractorSubgraph)
 
-            // Plain text path
-            edge(nodePreparePlainText forwardTo nodeSummarizeText transformed {
-                extractedContent = it
-                it.content
-            })
+            edge(contentExtractorSubgraph forwardTo nodeSummarizeText)
 
             edge(nodeSummarizeText forwardTo nodeCombineResult)
 

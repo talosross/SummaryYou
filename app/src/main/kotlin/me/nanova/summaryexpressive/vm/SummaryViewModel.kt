@@ -1,8 +1,8 @@
 package me.nanova.summaryexpressive.vm
 
 import android.app.Application
-import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +23,6 @@ import me.nanova.summaryexpressive.model.HistorySummary
 import me.nanova.summaryexpressive.model.SummaryException
 import me.nanova.summaryexpressive.model.SummaryType
 import me.nanova.summaryexpressive.model.VideoSubtype
-import java.net.URL
 import java.util.Locale
 import javax.inject.Inject
 
@@ -34,7 +33,7 @@ class SummaryViewModel @Inject constructor(
     private val historyRepository: HistoryRepository,
 ) : ViewModel() {
 
-    private sealed class SummarySource {
+    sealed class SummarySource {
         data class Video(val url: String) : SummarySource()
         data class Article(val url: String) : SummarySource()
         data class Text(val content: String) : SummarySource()
@@ -59,30 +58,29 @@ class SummaryViewModel @Inject constructor(
         return urlRegex.find(text)?.value?.trim() ?: text
     }
 
+    private val isFileUri =
+        { input: String -> input.startsWith("content://") || input.startsWith("file://") }
+
     fun summarize(text: String, settings: SettingsUiState) {
-        val processedText = if (settings.autoExtractUrl) extractHttpUrl(text) else text
-        processedText.let {
-            val source = when {
-                it.startsWith("http://", ignoreCase = true)
-                        || it.startsWith("https://", ignoreCase = true) ->
-                    if (YouTubeTranscriptTool.isYouTubeLink(it) || it.contains("bilibili.com")) SummarySource.Video(
-                        it
-                    )
-                    else SummarySource.Article(it)
-
-                it.isNotBlank() -> SummarySource.Text(it)
-                else -> SummarySource.None
-            }
-            viewModelScope.launch {
-                summarizeInternal(source, settings)
-            }
-        }
-    }
-
-    fun summarize(uri: Uri, settings: SettingsUiState) {
         viewModelScope.launch {
-            val filename = getFileName(application, uri)
-            val source = SummarySource.Document(filename, uri.toString())
+            val source = if (isFileUri(text)) {
+                val uri = text.toUri()
+                val filename = getFileName(application, uri)
+                SummarySource.Document(filename, text)
+            } else {
+                val processedText = if (settings.autoExtractUrl) extractHttpUrl(text) else text
+                when {
+                    processedText.startsWith("http://", ignoreCase = true)
+                            || processedText.startsWith("https://", ignoreCase = true) ->
+                        if (YouTubeTranscriptTool.isYouTubeLink(processedText) || processedText.contains("bilibili.com"))
+                            SummarySource.Video(processedText)
+                        else SummarySource.Article(processedText)
+
+                    processedText.isNotBlank() -> SummarySource.Text(processedText)
+                    else -> SummarySource.None
+                }
+            }
+
             summarizeInternal(source, settings)
         }
     }
@@ -93,6 +91,9 @@ class SummaryViewModel @Inject constructor(
             val currentApiKey = settings.apiKey
             if (currentApiKey.isNullOrEmpty()) {
                 throw SummaryException.NoKeyException()
+            }
+            if (source is SummarySource.None) {
+                throw SummaryException.NoContentException()
             }
 
             val language = if (settings.useOriginalLanguage) "the same language as the content"
@@ -108,10 +109,8 @@ class SummaryViewModel @Inject constructor(
                 language = language
             )
 
-            val inputString = prepareSummarizationInput(source)
-
             val summaryOutput = withContext(Dispatchers.IO) {
-                agent.run(inputString)
+                agent.run(source)
             }
 
             _summarizationState.update { it.copy(summaryResult = summaryOutput) }
@@ -130,31 +129,10 @@ class SummaryViewModel @Inject constructor(
         }
     }
 
-    private fun prepareSummarizationInput(source: SummarySource): String {
-        val inputString = when (source) {
-            is SummarySource.Article -> source.url
-            is SummarySource.Document -> source.uri
-            is SummarySource.Text -> source.content
-            is SummarySource.Video -> source.url
-            is SummarySource.None -> ""
-        }
-
-        if (inputString.isBlank()) {
-            throw SummaryException.NoContentException()
-        }
-
-        if (source is SummarySource.Article || source is SummarySource.Video) {
-            if (runCatching { URL(inputString).host }.getOrNull().isNullOrEmpty()) {
-                throw SummaryException.InvalidLinkException()
-            }
-        }
-        return inputString
-    }
-
     private suspend fun saveSummaryToHistory(
         summaryOutput: SummaryOutput,
         summaryLength: SummaryLength,
-        source: SummarySource
+        source: SummarySource,
     ) {
         if (source is SummarySource.None) return
 

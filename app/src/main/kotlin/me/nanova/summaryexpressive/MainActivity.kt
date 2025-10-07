@@ -2,6 +2,7 @@ package me.nanova.summaryexpressive
 
 import android.content.ClipboardManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -66,7 +67,12 @@ class MainActivity : ComponentActivity() {
     private fun handleIntent(intent: Intent) {
         when (intent.action) {
             Intent.ACTION_SEND -> {
-                if ("text/plain" == intent.type) {
+                val type = intent.type ?: ""
+                if (type.startsWith("application/") || type.startsWith("image/")) {
+                    val contentUri: Uri? =
+                        intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                    contentUri?.let { viewModel.onEvent(AppStartAction(it.toString())) }
+                } else if (type == "text/plain") {
                     val content = intent.getStringExtra(Intent.EXTRA_TEXT)
                     viewModel.onEvent(AppStartAction(content))
                 }

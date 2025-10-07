@@ -1,10 +1,7 @@
 package me.nanova.summaryexpressive.llm.tools
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -18,6 +15,7 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -28,27 +26,20 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
-import kotlinx.serialization.serializer
 import me.nanova.summaryexpressive.model.ExtractedContent
 
 @Serializable
-data class YouTubeTranscript(val url: String) : ToolArgs
+data class YouTubeTranscript(
+    @property:LLMDescription("The full URL of the YouTube video.") val url: String,
+)
 
 class YouTubeTranscriptTool(client: HttpClient) : Tool<YouTubeTranscript, ExtractedContent>() {
     private val youtubeExtractor = YouTubeExtractor(client)
 
-    override val argsSerializer = serializer<YouTubeTranscript>()
-    override val descriptor = ToolDescriptor(
-        name = "extract_transcript_from_youtube_url",
-        description = "Fetches the transcript for a given YouTube video URL.",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "url",
-                description = "The full URL of the YouTube video.",
-                type = ToolParameterType.String
-            )
-        )
-    )
+    override val argsSerializer = YouTubeTranscript.serializer()
+    override val resultSerializer: KSerializer<ExtractedContent> = ExtractedContent.serializer()
+    override val name = "extract_transcript_from_youtube_url"
+    override val description = "Fetches the transcript for a given YouTube video URL."
 
     public override suspend fun execute(args: YouTubeTranscript): ExtractedContent {
         val videoId = YouTubeExtractor.extractVideoId(args.url)

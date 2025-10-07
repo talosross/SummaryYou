@@ -100,7 +100,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.R
@@ -148,8 +147,7 @@ fun HomeScreen(
 
     fun summarize() {
         focusManager.clearFocus()
-        if (documentFilename != null) summaryViewModel.summarize(urlOrText.toUri(), settings)
-        else summaryViewModel.summarize(urlOrText, settings)
+        summaryViewModel.summarize(urlOrText,  settings)
     }
 
     val appStartAction by appViewModel.appStartAction.collectAsState()
