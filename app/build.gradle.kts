@@ -18,8 +18,8 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 37
-        versionName = "1.0.0"
+        versionCode = 38
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -153,7 +153,7 @@ dependencies {
     }
 
     // Networking
-    implementation("io.ktor:ktor-client-android:3.2.3")
+    implementation("io.ktor:ktor-client-android:3.3.0")
 
     // Serialization & Utilities
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")

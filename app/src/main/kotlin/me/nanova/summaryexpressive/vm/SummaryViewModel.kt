@@ -17,6 +17,7 @@ import me.nanova.summaryexpressive.data.HistoryRepository
 import me.nanova.summaryexpressive.llm.LLMHandler
 import me.nanova.summaryexpressive.llm.SummaryLength
 import me.nanova.summaryexpressive.llm.SummaryOutput
+import me.nanova.summaryexpressive.llm.tools.BiliBiliSubtitleTool
 import me.nanova.summaryexpressive.llm.tools.YouTubeTranscriptTool
 import me.nanova.summaryexpressive.llm.tools.getFileName
 import me.nanova.summaryexpressive.model.HistorySummary
@@ -72,7 +73,9 @@ class SummaryViewModel @Inject constructor(
                 when {
                     processedText.startsWith("http://", ignoreCase = true)
                             || processedText.startsWith("https://", ignoreCase = true) ->
-                        if (YouTubeTranscriptTool.isYouTubeLink(processedText) || processedText.contains("bilibili.com"))
+                        if (YouTubeTranscriptTool.isYouTubeLink(processedText)
+                            || BiliBiliSubtitleTool.isBiliBiliLink(processedText)
+                        )
                             SummarySource.Video(processedText)
                         else SummarySource.Article(processedText)
 

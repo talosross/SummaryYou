@@ -1065,7 +1065,7 @@ private fun ScrollContentPreview() {
             useOriginalLanguage = false,
             dynamicColor = true,
             showLength = true,
-            autoExtractUrl = true // Added for preview
+            autoExtractUrl = true
         )
         val actions = SettingsActions(
             onThemeChange = {},
