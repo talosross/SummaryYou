@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.AppViewModel
@@ -57,10 +58,48 @@ import me.nanova.summaryexpressive.vm.SummaryViewModel
 class InstantSummaryActivity : ComponentActivity() {
     private val appViewModel: AppViewModel by viewModels()
     private val summaryViewModel: SummaryViewModel by viewModels()
+    private val textToSummarizeStateFlow = MutableStateFlow<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        handleIntent(intent)
+
+        setContent {
+            val settings by appViewModel.settingsUiState.collectAsState()
+            val textToSummarize by textToSummarizeStateFlow.collectAsState()
+
+
+            LaunchedEffect(textToSummarize, settings) {
+                textToSummarize?.let {
+                    if (it.isNotBlank()) {
+                        summaryViewModel.summarize(it, settings)
+                    }
+                }
+            }
+
+            SummaryExpressiveTheme(
+                darkTheme = when (settings.theme) {
+                    1 -> true
+                    2 -> false
+                    else -> isSystemInDarkTheme()
+                },
+                dynamicColor = settings.dynamicColor
+            ) {
+                InstantSummaryDialog(
+                    viewModel = summaryViewModel,
+                    onDismiss = { finish() }
+                )
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
         val textToSummarize = when (intent?.action) {
             Intent.ACTION_PROCESS_TEXT ->
                 intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString()
@@ -86,32 +125,7 @@ class InstantSummaryActivity : ComponentActivity() {
             finish()
             return
         }
-
-        setContent {
-            val settings by appViewModel.settingsUiState.collectAsState()
-            val summarizationState by summaryViewModel.summarizationState.collectAsState()
-
-
-            LaunchedEffect(settings) {
-                if (summarizationState.summaryResult == null && !summarizationState.isLoading) {
-                    summaryViewModel.summarize(textToSummarize, settings)
-                }
-            }
-
-            SummaryExpressiveTheme(
-                darkTheme = when (settings.theme) {
-                    1 -> true
-                    2 -> false
-                    else -> isSystemInDarkTheme()
-                },
-                dynamicColor = settings.dynamicColor
-            ) {
-                InstantSummaryDialog(
-                    viewModel = summaryViewModel,
-                    onDismiss = { finish() }
-                )
-            }
-        }
+        textToSummarizeStateFlow.value = textToSummarize
     }
 }
 
