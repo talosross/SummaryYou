@@ -124,7 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Settings screen back button not working
-- Failed to parse Youtube live video link
+- Failed to parse YouTube live video link
 
 
 ## [0.2.5] - 2025-08-23

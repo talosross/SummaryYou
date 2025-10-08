@@ -117,7 +117,7 @@ fun SummaryCard(
                     if (summary.isYoutubeLink) {
                         Icon(
                             painter = painterResource(id = R.drawable.youtube),
-                            contentDescription = "Youtube Icon",
+                            contentDescription = "YouTube Icon",
                             modifier = Modifier.padding(top = 1.dp)
                         )
                     } else if (summary.isBiliBiliLink) {

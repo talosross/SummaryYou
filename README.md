@@ -14,7 +14,8 @@
 
 </div>
 
-Summarize YouTube-Videos, Articles, Images and Documents with AI
+A modern, BYOK and FOSS android app to summarize videos(YouTube, BiliBili), articles, images and
+documents with AI/LLM.
 
 [MAD](https://developer.android.com/courses/pathways/android-architecture): pure Kotlin + Jetpack Compose + M3 Expressive
 
@@ -55,7 +56,7 @@ package previously.
 
 | media        | supported types                          |
 |--------------|------------------------------------------|
-| Video (Link) | Youtube, BiliBili                        |
+| Video (Link) | YouTube, BiliBili                        |
 | Document     | MS Word, PDF (very long contents planed) |
 | Image        | Jpg, Png, Webp (Latin only for now)      |
 | Text         | Article link, Plain text                 |
@@ -70,11 +71,12 @@ package previously.
 | Claude        | claude-3-haiku, claude-3-opus, claude-3-5-haiku, claude-3-5-sonnet, claude-3-7-sonnet, claude-opus-4-0, claude-sonnet-4-0  |
 | DeepSeek      | deepseek-chat, deepseek-reasoner                                                                                           |
 
-- **[Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) style UI**: Engaging and easier to use, light/dark theme and dynamic color theme
+- **[Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) UI**: Engaging
+  and easier to use, light/dark theme and dynamic color theme
 
 - **Instant summarize via share sheet or text selection toolbar**: Convenient to trigger summarization, show result in overlayer
 
-- **Configurable summary length**
+- **Configurable LLM settings**
 
 - **Read-Out the summaries with multilingual support**
 
