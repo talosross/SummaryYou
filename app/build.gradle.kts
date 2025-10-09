@@ -18,8 +18,8 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 40
-        versionName = "1.0.3"
+        versionCode = 41
+        versionName = "1.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -103,7 +103,7 @@ android {
 
 dependencies {
     // https://developer.android.com/develop/ui/compose/bom/bom-mapping
-    val composeBomVersion = "2025.09.01"
+    val composeBomVersion = "2025.10.00"
 
     // Core & Lifecycle
     implementation("androidx.core:core-ktx:1.17.0")
@@ -127,7 +127,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     // Keep alpha override for material expressive features, as intended
     // https://developer.android.com/jetpack/androidx/releases/compose-material3#compose_material3_version_15_2
-    implementation("androidx.compose.material3:material3:1.5.0-alpha04")
+    implementation("androidx.compose.material3:material3:1.5.0-alpha06")
 
     // Paging
     implementation("androidx.paging:paging-compose:3.3.6")
@@ -135,10 +135,10 @@ dependencies {
 
     // Data Persistence
     implementation("androidx.datastore:datastore-preferences:1.1.7")
-    implementation("androidx.room:room-runtime:2.8.1")
-    implementation("androidx.room:room-paging:2.8.1")
-    implementation("androidx.room:room-ktx:2.8.1")
-    ksp("androidx.room:room-compiler:2.8.1")
+    implementation("androidx.room:room-runtime:2.8.2")
+    implementation("androidx.room:room-paging:2.8.2")
+    implementation("androidx.room:room-ktx:2.8.2")
+    ksp("androidx.room:room-compiler:2.8.2")
 
     // ML & AI
     // Custom configurations for build flavors to manage ML model packaging
@@ -157,7 +157,6 @@ dependencies {
 
     // Serialization & Utilities
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    // Consider consolidating on one JSON parser if possible
     implementation("org.jsoup:jsoup:1.21.2")
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("io.coil-kt:coil-gif:2.7.0")

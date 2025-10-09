@@ -5,7 +5,9 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import android.content.Context
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
+import android.os.Build
 import android.provider.OpenableColumns
+import android.util.Log
 import android.util.Xml
 import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
@@ -30,39 +32,65 @@ private interface TextExtractor {
 private object PdfTextExtractor : TextExtractor {
     override suspend fun extract(context: Context, uri: Uri): String =
         withContext(Dispatchers.IO) {
-            // Open the PDF file
-            val pdfRenderer =
-                PdfRenderer(context.contentResolver.openFileDescriptor(uri, "r")!!)
-
-            // Initialize the text recognizer
             val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-
-            // Initialize the StringBuilder
             val extractedText = StringBuilder()
 
-            // Iterate through the pages of the PDF
-            for (pageNumber in 0 until pdfRenderer.pageCount) {
-                // Get the page as an image
-                val page = pdfRenderer.openPage(pageNumber)
-                val pageImage = createBitmap(page.width, page.height)
-                page.render(pageImage, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { parcelFileDescriptor ->
+                PdfRenderer(parcelFileDescriptor).use { pdfRenderer ->
+                    for (pageNumber in 0 until pdfRenderer.pageCount) {
+                        pdfRenderer.openPage(pageNumber).use { page ->
+                            val pageImage = createBitmap(page.width, page.height)
+                            page.render(
+                                pageImage,
+                                null,
+                                null,
+                                PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY
+                            )
 
-                // Create an input image from the page image
-                val inputImage = InputImage.fromBitmap(pageImage, 0)
+                            // Try OCR first
+                            val inputImage = InputImage.fromBitmap(pageImage, 0)
+                            val ocrResult = textRecognizer.process(inputImage).await()
+                            var pageText = ocrResult.text.trim()
 
-                // Recognize text from the page image
-                val result = textRecognizer.process(inputImage).await()
-                extractedText.append(result.text)
+                            // fallback to get content directly from text layer
+                            if (pageText.isBlank()) {
+                                try {
+                                    val textContents =
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                                            page.getTextContents()
+                                        } else {
+                                            // maybe can use this: https://developer.android.com/jetpack/androidx/releases/pdf
+                                            TODO()
+                                        }
 
-                // Close the page
-                page.close()
-            }
+                                    if (textContents.isNotEmpty()) {
+                                        val pageLayerText =
+                                            textContents.joinToString(" ") { it.text }.trim()
+                                        if (pageLayerText.isNotBlank()) {
+                                            pageText = pageLayerText
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Log.w(
+                                        "PdfTextExtractor",
+                                        "Failed to extract text from PDF's text layer (might be API limitation or other issue)",
+                                        e
+                                    )
+                                    // Ignore, fallback only
+                                }
+                            }
 
-            // Close the PDF file
-            pdfRenderer.close()
+                            if (pageText.isNotBlank()) {
+                                extractedText.append(pageText)
+                                extractedText.append("\n")
+                            }
+                        }
+                    }
+                }
+            } ?: throw FileNotFoundException("Cannot open PDF file descriptor for URI: $uri")
 
-            // Return the extracted text
-            extractedText.toString()
+            val resultText = extractedText.toString().trim()
+            resultText
         }
 }
 
