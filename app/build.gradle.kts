@@ -18,8 +18,8 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 39
-        versionName = "1.0.2"
+        versionCode = 40
+        versionName = "1.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

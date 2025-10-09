@@ -19,7 +19,7 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
--keepattributes Signature
+-keepattributes Signature,*Annotation*
 
 -keep class ai.koog.** { *; }
 
@@ -42,3 +42,12 @@
 -dontwarn java.lang.management.**
 -dontwarn com.fasterxml.jackson.core.JsonFactory
 -dontwarn com.fasterxml.jackson.core.JsonGenerator
+
+# Keep rules for KotlinX Serialization
+-keepclassmembers class ** {
+    @kotlinx.serialization.Serializable *;
+}
+-keep class **$$serializer { *; }
+
+# Keep specific data models to be safe, though the above rules should cover them.
+-keep class me.nanova.summaryexpressive.model.** { *; }
