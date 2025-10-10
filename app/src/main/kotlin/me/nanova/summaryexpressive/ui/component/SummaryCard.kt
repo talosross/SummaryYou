@@ -61,6 +61,21 @@ import me.nanova.summaryexpressive.util.getLanguageCode
 import java.util.Locale
 import java.util.UUID
 
+enum class PlaybackSpeed(val rate: Float, val label: String) {
+    HALF(0.5f, "0.5x"),
+    NORMAL(1.0f, "1x"),
+    FAST(1.25f, "1.25x"),
+    FASTER(1.5f, "1.5x"),
+    FASTEST(1.75f, "1.75x"),
+    DOUBLE(2.0f, "2x");
+
+    fun next(): PlaybackSpeed {
+        val values = entries.toTypedArray()
+        val nextOrdinal = (ordinal + 1) % values.size
+        return values[nextOrdinal]
+    }
+}
+
 private const val MAX_LINES_WHEN_COLLAPSE = 7
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -208,6 +223,7 @@ private fun SummaryActionButtons(
     var resumeOffset by remember { mutableIntStateOf(0) }
     var utteranceId by remember { mutableStateOf("") }
     val copied = stringResource(id = R.string.copied)
+    var playbackSpeed by remember { mutableStateOf(PlaybackSpeed.NORMAL) }
 
     val updatedOnPlayRequest by rememberUpdatedState(onPlayRequest)
     val updatedIsPlaying by rememberUpdatedState(isPlaying)
@@ -284,6 +300,7 @@ private fun SummaryActionButtons(
 
                 resumeOffset = 0
                 utteranceId = UUID.randomUUID().toString()
+                tts?.setSpeechRate(playbackSpeed.rate)
                 tts?.speak(summaryText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
             }
         } else {
@@ -304,32 +321,54 @@ private fun SummaryActionButtons(
         }
 
         AnimatedVisibility(visible = isPlaying) {
-            IconButton(
-                onClick = {
-                    if (isPaused) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = {
+                        if (isPaused) {
+                            resumeOffset = currentPosition
+                            val remainingText =
+                                summaryText.substring(currentPosition)
+                            utteranceId =
+                                UUID.randomUUID().toString()
+                            tts?.setSpeechRate(playbackSpeed.rate)
+                            tts?.speak(
+                                remainingText,
+                                TextToSpeech.QUEUE_FLUSH,
+                                null,
+                                utteranceId
+                            )
+                            isPaused = false
+                        } else {
+                            tts?.stop()
+                            isPaused = true
+                        }
+                    }
+                ) {
+                    Icon(
+                        if (isPaused) Icons.Outlined.PlayCircleFilled else Icons.Outlined.PauseCircleFilled,
+                        contentDescription = if (isPaused) "Continue" else "Pause",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                TextButton(onClick = {
+                    val newSpeed = playbackSpeed.next()
+                    playbackSpeed = newSpeed
+                    if (!isPaused) {
+                        tts?.stop()
                         resumeOffset = currentPosition
-                        val remainingText =
-                            summaryText.substring(currentPosition)
-                        utteranceId =
-                            UUID.randomUUID().toString()
+                        val remainingText = summaryText.substring(currentPosition)
+                        utteranceId = UUID.randomUUID().toString()
+                        tts?.setSpeechRate(newSpeed.rate)
                         tts?.speak(
                             remainingText,
                             TextToSpeech.QUEUE_FLUSH,
                             null,
                             utteranceId
                         )
-                        isPaused = false
-                    } else {
-                        tts?.stop()
-                        isPaused = true
                     }
+                }) {
+                    Text(text = playbackSpeed.label)
                 }
-            ) {
-                Icon(
-                    if (isPaused) Icons.Outlined.PlayCircleFilled else Icons.Outlined.PauseCircleFilled,
-                    contentDescription = if (isPaused) "Continue" else "Pause",
-                    modifier = Modifier.size(24.dp)
-                )
             }
         }
 

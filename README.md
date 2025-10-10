@@ -78,7 +78,7 @@ package previously.
 
 - **Configurable LLM settings**
 
-- **Read-Out the summaries with multilingual support**
+- **Text to speech for the summaries with multilingual and speed adjustment support**
 
 - **History search**
 
