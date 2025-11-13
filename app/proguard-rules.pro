@@ -21,7 +21,19 @@
 #-renamesourcefileattribute SourceFile
 -keepattributes Signature,*Annotation*
 
+# 1. Keep the ai.koog library classes, as they are used extensively via reflection.
 -keep class ai.koog.** { *; }
+
+# 2. Preserve the kotlin.Metadata annotation, which is required for reflection to work.
+# This is a more memory-efficient way than keeping all annotated classes, which caused an OOM error.
+-keepattributes kotlin.Metadata
+-keep class kotlin.Metadata { *; }
+
+# 3. Keep the entire Kotlin Reflection package. This is critical.
+# The reflection implementation depends on classes like `KVisibility` from the root package,
+# not just the internal classes. Failing to keep the whole package causes the `getVisibility` crash.
+-keep class kotlin.reflect.** { *; }
+-dontwarn kotlin.reflect.**
 
 -keep class io.ktor.client.engine.android.** { *; }
 -keep class io.ktor.client.plugins.contentnegotiation.** { *; }
