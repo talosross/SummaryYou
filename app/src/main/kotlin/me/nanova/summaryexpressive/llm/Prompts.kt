@@ -8,8 +8,8 @@ enum class SummaryLength {
 
 fun createSummarizationPrompt(
     length: SummaryLength,
-    useOriginalLanguage: Boolean,
-    language: String,
+    useContentLanguage: Boolean,
+    appLanguage: String,
 ): Prompt {
     val lengthInstruction = when (length) {
         SummaryLength.SHORT -> "a few sentences(better within 100 words)"
@@ -17,13 +17,13 @@ fun createSummarizationPrompt(
         SummaryLength.LONG -> "a detailed, multi-paragraph summary"
     }
 
-    val languageInstruction = if (useOriginalLanguage) {
+    val languageInstruction = if (useContentLanguage) {
         """
         **Mandatory Procedure:**
         1.  **Identify Content Language:** First, determine the original language of the 'content' field in the user's request. This is the SOLE source for language identification. Ignore tool call details for this step.
         2.  **Use the identified language for summarization**".
         """
-    } else "The summary should be written in $language."
+    } else "The summary should be written in $appLanguage."
 
     return Prompt.build("summarizer-prompt") {
         system(

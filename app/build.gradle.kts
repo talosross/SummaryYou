@@ -18,8 +18,8 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 42
-        versionName = "1.1.0"
+        versionCode = 43
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -77,6 +77,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "/META-INF/io.netty.versions.properties"
             excludes += "/META-INF/INDEX.LIST"
+            excludes += "/META-INF/DEPENDENCIES"
         }
     }
 
@@ -103,7 +104,7 @@ android {
 
 dependencies {
     // https://developer.android.com/develop/ui/compose/bom/bom-mapping
-    val composeBomVersion = "2025.10.00"
+    val composeBomVersion = "2025.10.01"
 
     // Core & Lifecycle
     implementation("androidx.core:core-ktx:1.17.0")
@@ -127,7 +128,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     // Keep alpha override for material expressive features, as intended
     // https://developer.android.com/jetpack/androidx/releases/compose-material3#compose_material3_version_15_2
-    implementation("androidx.compose.material3:material3:1.5.0-alpha06")
+    implementation("androidx.compose.material3:material3:1.5.0-alpha07")
 
     // Paging
     implementation("androidx.paging:paging-compose:3.3.6")
@@ -135,10 +136,10 @@ dependencies {
 
     // Data Persistence
     implementation("androidx.datastore:datastore-preferences:1.1.7")
-    implementation("androidx.room:room-runtime:2.8.2")
-    implementation("androidx.room:room-paging:2.8.2")
-    implementation("androidx.room:room-ktx:2.8.2")
-    ksp("androidx.room:room-compiler:2.8.2")
+    implementation("androidx.room:room-runtime:2.8.3")
+    implementation("androidx.room:room-paging:2.8.3")
+    implementation("androidx.room:room-ktx:2.8.3")
+    ksp("androidx.room:room-compiler:2.8.3")
 
     // ML & AI
     // Custom configurations for build flavors to manage ML model packaging
@@ -147,13 +148,10 @@ dependencies {
     // Uses Google Play Services
     "gmsImplementation"("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-    implementation("ai.koog:koog-agents:0.5.0") {
-        // Exclude CIO engine to use the Android engine provided below
-        exclude(group = "io.ktor", module = "ktor-client-cio")
-    }
+    implementation("ai.koog:koog-agents:0.5.3")
 
     // Networking
-    implementation("io.ktor:ktor-client-android:3.3.0")
+    implementation("io.ktor:ktor-client-android:3.3.2")
 
     // Serialization & Utilities
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")

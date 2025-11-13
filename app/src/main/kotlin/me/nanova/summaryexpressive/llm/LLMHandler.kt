@@ -12,6 +12,9 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.dashscope.DashscopeClientSettings
+import ai.koog.prompt.executor.clients.dashscope.DashscopeLLMClient
+import ai.koog.prompt.executor.clients.dashscope.DashscopeModels
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
@@ -23,6 +26,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import android.content.Context
 import io.ktor.client.HttpClient
@@ -40,6 +45,7 @@ import me.nanova.summaryexpressive.model.ExtractedContent
 import me.nanova.summaryexpressive.model.SummaryData
 import me.nanova.summaryexpressive.model.SummaryException
 import me.nanova.summaryexpressive.vm.SummaryViewModel.SummarySource
+import java.util.Locale
 
 @Serializable
 data class SummaryOutput(
@@ -66,10 +72,10 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         baseUrl: String? = null,
         model: String? = null,
         summaryLength: SummaryLength = SummaryLength.MEDIUM,
-        useOriginalLanguage: Boolean,
-        language: String,
+        useContentLanguage: Boolean,
+        appLanguage: Locale,
     ): AIAgent<SummarySource, SummaryOutput> {
-        val executor = createExecutor(provider, apiKey, baseUrl)
+        val executor = createExecutor(provider, apiKey, baseUrl, appLanguage)
 
         val articleToolRegistry = ToolRegistry { tool(articleExtractorTool) }
         val youtubeToolRegistry = ToolRegistry { tool(youTubeTranscriptTool) }
@@ -79,7 +85,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
             articleToolRegistry + youtubeToolRegistry + bilibiliToolRegistry + fileToolRegistry
 
         val agentConfig =
-            createAgentConfig(provider, model, summaryLength, useOriginalLanguage, language)
+            createAgentConfig(provider, model, summaryLength, useContentLanguage, appLanguage)
 
         return AIAgent(
             promptExecutor = executor,
@@ -98,12 +104,15 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         provider: AIProvider,
         apiKey: String,
         baseUrl: String?,
+        appLanguage: Locale,
     ): PromptExecutor {
         return when (provider) {
             AIProvider.OPENAI -> createOpenAIExecutor(apiKey, baseUrl)
             AIProvider.GEMINI -> createGeminiExecutor(apiKey, baseUrl)
             AIProvider.CLAUDE -> createClaudExecutor(apiKey, baseUrl)
             AIProvider.DEEPSEEK -> createDeepSeekExecutor(apiKey, baseUrl)
+            AIProvider.QWEN -> createQwenExecutor(apiKey, baseUrl, appLanguage)
+            AIProvider.OLLAMA -> createOllamaExecutor(baseUrl)
         }
     }
 
@@ -111,25 +120,23 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         provider: AIProvider,
         modelName: String?,
         summaryLength: SummaryLength,
-        useOriginalLanguage: Boolean,
-        language: String,
+        useContentLanguage: Boolean,
+        appLanguage: Locale,
     ): AIAgentConfig {
-        val llmModel = when (provider) {
-            AIProvider.OPENAI -> modelName?.let { name -> provider.models.find { it.id == name } }
-                ?: OpenAIModels.CostOptimized.GPT4oMini
-
-            AIProvider.GEMINI -> modelName?.let { name -> provider.models.find { it.id == name } }
-                ?: GoogleModels.Gemini2_5Flash
-
-            AIProvider.CLAUDE -> modelName?.let { name -> provider.models.find { it.id == name } }
-                ?: AnthropicModels.Sonnet_3_5
-
-            AIProvider.DEEPSEEK -> modelName?.let { name -> provider.models.find { it.id == name } }
-                ?: DeepSeekModels.DeepSeekChat
+        val llmModel = modelName?.takeIf { it.isNotBlank() }?.let { name ->
+            provider.models.find { it.id == name } ?: CustomLLModel(provider, name).toLLModel()
+        } ?: when (provider) {
+            AIProvider.OPENAI -> OpenAIModels.CostOptimized.GPT4oMini
+            AIProvider.GEMINI -> GoogleModels.Gemini2_5Flash
+            AIProvider.CLAUDE -> AnthropicModels.Sonnet_3_5
+            AIProvider.DEEPSEEK -> DeepSeekModels.DeepSeekChat
+            AIProvider.QWEN -> DashscopeModels.QWEN_FLASH
+            AIProvider.OLLAMA -> OllamaModels.Alibaba.QWQ
         }
 
+        val lang = appLanguage.getDisplayLanguage(Locale.ENGLISH)
         return AIAgentConfig(
-            prompt = createSummarizationPrompt(summaryLength, useOriginalLanguage, language),
+            prompt = createSummarizationPrompt(summaryLength, useContentLanguage, lang),
             model = llmModel,
             maxAgentIterations = 10,
         )
@@ -163,6 +170,34 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         val client = baseUrl?.takeIf { it.isNotBlank() }
             ?.let { DeepSeekLLMClient(apiKey, settings = DeepSeekClientSettings(baseUrl = it)) }
             ?: DeepSeekLLMClient(apiKey)
+
+        return SingleLLMPromptExecutor(client)
+    }
+
+    private fun createQwenExecutor(
+        apiKey: String,
+        baseUrl: String?,
+        appLanguage: Locale,
+    ): PromptExecutor {
+        // assume mainland china user if using simple chinese
+        val isSimplifiedChinese = appLanguage.language == "zh" && appLanguage.script == "Hans"
+
+        val finalBaseUrl = if (isSimplifiedChinese) {
+            "https://dashscope.aliyuncs.com"
+        } else {
+            baseUrl
+        }
+        val client = finalBaseUrl?.takeIf { it.isNotBlank() }
+            ?.let { DashscopeLLMClient(apiKey, settings = DashscopeClientSettings(baseUrl = it)) }
+            ?: DashscopeLLMClient(apiKey)
+
+        return SingleLLMPromptExecutor(client)
+    }
+
+    private fun createOllamaExecutor(baseUrl: String?): PromptExecutor {
+        val client = baseUrl?.takeIf { it.isNotBlank() }
+            ?.let { OllamaClient(baseUrl = it) }
+            ?: throw IllegalArgumentException("Base URL is required for Ollama")
 
         return SingleLLMPromptExecutor(client)
     }

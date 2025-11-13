@@ -6,14 +6,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Search
@@ -123,24 +125,13 @@ fun HistoryScreen(
                     content = {},
                 )
 
-                Row(
+                TypeFilters(
+                    selectedFilter = selectedFilter,
+                    onFilterChanged = { viewModel.onFilterChanged(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    SummaryType.entries.forEach { filter ->
-                        FilterChip(
-                            selected = selectedFilter == filter,
-                            onClick = { viewModel.onFilterChanged(filter) },
-                            label = {
-                                Text(
-                                    text = filter.name.lowercase()
-                                        .replaceFirstChar { it.titlecase() })
-                            },
-                        )
-                    }
-                }
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                )
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -269,6 +260,38 @@ fun HistoryScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TypeFilters(
+    selectedFilter: SummaryType?,
+    onFilterChanged: (SummaryType) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(SummaryType.entries) { filter ->
+            val selected = selectedFilter == filter
+            FilterChip(
+                selected = selected,
+                onClick = { onFilterChanged(filter) },
+                label = {
+                    Text(
+                        text = filter.name.lowercase()
+                            .replaceFirstChar { it.titlecase() })
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = if (selected) Icons.Default.Check else filter.icon,
+                        contentDescription = filter.name
+                    )
+                }
+            )
         }
     }
 }

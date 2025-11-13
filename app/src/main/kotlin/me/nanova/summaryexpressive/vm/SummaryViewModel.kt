@@ -24,7 +24,6 @@ import me.nanova.summaryexpressive.model.HistorySummary
 import me.nanova.summaryexpressive.model.SummaryException
 import me.nanova.summaryexpressive.model.SummaryType
 import me.nanova.summaryexpressive.model.VideoSubtype
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -99,8 +98,7 @@ class SummaryViewModel @Inject constructor(
                 throw SummaryException.NoContentException()
             }
 
-            val language = if (settings.useOriginalLanguage) "the same language as the content"
-            else application.resources.configuration.locales[0].getDisplayLanguage(Locale.ENGLISH)
+            val appLanguage = application.resources.configuration.locales[0]
 
             val agent = llmHandler.getSummarizationAgent(
                 provider = settings.aiProvider,
@@ -108,8 +106,8 @@ class SummaryViewModel @Inject constructor(
                 baseUrl = settings.baseUrl,
                 model = settings.model,
                 summaryLength = settings.summaryLength,
-                useOriginalLanguage = settings.useOriginalLanguage,
-                language = language
+                useContentLanguage = settings.useOriginalLanguage,
+                appLanguage = appLanguage
             )
 
             val summaryOutput = withContext(Dispatchers.IO) {

@@ -1,6 +1,5 @@
 package me.nanova.summaryexpressive.ui.page
 
-import ai.koog.prompt.llm.LLModel
 import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
@@ -40,8 +39,6 @@ import androidx.compose.material.icons.automirrored.rounded.HelpCenter
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.outlined.Clear
-import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Link
@@ -109,6 +106,7 @@ import me.nanova.summaryexpressive.BuildConfig
 import me.nanova.summaryexpressive.R
 import me.nanova.summaryexpressive.llm.AIProvider
 import me.nanova.summaryexpressive.ui.Nav
+import me.nanova.summaryexpressive.ui.component.ClickablePasteIcon
 import me.nanova.summaryexpressive.ui.theme.SummaryExpressiveTheme
 import me.nanova.summaryexpressive.vm.AppViewModel
 import me.nanova.summaryexpressive.vm.SettingsUiState
@@ -251,10 +249,9 @@ fun SettingsScreen(
                 ModelSettingsDialog(
                     onDismissRequest = { dialogState = DialogState.NONE },
                     provider = state.aiProvider,
-                    initialModel = state.aiProvider.models.find { it.id == state.model }
-                        ?: state.aiProvider.models.first(),
-                    onConfirm = { model ->
-                        actions.onModelChange(model.id)
+                    initialModelId = state.model,
+                    onConfirm = { modelId ->
+                        actions.onModelChange(modelId)
                     },
                 )
             }
@@ -780,7 +777,6 @@ private fun AIProviderSettingsDialog(
     onConfirm: (provider: AIProvider, baseUrl: String, apiKey: String) -> Unit,
     onNext: (provider: AIProvider, baseUrl: String, apiKey: String) -> Unit,
 ) {
-    val clipboard = LocalClipboard.current
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -790,7 +786,8 @@ private fun AIProviderSettingsDialog(
     var baseUrlTextFieldValue by remember { mutableStateOf(initialBaseUrl ?: "") }
     var apiKeyTextFieldValue by remember { mutableStateOf(initialApiKey ?: "") }
 
-    val formValid = apiKeyTextFieldValue.isNotBlank()
+    val formValid = (selectedProvider.isMandatoryBaseUrl && baseUrlTextFieldValue.isNotBlank())
+            || (selectedProvider.isRequiredApiKey && apiKeyTextFieldValue.isNotBlank())
     val providerChanged = selectedProvider != initialProvider
 
     val submit = {
@@ -815,82 +812,68 @@ private fun AIProviderSettingsDialog(
                     }
                 }
 
-                if (selectedProvider.isBaseUrlCustomisable) {
-                    Spacer(modifier = Modifier.height(9.dp))
-                    OutlinedTextField(
-                        value = baseUrlTextFieldValue,
-                        onValueChange = { baseUrlTextFieldValue = it },
-                        label = { Text("(Optional) Custom URL") },
-                        shape = MaterialTheme.shapes.large,
-                        leadingIcon = { Icon(Icons.Rounded.Link, contentDescription = "Base Url") },
-                        trailingIcon = {
-                            if (baseUrlTextFieldValue.isBlank()) {
-                                IconButton(onClick = {
-                                    scope.launch {
-                                        clipboard.getClipEntry()?.let {
-                                            baseUrlTextFieldValue =
-                                                it.clipData.getItemAt(0).text.toString()
-                                        }
-                                    }
-                                }) {
-                                    Icon(Icons.Outlined.ContentPaste, contentDescription = "Paste")
-                                }
-                            } else {
-                                IconButton(onClick = { baseUrlTextFieldValue = "" }) {
-                                    Icon(Icons.Outlined.Clear, contentDescription = "Clear")
-                                }
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Uri,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { apiKeyFocusRequester.requestFocus() }
-                        ),
-                    )
-                }
-
                 Spacer(modifier = Modifier.height(9.dp))
 
                 OutlinedTextField(
-                    modifier = Modifier.focusRequester(apiKeyFocusRequester),
-                    value = apiKeyTextFieldValue,
-                    onValueChange = { apiKeyTextFieldValue = it },
-                    leadingIcon = { Icon(Icons.Rounded.VpnKey, contentDescription = "API Key") },
-                    label = { Text(stringResource(R.string.setApiKey)) },
+                    value = baseUrlTextFieldValue,
+                    onValueChange = { baseUrlTextFieldValue = it },
+                    label = { Text(if (selectedProvider.isMandatoryBaseUrl) "* Base Url" else "Custom URL") },
+                    singleLine = true,
                     shape = MaterialTheme.shapes.large,
+                    leadingIcon = { Icon(Icons.Rounded.Link, contentDescription = "Base Url") },
                     trailingIcon = {
-                        if (apiKeyTextFieldValue.isBlank()) {
-                            IconButton(onClick = {
-                                scope.launch {
-                                    clipboard.getClipEntry()?.let {
-                                        apiKeyTextFieldValue =
-                                            it.clipData.getItemAt(0).text.toString()
-                                    }
-                                }
-                            }) {
-                                Icon(Icons.Outlined.ContentPaste, contentDescription = "Paste")
-                            }
-                        } else {
-                            IconButton(onClick = { apiKeyTextFieldValue = "" }) {
-                                Icon(Icons.Outlined.Clear, contentDescription = "Clear")
-                            }
-                        }
+                        ClickablePasteIcon(
+                            text = baseUrlTextFieldValue,
+                            onPaste = { baseUrlTextFieldValue = it },
+                            onClear = { baseUrlTextFieldValue = "" }
+                        )
                     },
-                    visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
+                        keyboardType = KeyboardType.Uri,
+                        imeAction = ImeAction.Next
                     ),
                     keyboardActions = KeyboardActions(
-                        onDone = {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            submit()
-                        }
+                        onNext = { apiKeyFocusRequester.requestFocus() }
                     ),
                 )
+
+                Spacer(modifier = Modifier.height(9.dp))
+
+                if (selectedProvider.isRequiredApiKey) {
+                    OutlinedTextField(
+                        modifier = Modifier.focusRequester(apiKeyFocusRequester),
+                        value = apiKeyTextFieldValue,
+                        onValueChange = { apiKeyTextFieldValue = it },
+                        singleLine = true,
+                        leadingIcon = {
+                            Icon(
+                                Icons.Rounded.VpnKey,
+                                contentDescription = "API Key"
+                            )
+                        },
+                        label = { Text("* " + stringResource(R.string.setApiKey)) },
+                        shape = MaterialTheme.shapes.large,
+                        trailingIcon = {
+                            ClickablePasteIcon(
+                                text = apiKeyTextFieldValue,
+                                onPaste = { apiKeyTextFieldValue = it },
+                                onClear = { apiKeyTextFieldValue = "" }
+                            )
+                        },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
+                                submit()
+                            }
+                        ),
+                    )
+                }
             }
         },
         confirmButton = {
@@ -913,32 +896,79 @@ private fun AIProviderSettingsDialog(
 private fun ModelSettingsDialog(
     onDismissRequest: () -> Unit,
     provider: AIProvider,
-    initialModel: LLModel,
-    onConfirm: (model: LLModel) -> Unit,
+    initialModelId: String?,
+    onConfirm: (modelId: String) -> Unit,
 ) {
-    var selectedModel by remember { mutableStateOf(initialModel) }
+    val customModelKey = "##CUSTOM_MODEL##"
+    val isInitialModelCustom =
+        initialModelId?.let { id -> provider.models.none { it.id == id } } == true
+
+    var selectedKey by remember {
+        mutableStateOf(if (isInitialModelCustom) customModelKey else initialModelId)
+    }
+    var customModelName by remember {
+        mutableStateOf(if (isInitialModelCustom) initialModelId else "")
+    }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(id = R.string.setModel) + " (${provider.displayName})") },
+        title = { Text(stringResource(id = R.string.setModel) + " (${provider.id.display})") },
         text = {
-            LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-                items(provider.models.size) { index ->
-                    val model = provider.models[index]
-                    RadioButtonItem(
-                        selected = selectedModel.id == model.id,
-                        onSelectionChange = { selectedModel = model }
-                    ) {
-                        Text(text = model.id)
+            Column(Modifier.heightIn(max = 390.dp)) {
+                LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                    items(provider.models.size) { index ->
+                        val model = provider.models[index]
+                        RadioButtonItem(
+                            selected = selectedKey == model.id,
+                            onSelectionChange = { selectedKey = model.id }
+                        ) {
+                            Text(text = model.id)
+                        }
                     }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                RadioButtonItem(
+                    selected = selectedKey == customModelKey,
+                    onSelectionChange = { selectedKey = customModelKey }
+                ) {
+                    OutlinedTextField(
+                        value = customModelName,
+                        onValueChange = {
+                            customModelName = it
+                            selectedKey = customModelKey
+                        },
+                        label = { Text("Custom Model") },
+                        shape = MaterialTheme.shapes.large,
+                        singleLine = true,
+                        trailingIcon = {
+                            ClickablePasteIcon(
+                                text = customModelName,
+                                onPaste = {
+                                    customModelName = it
+                                    selectedKey = customModelKey
+                                },
+                                onClear = { customModelName = "" }
+                            )
+                        },
+                    )
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                onConfirm(selectedModel)
-                onDismissRequest()
-            }) {
+            TextButton(
+                onClick = {
+                    val resultModelId = if (selectedKey == customModelKey) {
+                        customModelName
+                    } else {
+                        selectedKey ?: ""
+                    }
+                    onConfirm(resultModelId)
+                    onDismissRequest()
+                },
+                enabled = (selectedKey != customModelKey && selectedKey != null) || (selectedKey == customModelKey && customModelName.isNotBlank())
+            ) {
                 Text(stringResource(id = R.string.ok))
             }
         },
@@ -987,13 +1017,12 @@ private fun AIProviderItem(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = llm.icon),
-                tint = if (selected) Color.Unspecified else LocalContentColor.current,
-                contentDescription = "${llm.displayName} icon",
+                tint = if (selected && !llm.isMonochromeIcon) Color.Unspecified else LocalContentColor.current,
+                contentDescription = "${llm.id.display} icon",
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = llm.displayName, style = MaterialTheme.typography.bodyLarge)
-
+            Text(text = llm.id.display, style = MaterialTheme.typography.bodyLarge)
         }
     }
 }
@@ -1021,8 +1050,8 @@ private fun ModelSettingsDialogPreview() {
         ModelSettingsDialog(
             onDismissRequest = {},
             provider = AIProvider.OPENAI,
-            initialModel = AIProvider.OPENAI.models.first(),
             onConfirm = { _ -> },
+            initialModelId = AIProvider.OPENAI.models.first().id,
         )
     }
 }
