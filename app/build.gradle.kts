@@ -18,8 +18,8 @@ android {
         applicationId = "me.nanova.summaryexpressive"
         minSdk = 33
         targetSdk = 36
-        versionCode = 46
-        versionName = "1.2.3"
+        versionCode = 47
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -104,13 +104,14 @@ android {
 
 dependencies {
     // https://developer.android.com/develop/ui/compose/bom/bom-mapping
-    val composeBomVersion = "2025.11.00"
+    val composeBomVersion = "2025.11.01"
+    val roomVersion = "2.8.4"
 
     // Core & Lifecycle
     implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.activity:activity-compose:1.11.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
+    implementation("androidx.activity:activity-compose:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     implementation("androidx.webkit:webkit:1.14.0")
 
     // DI (Hilt)
@@ -128,18 +129,18 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     // Keep alpha override for material expressive features, as intended
     // https://developer.android.com/jetpack/androidx/releases/compose-material3#compose_material3_version_15_2
-    implementation("androidx.compose.material3:material3:1.5.0-alpha08")
+    implementation("androidx.compose.material3:material3:1.5.0-alpha09")
 
     // Paging
     implementation("androidx.paging:paging-compose:3.3.6")
     implementation("androidx.paging:paging-runtime-ktx:3.3.6")
 
     // Data Persistence
-    implementation("androidx.datastore:datastore-preferences:1.1.7")
-    implementation("androidx.room:room-runtime:2.8.3")
-    implementation("androidx.room:room-paging:2.8.3")
-    implementation("androidx.room:room-ktx:2.8.3")
-    ksp("androidx.room:room-compiler:2.8.3")
+    implementation("androidx.datastore:datastore-preferences:1.2.0")
+    implementation("androidx.room:room-runtime:${roomVersion}")
+    implementation("androidx.room:room-paging:${roomVersion}")
+    implementation("androidx.room:room-ktx:${roomVersion}")
+    ksp("androidx.room:room-compiler:${roomVersion}")
 
     // ML & AI
     // Custom configurations for build flavors to manage ML model packaging
@@ -151,7 +152,7 @@ dependencies {
     implementation("ai.koog:koog-agents:0.5.3")
 
     // Networking
-    implementation("io.ktor:ktor-client-android:3.3.2")
+    implementation("io.ktor:ktor-client-android:3.3.3")
 
     // Serialization & Utilities
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")

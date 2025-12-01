@@ -780,7 +780,6 @@ private fun AIProviderSettingsDialog(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val scope = rememberCoroutineScope()
     val apiKeyFocusRequester = remember { FocusRequester() }
     var selectedProvider by remember { mutableStateOf(initialProvider) }
     var baseUrlTextFieldValue by remember { mutableStateOf(initialBaseUrl ?: "") }
@@ -824,7 +823,7 @@ private fun AIProviderSettingsDialog(
                     trailingIcon = {
                         ClickablePasteIcon(
                             text = baseUrlTextFieldValue,
-                            onPaste = { baseUrlTextFieldValue = it },
+                            onPaste = { baseUrlTextFieldValue = it.trim() },
                             onClear = { baseUrlTextFieldValue = "" }
                         )
                     },
@@ -856,7 +855,7 @@ private fun AIProviderSettingsDialog(
                         trailingIcon = {
                             ClickablePasteIcon(
                                 text = apiKeyTextFieldValue,
-                                onPaste = { apiKeyTextFieldValue = it },
+                                onPaste = { apiKeyTextFieldValue = it.trim() },
                                 onClear = { apiKeyTextFieldValue = "" }
                             )
                         },
@@ -946,7 +945,7 @@ private fun ModelSettingsDialog(
                             ClickablePasteIcon(
                                 text = customModelName,
                                 onPaste = {
-                                    customModelName = it
+                                    customModelName = it.trim()
                                     selectedKey = customModelKey
                                 },
                                 onClear = { customModelName = "" }

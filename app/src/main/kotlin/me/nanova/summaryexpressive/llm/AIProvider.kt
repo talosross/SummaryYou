@@ -5,7 +5,9 @@ import ai.koog.prompt.executor.clients.dashscope.DashscopeModels
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.list
+import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -65,6 +67,15 @@ enum class AIProvider(
         DeepSeekModels.list().filter { it.supports(LLMCapability.Completion) }
             .sortedBy { it.id }
     ),
+    MISTRAL(
+        LLMProvider.MistralAI,
+        false,
+        true,
+        R.drawable.mistral,
+        false,
+        MistralAIModels.list().filter { it.supports(LLMCapability.Completion) }
+            .sortedBy { it.id }
+    ),
     QWEN(
         LLMProvider.Alibaba,
         false,
@@ -92,6 +103,15 @@ enum class AIProvider(
                 contextLength = 32_768,
             )
         )
+    ),
+    OPEN_ROUTER(
+        LLMProvider.OpenRouter,
+        false,
+        true,
+        R.drawable.openrouter,
+        false,
+        OpenRouterModels.list().filter { it.supports(LLMCapability.Completion) }
+            .sortedBy { it.id }
     )
 
 }

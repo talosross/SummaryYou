@@ -21,9 +21,15 @@ import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.mistralai.MistralAIClientSettings
+import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
+import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
+import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
+import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
@@ -111,8 +117,10 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
             AIProvider.GEMINI -> createGeminiExecutor(apiKey, baseUrl)
             AIProvider.CLAUDE -> createClaudExecutor(apiKey, baseUrl)
             AIProvider.DEEPSEEK -> createDeepSeekExecutor(apiKey, baseUrl)
+            AIProvider.MISTRAL -> createMistralExecutor(apiKey, baseUrl)
             AIProvider.QWEN -> createQwenExecutor(apiKey, baseUrl, appLanguage)
             AIProvider.OLLAMA -> createOllamaExecutor(baseUrl)
+            AIProvider.OPEN_ROUTER -> createOpenRouterExecutor(apiKey, baseUrl)
         }
     }
 
@@ -130,8 +138,10 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
             AIProvider.GEMINI -> GoogleModels.Gemini2_5Flash
             AIProvider.CLAUDE -> AnthropicModels.Sonnet_3_5
             AIProvider.DEEPSEEK -> DeepSeekModels.DeepSeekChat
+            AIProvider.MISTRAL -> MistralAIModels.Chat.MistralMedium31
             AIProvider.QWEN -> DashscopeModels.QWEN_FLASH
             AIProvider.OLLAMA -> OllamaModels.Alibaba.QWQ
+            AIProvider.OPEN_ROUTER -> OpenRouterModels.Claude3Sonnet
         }
 
         val lang = appLanguage.getDisplayLanguage(Locale.ENGLISH)
@@ -174,6 +184,14 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         return SingleLLMPromptExecutor(client)
     }
 
+    private fun createMistralExecutor(apiKey: String, baseUrl: String?): PromptExecutor {
+        val client = baseUrl?.takeIf { it.isNotBlank() }
+            ?.let { MistralAILLMClient(apiKey, settings = MistralAIClientSettings(baseUrl = it)) }
+            ?: MistralAILLMClient(apiKey)
+
+        return SingleLLMPromptExecutor(client)
+    }
+
     private fun createQwenExecutor(
         apiKey: String,
         baseUrl: String?,
@@ -198,6 +216,14 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         val client = baseUrl?.takeIf { it.isNotBlank() }
             ?.let { OllamaClient(baseUrl = it) }
             ?: throw IllegalArgumentException("Base URL is required for Ollama")
+
+        return SingleLLMPromptExecutor(client)
+    }
+
+    private fun createOpenRouterExecutor(apiKey: String, baseUrl: String?): PromptExecutor {
+        val client = baseUrl?.takeIf { it.isNotBlank() }
+            ?.let { OpenRouterLLMClient(apiKey, settings = OpenRouterClientSettings(baseUrl = it)) }
+            ?: OpenRouterLLMClient(apiKey)
 
         return SingleLLMPromptExecutor(client)
     }
