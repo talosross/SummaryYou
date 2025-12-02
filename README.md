@@ -11,6 +11,9 @@
 [![ChatGPT](https://img.shields.io/badge/ChatGPT-74aa9c?logo=openai&logoColor=white)](#)
 [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-886FBF?logo=googlegemini&logoColor=fff)](#)
 [![Claude](https://img.shields.io/badge/Claude-D97757?logo=claude&logoColor=fff)](#)
+[![Ollama](https://img.shields.io/badge/Ollama-fff?logo=ollama&logoColor=000)](#)
+[![Mistral AI](https://img.shields.io/badge/Mistral%20AI-FA520F?logo=mistral-ai&logoColor=fff)](#)
+[![Deepseek](https://custom-icon-badges.demolab.com/badge/Deepseek-4D6BFF?logo=deepseek&logoColor=fff)](#)
 
 </div>
 
@@ -63,14 +66,14 @@ package previously.
 
 - Multiple LLM providers supported
 
-    - OpenAI Chatgpt
-    - Google Gemini
-    - Anthropic Claude
-    - Alibaba Qwen
-    - DeepSeek
-    - Mistral
-    - OpenRouter
-    - Ollama
+  - OpenAI Chatgpt
+  - Google Gemini
+  - Anthropic Claude
+  - Alibaba Qwen
+  - DeepSeek
+  - Mistral
+  - OpenRouter
+  - Ollama
 
 - **[Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive) UI**: Engaging
   and easier to use, light/dark theme and dynamic color theme
