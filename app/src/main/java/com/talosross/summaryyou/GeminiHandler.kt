@@ -22,7 +22,7 @@ class GeminiHandler {
                         temperature = 0.9f
                     }
                     val model = GenerativeModel(
-                        modelName = "gemini-2.0-flash",
+                        modelName = "gemini-2.5-flash-lite",
                         apiKey = apiKey,
                         generationConfig = config
                     )
