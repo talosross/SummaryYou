@@ -295,12 +295,14 @@ def summarize(url: str, length: int, language: str, key: str, model: str) -> dic
             # Video
             if video_id:
                 try:
-                    # Get the transcript languages
-                    transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-                    language = [transcript.language_code for transcript in transcript_list]
+                    # Use new instance-based API
+                    api = YouTubeTranscriptApi()
+                    transcript_list = api.list(video_id)
 
-                    # Get the transcript
-                    text = YouTubeTranscriptApi.get_transcript(video_id, languages=[language[0]])
+                    # Get the first available transcript
+                    transcript_obj = next(iter(transcript_list))
+                    fetched = transcript_obj.fetch()
+                    text = fetched.to_raw_data()
                     transcript = " ".join([line["text"] for line in text])
 
                     # Get the title of the video
