@@ -74,7 +74,7 @@ class BiliBiliSubtitleTool(
     private val client: HttpClient,
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : Tool<BiliBiliVideo, ExtractedContent>() {
-    private val json = Json { ignoreUnknownKeys = true }
+    private val jsonDes = Json { ignoreUnknownKeys = true }
     private val bvidRegex = "(BV[1-9A-HJ-NP-Za-km-z]{10})".toRegex()
 
     override val argsSerializer = BiliBiliVideo.serializer()
@@ -183,7 +183,7 @@ class BiliBiliSubtitleTool(
         }
 
         val responseBody = response.bodyAsText()
-        val videoInfo = json.decodeFromString<BiliVideoInfoResponse>(responseBody)
+        val videoInfo = jsonDes.decodeFromString<BiliVideoInfoResponse>(responseBody)
 
         if (videoInfo.code != 0) {
             Log.e(
@@ -221,7 +221,7 @@ class BiliBiliSubtitleTool(
         }
 
         val responseBody = response.bodyAsText()
-        val playerInfo = json.decodeFromString<BiliPlayerResponse>(responseBody)
+        val playerInfo = jsonDes.decodeFromString<BiliPlayerResponse>(responseBody)
 
         if (playerInfo.code != 0) {
             Log.e(
@@ -269,6 +269,6 @@ class BiliBiliSubtitleTool(
         }
 
         val responseBody = response.bodyAsText()
-        return json.decodeFromString<BiliSubtitleContentResponse>(responseBody)
+        return jsonDes.decodeFromString<BiliSubtitleContentResponse>(responseBody)
     }
 }

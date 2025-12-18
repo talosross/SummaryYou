@@ -104,15 +104,15 @@ android {
 
 dependencies {
     // https://developer.android.com/develop/ui/compose/bom/bom-mapping
-    val composeBomVersion = "2025.11.01"
+    val composeBomVersion = "2025.12.01"
     val roomVersion = "2.8.4"
 
     // Core & Lifecycle
     implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.activity:activity-compose:1.12.0")
+    implementation("androidx.activity:activity-compose:1.12.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation("androidx.webkit:webkit:1.14.0")
+    implementation("androidx.webkit:webkit:1.15.0")
 
     // DI (Hilt)
     implementation("com.google.dagger:hilt-android:2.57.2")
@@ -129,7 +129,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     // Keep alpha override for material expressive features, as intended
     // https://developer.android.com/jetpack/androidx/releases/compose-material3#compose_material3_version_15_2
-    implementation("androidx.compose.material3:material3:1.5.0-alpha09")
+    implementation("androidx.compose.material3:material3:1.5.0-alpha11")
 
     // Paging
     implementation("androidx.paging:paging-compose:3.3.6")
@@ -149,7 +149,7 @@ dependencies {
     // Uses Google Play Services
     "gmsImplementation"("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-    implementation("ai.koog:koog-agents:0.5.3")
+    implementation("ai.koog:koog-agents:0.5.4")
 
     // Networking
     implementation("io.ktor:ktor-client-android:3.3.3")
