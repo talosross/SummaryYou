@@ -165,7 +165,7 @@ Main app configuration:
 - Min SDK: 33 (Android 13)
 - Target SDK: 36
 - Java 21 toolchain
-- Compose BOM: 2025.11.01
+- Compose BOM: 2025.12.01
 - Room: 2.8.4
 - Key signing configuration in `keystore.properties`
 
@@ -233,10 +233,10 @@ The app likely requires:
 - Overlay permission (for instant summary overlay)
 
 ## Known Dependencies
-- `ai.koog:koog-agents:0.5.3` - Kotlin-based LLM interactions
+- `ai.koog:koog-agents:0.6.0` - Kotlin-based LLM interactions
 - `io.ktor:ktor-client-android:3.3.3` - HTTP client
 - `org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0` - JSON serialization
-- `org.jsoup:jsoup:1.21.2` - HTML parsing
+- `org.jsoup:jsoup:1.22.1` - HTML parsing
 - `io.coil-kt:coil-compose:2.7.0` - Image loading
 
 ## Build Warnings & Notes

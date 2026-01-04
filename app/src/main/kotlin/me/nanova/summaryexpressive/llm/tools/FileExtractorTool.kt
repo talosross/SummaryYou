@@ -17,7 +17,6 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import me.nanova.summaryexpressive.model.ExtractedContent
 import org.xmlpull.v1.XmlPullParser
@@ -163,13 +162,14 @@ data class File(
     @property:LLMDescription("The content URI of the file.") val fileUriString: String,
 )
 
-class FileExtractorTool(private val context: Context) : Tool<File, ExtractedContent>() {
-    override val argsSerializer = File.serializer()
-    override val resultSerializer: KSerializer<ExtractedContent> = ExtractedContent.serializer()
-    override val name = "extract_text_from_file_uri"
-    override val description = "Extracts text from a file (PDF, DOCX, image) given its content URI."
+class FileExtractorTool(private val context: Context) : Tool<File, ExtractedContent>(
+    argsSerializer = File.serializer(),
+    resultSerializer = ExtractedContent.serializer(),
+    name = "extract_text_from_file_uri",
+    description = "Extracts text from a file (PDF, DOCX, image) given its content URI."
+) {
 
-    public override suspend fun execute(args: File): ExtractedContent {
+    override suspend fun execute(args: File): ExtractedContent {
         val uri = args.fileUriString.toUri()
         val filename = getFileName(context, uri)
         val mimeType = context.contentResolver.getType(uri)
@@ -194,6 +194,7 @@ class FileExtractorTool(private val context: Context) : Tool<File, ExtractedCont
 
         return ExtractedContent(filename, "File System", content)
     }
+
 }
 
 suspend fun getFileName(context: Context, uri: Uri): String = withContext(Dispatchers.IO) {

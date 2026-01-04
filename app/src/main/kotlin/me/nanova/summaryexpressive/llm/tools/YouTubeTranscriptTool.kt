@@ -15,7 +15,6 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -33,13 +32,14 @@ data class YouTubeTranscript(
     @property:LLMDescription("The full URL of the YouTube video.") val url: String,
 )
 
-class YouTubeTranscriptTool(client: HttpClient) : Tool<YouTubeTranscript, ExtractedContent>() {
+class YouTubeTranscriptTool(client: HttpClient) : Tool<YouTubeTranscript, ExtractedContent>(
+    argsSerializer = YouTubeTranscript.serializer(),
+    resultSerializer = ExtractedContent.serializer(),
+    name = "extract_transcript_from_youtube_url",
+    description = "Fetches the transcript for a given YouTube video URL."
+) {
     private val youtubeExtractor = YouTubeExtractor(client)
 
-    override val argsSerializer = YouTubeTranscript.serializer()
-    override val resultSerializer: KSerializer<ExtractedContent> = ExtractedContent.serializer()
-    override val name = "extract_transcript_from_youtube_url"
-    override val description = "Fetches the transcript for a given YouTube video URL."
 
     public override suspend fun execute(args: YouTubeTranscript): ExtractedContent {
         val videoId = YouTubeExtractor.extractVideoId(args.url)

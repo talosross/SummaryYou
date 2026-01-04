@@ -134,7 +134,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         val llmModel = modelName?.takeIf { it.isNotBlank() }?.let { name ->
             provider.models.find { it.id == name } ?: CustomLLModel(provider, name).toLLModel()
         } ?: when (provider) {
-            AIProvider.OPENAI -> OpenAIModels.CostOptimized.GPT4oMini
+            AIProvider.OPENAI -> OpenAIModels.Chat.GPT4oMini
             AIProvider.GEMINI -> GoogleModels.Gemini2_5Flash
             AIProvider.CLAUDE -> AnthropicModels.Sonnet_3_5
             AIProvider.DEEPSEEK -> DeepSeekModels.DeepSeekChat

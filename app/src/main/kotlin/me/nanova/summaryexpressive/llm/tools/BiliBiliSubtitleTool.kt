@@ -15,10 +15,8 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import me.nanova.summaryexpressive.UserPreferencesRepository
 import me.nanova.summaryexpressive.model.ExtractedContent
 import me.nanova.summaryexpressive.model.SummaryException
@@ -73,14 +71,13 @@ data class BiliBiliVideo(
 class BiliBiliSubtitleTool(
     private val client: HttpClient,
     private val userPreferencesRepository: UserPreferencesRepository,
-) : Tool<BiliBiliVideo, ExtractedContent>() {
-    private val jsonDes = Json { ignoreUnknownKeys = true }
+) : Tool<BiliBiliVideo, ExtractedContent>(
+    argsSerializer = BiliBiliVideo.serializer(),
+    resultSerializer = ExtractedContent.serializer(),
+    name = "extract_subtitle_from_bilibili_url",
+    description = "Fetches the subtitle for a given BiliBili video URL."
+) {
     private val bvidRegex = "(BV[1-9A-HJ-NP-Za-km-z]{10})".toRegex()
-
-    override val argsSerializer = BiliBiliVideo.serializer()
-    override val resultSerializer: KSerializer<ExtractedContent> = ExtractedContent.serializer()
-    override val name = "extract_subtitle_from_bilibili_url"
-    override val description = "Fetches the subtitle for a given BiliBili video URL."
 
     companion object {
         private const val TAG = "BiliBiliSubtitleTool"
@@ -100,33 +97,6 @@ class BiliBiliSubtitleTool(
             }
         }
     }
-
-    private suspend fun extractBvid(url: String): String? {
-        val urlString = ensureScheme(url)
-        val parsedUrl = Url(urlString)
-        val finalUrl = if (parsedUrl.host == "b23.tv") {
-            // For b23.tv short links, we need to resolve the redirect to get the full URL.
-            // Ktor HttpClient follows redirects by default.
-            val response = client.head(parsedUrl)
-            response.request.url
-        } else {
-            parsedUrl
-        }
-
-        val pathSegments = finalUrl.segments.filter { it.isNotEmpty() }
-
-        // Prioritize finding the BVID in path segments that follow /video/
-        val bvidFromPath = if (pathSegments.size >= 2 && pathSegments.first().equals("video", ignoreCase = true)) {
-            pathSegments[1]
-        } else {
-            // Otherwise, check if the first segment is a BVID (common after redirects)
-            pathSegments.firstOrNull()
-        }
-
-        // Verify that the extracted string matches the BVID format.
-        return bvidFromPath?.takeIf { bvidRegex.matches(it) }
-    }
-
 
     override suspend fun execute(args: BiliBiliVideo): ExtractedContent {
         return withContext(Dispatchers.IO) {
@@ -166,6 +136,33 @@ class BiliBiliSubtitleTool(
         }
     }
 
+    private suspend fun extractBvid(url: String): String? {
+        val urlString = ensureScheme(url)
+        val parsedUrl = Url(urlString)
+        val finalUrl = if (parsedUrl.host == "b23.tv") {
+            // For b23.tv short links, we need to resolve the redirect to get the full URL.
+            // Ktor HttpClient follows redirects by default.
+            val response = client.head(parsedUrl)
+            response.request.url
+        } else {
+            parsedUrl
+        }
+
+        val pathSegments = finalUrl.segments.filter { it.isNotEmpty() }
+
+        // Prioritize finding the BVID in path segments that follow /video/
+        val bvidFromPath =
+            if (pathSegments.size >= 2 && pathSegments.first().equals("video", ignoreCase = true)) {
+                pathSegments[1]
+            } else {
+                // Otherwise, check if the first segment is a BVID (common after redirects)
+                pathSegments.firstOrNull()
+            }
+
+        // Verify that the extracted string matches the BVID format.
+        return bvidFromPath?.takeIf { bvidRegex.matches(it) }
+    }
+
     private suspend fun getVideoDetails(bvid: String, sessData: String): BiliVideoInfoData {
         val url = "https://api.bilibili.com/x/web-interface/view"
         val response = client.get(url) {
@@ -183,7 +180,7 @@ class BiliBiliSubtitleTool(
         }
 
         val responseBody = response.bodyAsText()
-        val videoInfo = jsonDes.decodeFromString<BiliVideoInfoResponse>(responseBody)
+        val videoInfo = json.decodeFromString<BiliVideoInfoResponse>(responseBody)
 
         if (videoInfo.code != 0) {
             Log.e(
@@ -221,7 +218,7 @@ class BiliBiliSubtitleTool(
         }
 
         val responseBody = response.bodyAsText()
-        val playerInfo = jsonDes.decodeFromString<BiliPlayerResponse>(responseBody)
+        val playerInfo = json.decodeFromString<BiliPlayerResponse>(responseBody)
 
         if (playerInfo.code != 0) {
             Log.e(
@@ -269,6 +266,6 @@ class BiliBiliSubtitleTool(
         }
 
         val responseBody = response.bodyAsText()
-        return jsonDes.decodeFromString<BiliSubtitleContentResponse>(responseBody)
+        return json.decodeFromString<BiliSubtitleContentResponse>(responseBody)
     }
 }
