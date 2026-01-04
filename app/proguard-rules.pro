@@ -55,6 +55,14 @@
 -dontwarn com.fasterxml.jackson.core.JsonFactory
 -dontwarn com.fasterxml.jackson.core.JsonGenerator
 
+# Suppress warnings for missing classes in jsoup (optional re2j support)
+-dontwarn com.google.re2j.**
+-dontwarn org.jsoup.helper.Re2jRegex**
+
+# Suppress warnings for Java 9+ ProcessHandle used in ai.koog (not available on Android)
+-dontwarn java.lang.ProcessHandle
+-dontwarn ai.koog.agents.ext.tool.shell.JvmShellCommandExecutor
+
 # Keep rules for KotlinX Serialization
 -keepclassmembers class ** {
     @kotlinx.serialization.Serializable *;
