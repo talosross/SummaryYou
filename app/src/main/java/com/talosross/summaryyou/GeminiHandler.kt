@@ -29,7 +29,7 @@ class GeminiHandler {
                     val response = model.generateContent("$instructions\n$text")
                     response.text ?: throw Exception("Empty response from Gemini")
                 } catch (e: Exception) {
-                    "Error: ${e.localizedMessage}"
+                    throw Exception("Error: ${e.localizedMessage}")
                 }
             }
         }

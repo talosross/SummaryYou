@@ -6,5 +6,7 @@ class APIKeyLibrary {
             System.loadLibrary("api-keys")
         }
         external fun getAPIKey(): String
+        external fun getAPIKeyFree2(): String
+        external fun getPaidAPIKey(): String
     }
 }

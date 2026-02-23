@@ -122,6 +122,7 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument
 import java.io.FileNotFoundException
 import java.util.Locale
 import java.util.UUID
+import kotlin.random.Random
 
 
 class MainActivity : ComponentActivity() {
@@ -568,6 +569,7 @@ fun homeScreen(modifier: Modifier = Modifier, navController: NavHostController, 
                                                         }
                                                     }
                                                     "Exception: rate limit" -> stringResource(id = R.string.rateLimit)
+                                                    "Exception: quota exceeded" -> stringResource(id = R.string.rateLimit)
                                                     "Exception: no key" -> stringResource(id = R.string.noKey)
                                                     else -> transcriptResult ?: "unknown error 3"
                                                 },
@@ -970,48 +972,112 @@ data class SummaryResult(
 suspend fun summarize(url: String, length: Int, viewModel: TextSummaryViewModel): SummaryResult {
     val py = Python.getInstance()
     val module = py.getModule("youtube")
-    var key: String = APIKeyLibrary.getAPIKey()
-    var model: String = viewModel.getModelValue().toString()
+    val model: String = viewModel.getModelValue().toString()
 
-    if (key.isEmpty()) {
-        key = viewModel.getApiKeyValue().toString()
+    // Lade alle drei Keys
+    val freeKey1 = APIKeyLibrary.getAPIKey()
+    val freeKey2 = APIKeyLibrary.getAPIKeyFree2()
+    val paidKey = APIKeyLibrary.getPaidAPIKey()
+
+    // Wähle zufällig einen der beiden kostenlosen Keys
+    val freeKeys = listOfNotNull(
+        freeKey1.takeIf { it.isNotEmpty() },
+        freeKey2.takeIf { it.isNotEmpty() }
+    )
+    val chosenFreeKey = if (freeKeys.isNotEmpty()) {
+        freeKeys[Random.nextInt(freeKeys.size)]
+    } else {
+        // Kein eingebauter Key vorhanden — verwende den vom Nutzer eingestellten Key
+        viewModel.getApiKeyValue().toString()
     }
 
-    // Get the currently set language
-    val currentLocale: Locale = Resources.getSystem().configuration.locale
+    val chosenSlot = when (chosenFreeKey) {
+        freeKey1 -> "#1"
+        freeKey2 -> "#2"
+        else -> "user-key"
+    }
+    Log.i("SummaryYou-APIKey", "Gewählter Free-Key-Slot: $chosenSlot")
 
+    // Spracheinstellung
+    val currentLocale: Locale = Resources.getSystem().configuration.locales[0]
     val language: String = if (viewModel.getUseOriginalLanguageValue()) {
         "the same language as the "
     } else {
         currentLocale.getDisplayLanguage(Locale.ENGLISH)
     }
 
-    return try {
-        val result: Map<String, PyObject> = withContext(Dispatchers.IO) {
-            module.callAttr("summarize", url, length, language, key, model)
-                .asMap() as Map<String, PyObject>
-        }
+    // Hilfsfunktion: Python-summarize mit einem bestimmten Key aufrufen
+    suspend fun callWithKey(apiKey: String): Map<String, PyObject> = withContext(Dispatchers.IO) {
+        module.callAttr("summarize", url, length, language, apiKey, model)
+            .asMap() as Map<String, PyObject>
+    }
 
+    // --- Erster Versuch mit dem gewählten kostenlosen Key ---
+    return try {
+        Log.i("SummaryYou-APIKey", "Versuch mit Free-Key ($chosenSlot)...")
+        val result = callWithKey(chosenFreeKey)
+        // Prüfe ob das summary mit "Error:" anfängt (Gemini-Fehler als String)
+        val summaryText = result["summary"]?.toString() ?: ""
+        if (summaryText.startsWith("Error:")) {
+            Log.i("SummaryYou-APIKey", "Gemini gab Error-String zurück: $summaryText")
+            throw Exception(summaryText)
+        }
         SummaryResult(
             title = result["title"]?.toString(),
             author = result["author"]?.toString(),
-            summary = result["summary"]?.toString(),
+            summary = summaryText,
             isError = false
         )
-    } catch (e: PyException) {
-        SummaryResult(
-            title = null,
-            author = null,
-            summary = e.message ?: "unknown error 2",
-            isError = true
-        )
     } catch (e: Exception) {
-        SummaryResult(
-            title = null,
-            author = null,
-            summary = e.message ?: "unknown error 3",
-            isError = true
-        )
+        val errMsg = (e.message ?: e.toString()).lowercase()
+        Log.i("SummaryYou-APIKey", "Free-Key ($chosenSlot) fehlgeschlagen: ${e.message}")
+
+        // Prüfe ob es ein Quota-/Rate-Limit-Fehler ist
+        val isQuotaError = listOf(
+            "quota exceeded", "rate limit", "you exceeded", "exceeded your current quota",
+            "quota exceeded for metric", "generativelanguage.googleapis.com",
+            "ai.google.dev", "resource has been exhausted", "429", "resource_exhausted"
+        ).any { errMsg.contains(it) }
+
+        Log.i("SummaryYou-APIKey", "isQuotaError=$isQuotaError")
+
+        if (isQuotaError && paidKey.isNotEmpty()) {
+            // --- Stiller Fallback auf den Paid-Key ---
+            Log.i("SummaryYou-APIKey", "Starte stillen Fallback mit Paid-Key...")
+            try {
+                val fallbackResult = callWithKey(paidKey)
+                val fallbackSummary = fallbackResult["summary"]?.toString() ?: ""
+                if (fallbackSummary.startsWith("Error:")) {
+                    Log.i("SummaryYou-APIKey", "Paid-Key gab Error-String zurück: $fallbackSummary")
+                    throw Exception(fallbackSummary)
+                }
+                Log.i("SummaryYou-APIKey", "Paid-Key Fallback ERFOLGREICH")
+                SummaryResult(
+                    title = fallbackResult["title"]?.toString(),
+                    author = fallbackResult["author"]?.toString(),
+                    summary = fallbackSummary,
+                    isError = false
+                )
+            } catch (e2: Exception) {
+                Log.i("SummaryYou-APIKey", "Paid-Key Fallback FEHLGESCHLAGEN: ${e2.message}")
+                // Gib den ursprünglichen Fehler an die UI zurück
+                SummaryResult(
+                    title = null, author = null,
+                    summary = e.message ?: "unknown error", isError = true
+                )
+            }
+        } else {
+            if (!isQuotaError) {
+                Log.i("SummaryYou-APIKey", "Kein Quota-Fehler, kein Fallback. Fehler an UI weitergeben.")
+            } else {
+                Log.i("SummaryYou-APIKey", "Quota-Fehler, aber kein Paid-Key vorhanden.")
+            }
+            // Kein Fallback möglich — Fehler an UI
+            SummaryResult(
+                title = null, author = null,
+                summary = e.message ?: "unknown error", isError = true
+            )
+        }
     }
 }
 

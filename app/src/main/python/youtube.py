@@ -236,13 +236,24 @@ def generate_summary(text: str, length: int, type: str, language: str, title: st
         raise e
 
 def handle_exception(e: Exception) -> None:
-    if "Incorrect API" in str(e) or "Invalid API Key" in str(e):
+    err = str(e)
+    err_lower = err.lower()
+    print(f"[handle_exception] raw error: {err}")
+
+    if "incorrect api" in err_lower or "invalid api key" in err_lower:
         raise Exception("incorrect key")
-    elif "Rate limit reached" in str(e):
-        raise Exception("rate limit")
-    elif "You didn't provide an API key" in str(e):
+    elif ("rate limit" in err_lower
+          or "quota exceeded" in err_lower
+          or "you exceeded" in err_lower
+          or "exceeded your current quota" in err_lower
+          or "quota exceeded for metric" in err_lower
+          or "generativelanguage.googleapis.com" in err_lower
+          or "ai.google.dev" in err_lower):
+        print("[handle_exception] -> mapped to 'quota exceeded'")
+        raise Exception("quota exceeded")
+    elif "you didn't provide an api key" in err_lower or "you did not provide an api key" in err_lower:
         raise Exception("no key")
-    elif "Please reduce the length of the messages" in str(e):
+    elif "please reduce the length of the messages" in err_lower or "please reduce the length" in err_lower:
         raise Exception("too long")
     else:
         raise e
