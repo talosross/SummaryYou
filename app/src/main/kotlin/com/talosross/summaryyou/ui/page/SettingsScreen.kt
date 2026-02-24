@@ -438,53 +438,7 @@ private fun SettingsContent(
                 )
             }
         }
-
-        item {
-            SettingsGroup(highlighted = highlightSection == "3rd-party-service") {
-                val sessDataValid =
-                    state.sessData.isNotBlank() && state.sessDataExpires > System.currentTimeMillis()
-                val itemColor =
-                    if (sessDataValid) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f) else LocalContentColor.current
-
-                ListItem(
-                    modifier = Modifier.combinedClickable(
-                        onClick = {
-                            if (!sessDataValid) {
-                                onShowBiliBiliLoginSheet()
-                            }
-                        },
-                        onLongClick = {
-                            if (sessDataValid) {
-                                onShowClearSessDataDialog()
-                            }
-                        }
-                    ),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text("BiliBili Account", color = itemColor) },
-                    supportingContent = {
-                        if (sessDataValid) {
-                            val expiryDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                                .format(Date(state.sessDataExpires))
-                            Text(
-                                "Logged in, expires on $expiryDate. Long press to clear.",
-                                color = itemColor
-                            )
-                        } else {
-                            Text("BiliBili required login to get transcripts which used for video summary")
-                        }
-                    },
-                    leadingContent = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.bilibili),
-                            contentDescription = "BiliBili",
-                            modifier = Modifier.size(24.dp),
-                            tint = itemColor
-                        )
-                    }
-                )
-            }
-        }
-
+        
         item {
             SettingsGroup {
                 ListItem(
@@ -573,7 +527,7 @@ private fun SettingsContent(
                     modifier = Modifier
                         .clickable {
                             val url =
-                                "https://play.google.com/store/apps/details?id=${context.packageName}"
+                                "https://play.google.com/store/apps/details?id=com.talosross.summaryyou"
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             context.startActivity(intent)
                         }
@@ -593,27 +547,7 @@ private fun SettingsContent(
                 ListItem(
                     modifier = Modifier
                         .clickable {
-                            val url = "https://discord.gg/WjN73wKTqd"
-                            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                            context.startActivity(intent)
-                        }
-                        .fillMaxWidth(),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.discord)) },
-                    leadingContent = {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.discord),
-                            contentDescription = "Discord",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    supportingContent = { Text(stringResource(id = R.string.discordDescription)) },
-                )
-
-                ListItem(
-                    modifier = Modifier
-                        .clickable {
-                            val url = "https://github.com/kid1412621/SummaryExpressive"
+                            val url = "https://github.com/talosross/SummaryYou"
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             context.startActivity(intent)
                         }
@@ -642,7 +576,7 @@ private fun SettingsContent(
                 val appInfo =
                     "${BuildConfig.VERSION_NAME} - ${BuildConfig.VERSION_CODE} (${BuildConfig.FLAVOR})"
                 Text(
-                    text = "Version $appInfo",
+                    text = "Version ${BuildConfig.VERSION_NAME}",
                     modifier = Modifier
                         .clickable {
                             scope.launch {
@@ -655,7 +589,7 @@ private fun SettingsContent(
                     text = stringResource(id = R.string.madeBy),
                     modifier = Modifier
                         .clickable {
-                            val url = "https://nanova.me"
+                            val url = "https://github.com/talosross"
                             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                             context.startActivity(intent)
                         }

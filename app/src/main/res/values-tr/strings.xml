@@ -23,7 +23,7 @@
     <string name="chooseLanguageDescription">Bir dil seçin</string>
     <string name="repository">Açık Kaynak Kodu</string>
     <string name="githubDescription">Github depomuz</string>
-    <string name="madeBy">NanoNova tarafından ❤ ile yapılmıştır</string>
+    <string name="madeBy">talosross tarafından ❤ ile yapılmıştır</string>
     <string name="useDynamicColor">Dinamik Renk</string>
     <string name="useDynamicColorDescription">Duvar kağıdınızdan renkleri kullanın</string>
     <string name="useAutoExtractLink">Web Bağlantısını Otomatik Çıkar</string>

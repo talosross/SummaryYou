@@ -31,7 +31,7 @@ This repository is the official home of **Summary You** ([com.talosross.com](htt
 ## Download
 
 Version without key required (paid):
-<a href='https://play.google.com/store/apps/details?id=com.talosross.com'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='300'/></a>
+<a href='https://play.google.com/store/apps/details?id=com.talosross.summaryyou'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='300'/></a>
 
 ## 📖 Features
 - Summarize YouTube videos, articles, images, and documents with AI
