@@ -40,19 +40,19 @@ jobs:
 
       - name: Setup Keystore
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEYSTORE_BASE64: ${{ secrets.FOSS_KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.FOSS_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.FOSS_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.FOSS_STORE_PASSWORD }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > release.jks
-          echo "storeFile=release.jks" > keystore.properties
-          echo "keyAlias=$KEY_ALIAS" >> keystore.properties
-          echo "keyPassword=$KEY_PASSWORD" >> keystore.properties
-          echo "storePassword=$STORE_PASSWORD" >> keystore.properties
+          echo "$KEYSTORE_BASE64" | base64 --decode > foss.jks
+          echo "storeFile=foss.jks" > keystore-foss.properties
+          echo "keyAlias=$KEY_ALIAS" >> keystore-foss.properties
+          echo "keyPassword=$KEY_PASSWORD" >> keystore-foss.properties
+          echo "storePassword=$STORE_PASSWORD" >> keystore-foss.properties
 
       - name: Build release artifacts
-        run: ./gradlew clean assembleRelease bundleGmsRelease
+        run: ./gradlew clean assembleFossRelease
 
       - name: Extract version info from tag
         id: extract-versions
@@ -81,9 +81,7 @@ jobs:
 
       - name: Copy and rename artifacts
         run: |
-          cp "app/build/outputs/apk/gms/release/app-gms-release.apk" "${{ env.APK_DIR }}/SummaryExpressive-gms-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
-          cp "app/build/outputs/apk/standalone/release/app-standalone-release.apk" "${{ env.APK_DIR }}/SummaryExpressive-standalone-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
-          cp "app/build/outputs/bundle/gmsRelease/app-gms-release.aab" "${{ env.APK_DIR }}/SummaryExpressive-gms-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).aab"
+          cp "app/build/outputs/apk/foss/release/app-foss-release.apk" "${{ env.APK_DIR }}/SummaryExpressive-foss-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
@@ -113,12 +111,3 @@ jobs:
             # Format for Google Play: remove '###', convert '- ' to '• '
             sed -i -e 's/^### //g' -e 's/^- /• /g' "${WHATS_NEW_FILE}"
           fi
-
-      - name: Release to Google Play
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-          packageName: com.talosross.summaryyou
-          releaseFiles: ${{ env.APK_DIR }}/*.aab
-          track: internal
-          whatsNewDirectory: whatsnew
