@@ -357,8 +357,6 @@ fun HomeScreen(
                                 .fillMaxWidth()
                                 .padding(top = 5.dp)
                         )
-                    } else {
-                        Spacer(modifier = Modifier.height(height = 8.dp))
                     }
 
                     summaryResult?.takeIf { it.summary.isNotEmpty() }?.let { summaryOutput ->
@@ -551,15 +549,25 @@ private fun LengthSelector(
 ) {
     Row(
         Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         options.forEachIndexed { index, label ->
+            val isSelected = selectedIndex == index
+            val animatedWeight by androidx.compose.animation.core.animateFloatAsState(
+                targetValue = if (isSelected) 1.2f else 1f,
+                animationSpec = androidx.compose.animation.core.spring(
+                    dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                    stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                ),
+                label = "buttonWeight"
+            )
+
             ToggleButton(
-                checked = selectedIndex == index,
+                checked = isSelected,
                 onCheckedChange = { onSelectedIndexChange(index) },
                 enabled = enabled,
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(animatedWeight)
                     .semantics { role = Role.RadioButton },
                 shapes = when (index) {
                     0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
