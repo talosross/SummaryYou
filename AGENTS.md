@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SummaryExpressive is an AI/LLM summarizer FOSS Android app that summarizes YouTube videos, web articles, images, and documents. It follows [MAD](https://developer.android.com/courses/pathways/android-architecture) principles using pure Kotlin + Jetpack Compose + Material 3 Expressive. The app is BYOK (Bring Your Own Key), allowing users to configure their own LLM API keys.
+SummaryYou is an AI/LLM summarizer FOSS Android app that summarizes YouTube videos, web articles, images, and documents. It follows [MAD](https://developer.android.com/courses/pathways/android-architecture) principles using pure Kotlin + Jetpack Compose + Material 3 Expressive. The app is BYOK (Bring Your Own Key), allowing users to configure their own LLM API keys.
 
 ## Common Commands
 
@@ -13,12 +13,9 @@ SummaryExpressive is an AI/LLM summarizer FOSS Android app that summarizes YouTu
 # Clean and build debug APK
 ./gradlew clean assembleDebug
 
-# Build release APK (requires keystore.properties setup)
-./gradlew assembleRelease
-
-# Build specific variant
-./gradlew assembleGmsRelease
-./gradlew assembleStandaloneRelease
+# Build specific release variants
+./gradlew assemblePlaystoreRelease
+./gradlew assembleFossRelease
 ```
 
 ### Testing
@@ -50,7 +47,7 @@ SummaryExpressive is an AI/LLM summarizer FOSS Android app that summarizes YouTu
 - Use `./gradlew clean assembleDebug` to verify the build
 - Use `./gradlew clean test` to run tests
 - Configure SDK paths in `local.properties`
-- Set up signing keys in `keystore.properties` for release builds
+- Set up signing keys in `keystore-playstore.properties` and `keystore-foss.properties` for release builds
 
 ## Architecture & Code Structure
 
@@ -66,10 +63,10 @@ SummaryExpressive is an AI/LLM summarizer FOSS Android app that summarizes YouTu
 
 ### Build Flavors
 The app uses two product flavors:
-- **gms**: Uses Google Play Services ML Kit (smaller APK size, requires Google Play Services)
-- **standalone**: Bundles ML model in APK (larger package size, works without Google Play Services)
+- **playstore**: Uses Google Play Services ML Kit (smaller APK size, requires Google Play Services)
+- **foss**: Bundles ML model in APK (larger package size, works without Google Play Services)
 
-Configure in `app/build.gradle.kts:58-68`.
+Configure in `app/build.gradle.kts` under the `productFlavors` block.
 
 ### Project Structure
 
@@ -165,15 +162,18 @@ Main app configuration:
 - Min SDK: 33 (Android 13)
 - Target SDK: 36
 - Java 21 toolchain
-- Compose BOM: 2025.12.01
+- Compose BOM: 2026.01.00
 - Room: 2.8.4
-- Key signing configuration in `keystore.properties`
+- Signing configs: `keystore-playstore.properties` and `keystore-foss.properties`
 
 ### `local.properties`
 Local SDK paths (not tracked in git)
 
-### `keystore.properties`
-Release signing keys (not tracked in git)
+### `keystore-playstore.properties`
+Play Store release signing keys (not tracked in git)
+
+### `keystore-foss.properties`
+FOSS release signing keys (not tracked in git)
 
 ## Development Guidelines
 
@@ -200,7 +200,7 @@ Release signing keys (not tracked in git)
 - Type converters in `converters/` package
 
 ### Material 3 Expressive
-The app uses Material 3 Expressive alpha features for enhanced UI. Material version: `1.5.0-alpha09`
+The app uses Material 3 Expressive alpha features for enhanced UI. Material version: `1.5.0-alpha12`
 
 ## Testing
 - Unit tests in `src/test/kotlin/`
@@ -216,14 +216,14 @@ The app uses Material 3 Expressive alpha features for enhanced UI. Material vers
 
 ### Release
 - Release builds are minified and shrunk
-- Requires `keystore.properties` for signing
+- Signing is flavor-specific and optional if the properties file is missing
 - Two distribution channels:
-  1. **GitHub Releases**: Both gms and standalone variants
-  2. **Google Play Store**: GMS variant with Google-managed signing
+  1. **GitHub Releases**: FOSS variant
+  2. **Google Play Store**: Playstore variant with Google-managed signing
 
 ### Version Info
-Current version: 1.2.3 (versionCode 46)
-- Update version in `app/build.gradle.kts:21-22`
+Current version: 1.4.0 (versionCode 2026022415)
+- Update version in `app/build.gradle.kts:20-21`
 
 ## Permissions & Security
 The app likely requires:
@@ -234,13 +234,13 @@ The app likely requires:
 
 ## Known Dependencies
 - `ai.koog:koog-agents:0.6.0` - Kotlin-based LLM interactions
-- `io.ktor:ktor-client-android:3.3.3` - HTTP client
-- `org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0` - JSON serialization
+- `io.ktor:ktor-client-android:3.4.0` - HTTP client
+- `org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0` - JSON serialization
 - `org.jsoup:jsoup:1.22.1` - HTML parsing
 - `io.coil-kt:coil-compose:2.7.0` - Image loading
 
 ## Build Warnings & Notes
-- ML Kit dependency is flavor-specific (see `app/build.gradle.kts:145-150`)
+- ML Kit dependency is flavor-specific (see `app/build.gradle.kts` dependencies)
 - ProGuard/R8 rules configured in `app/proguard-rules.pro`
 - Some resources excluded from APK (see packaging section)
 - Lint rule: MissingTranslation disabled for localization flexibility
