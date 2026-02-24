@@ -13,40 +13,28 @@ android {
     namespace = "com.talosross.summaryyou"
     compileSdk = 36
 
-    // Load signing properties once; missing files yield unsigned builds.
-    val playstoreSigningProps = loadSigningProperties(rootProject.file("keystore-playstore.properties"))
-    val fossSigningProps = loadSigningProperties(rootProject.file("keystore-foss.properties"))
-
     defaultConfig {
         applicationId = "com.talosross.summaryyou"
         minSdk = 33
         targetSdk = 36
-        versionCode = 2026022415
-        versionName = "1.4.0"
+        versionCode = 2026022423
+        versionName = "1.4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
-        create("playstore") {
-            if (playstoreSigningProps != null) {
-                keyAlias = playstoreSigningProps.getProperty("keyAlias")
-                keyPassword = playstoreSigningProps.getProperty("keyPassword")
-                storeFile = playstoreSigningProps.getProperty("storeFile")
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { rootProject.file(it) }
-                storePassword = playstoreSigningProps.getProperty("storePassword")
-            }
+        val keyPropertiesFile = rootProject.file("keystore.properties")
+        val keyProperties = Properties()
+        if (keyPropertiesFile.exists()) {
+            keyProperties.load(FileInputStream(keyPropertiesFile))
         }
-        create("foss") {
-            if (fossSigningProps != null) {
-                keyAlias = fossSigningProps.getProperty("keyAlias")
-                keyPassword = fossSigningProps.getProperty("keyPassword")
-                storeFile = fossSigningProps.getProperty("storeFile")
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { rootProject.file(it) }
-                storePassword = fossSigningProps.getProperty("storePassword")
-            }
+
+        create("release") {
+            keyAlias = keyProperties.getProperty("keyAlias")
+            keyPassword = keyProperties.getProperty("keyPassword")
+            storeFile = if (keyProperties.getProperty("storeFile") != null) rootProject.file(keyProperties.getProperty("storeFile")) else null
+            storePassword = keyProperties.getProperty("storePassword")
         }
     }
 
@@ -62,24 +50,34 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
     flavorDimensions += "distribution"
     productFlavors {
-        create("playstore") {
+        create("gms") {
             dimension = "distribution"
-            if (playstoreSigningProps != null) {
-                signingConfig = signingConfigs.getByName("playstore")
+
+            // Proxy URL and GCP project number from local.properties (never committed to git)
+            val localProps = Properties()
+            val localPropsFile = rootProject.file("local.properties")
+            if (localPropsFile.exists()) {
+                localProps.load(FileInputStream(localPropsFile))
             }
+            val proxyUrl = localProps.getProperty("proxy.url", "")
+            val gcpProjectNumber = localProps.getProperty("gcp.project.number", "0")
+
+            buildConfigField("String", "PROXY_URL", "\"$proxyUrl\"")
+            buildConfigField("long", "GCP_PROJECT_NUMBER", "${gcpProjectNumber}L")
         }
-        create("foss") {
+        create("standalone") {
             dimension = "distribution"
-            applicationIdSuffix = ".foss"
-            versionNameSuffix = "-foss"
-            if (fossSigningProps != null) {
-                signingConfig = signingConfigs.getByName("foss")
-            }
+            applicationIdSuffix = ".standalone"
+            versionNameSuffix = "-standalone"
+
+            buildConfigField("String", "PROXY_URL", "\"\"")
+            buildConfigField("long", "GCP_PROJECT_NUMBER", "0L")
         }
     }
 
@@ -119,14 +117,6 @@ kotlin {
     compilerOptions {
         languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
-    }
-}
-
-// Helper to load signing properties; returns null when file is absent.
-fun loadSigningProperties(file: java.io.File): Properties? {
-    if (!file.exists()) return null
-    return Properties().apply {
-        FileInputStream(file).use { load(it) }
     }
 }
 
@@ -173,14 +163,18 @@ dependencies {
     // ML & AI
     // Custom configurations for build flavors to manage ML model packaging
     // Bundles model in APK
-    "fossImplementation"("com.google.mlkit:text-recognition:16.0.1")
+    "standaloneImplementation"("com.google.mlkit:text-recognition:16.0.1")
     // Uses Google Play Services
-    "playstoreImplementation"("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
-    "playstoreImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
+    "gmsImplementation"("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+    // Play Integrity API (gms flavor only)
+    "gmsImplementation"("com.google.android.play:integrity:1.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
     implementation("ai.koog:koog-agents:0.6.0")
 
     // Networking
     implementation("io.ktor:ktor-client-android:3.4.0")
+    implementation("io.ktor:ktor-client-content-negotiation:3.4.0")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.0")
 
     // Serialization & Utilities
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")

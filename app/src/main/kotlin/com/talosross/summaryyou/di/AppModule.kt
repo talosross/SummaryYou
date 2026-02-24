@@ -18,6 +18,7 @@ import com.talosross.summaryyou.data.AppDatabase
 import com.talosross.summaryyou.data.HistoryDao
 import com.talosross.summaryyou.data.HistoryRepository
 import com.talosross.summaryyou.llm.LLMHandler
+import com.talosross.summaryyou.llm.ProxySummarizer
 import javax.inject.Singleton
 
 @Module
@@ -59,6 +60,15 @@ object AppModule {
         httpClient: HttpClient
     ): LLMHandler {
         return LLMHandler(context, httpClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProxySummarizer(
+        httpClient: HttpClient,
+        flavorConfig: FlavorConfig
+    ): ProxySummarizer {
+        return ProxySummarizer(httpClient, flavorConfig)
     }
 
     @Provides

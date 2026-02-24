@@ -72,6 +72,32 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
     private val youTubeTranscriptTool = YouTubeTranscriptTool(httpClient)
     private val bilibiliSubtitleTool = BiliBiliSubtitleTool(httpClient, userPreferencesRepository)
 
+    /**
+     * Extract content locally from any source type, without involving an LLM.
+     * Used by the proxy path to extract content before sending to the Cloudflare Worker.
+     */
+    suspend fun extractContent(source: SummarySource): ExtractedContent {
+        return when (source) {
+            is SummarySource.Article ->
+                articleExtractorTool.execute(Article(source.url))
+            is SummarySource.Video -> {
+                if (YouTubeTranscriptTool.isYouTubeLink(source.url)) {
+                    youTubeTranscriptTool.execute(YouTubeTranscript(source.url))
+                } else if (BiliBiliSubtitleTool.isBiliBiliLink(source.url)) {
+                    bilibiliSubtitleTool.execute(BiliBiliVideo(source.url))
+                } else {
+                    throw SummaryException.InvalidLinkException()
+                }
+            }
+            is SummarySource.Document ->
+                fileExtractorTool.execute(File(source.uri))
+            is SummarySource.Text ->
+                ExtractedContent(title = "Text Input", author = "Unknown", content = source.content)
+            is SummarySource.None ->
+                throw SummaryException.NoContentException()
+        }
+    }
+
     fun getSummarizationAgent(
         provider: AIProvider,
         apiKey: String,

@@ -19,6 +19,8 @@ data class SettingsUiState(
     val summaryLength: SummaryLength = SummaryLength.MEDIUM,
     val sessData: String = "",
     val sessDataExpires: Long = 0L,
+    /** Whether a server-side proxy is available (gms flavor with proxy URL configured). */
+    val hasProxy: Boolean = false,
 )
 
 data class SummarizationState(

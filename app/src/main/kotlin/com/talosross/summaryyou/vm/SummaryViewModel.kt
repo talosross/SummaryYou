@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.talosross.summaryyou.data.HistoryRepository
+import com.talosross.summaryyou.di.FlavorConfig
 import com.talosross.summaryyou.llm.LLMHandler
+import com.talosross.summaryyou.llm.ProxySummarizer
 import com.talosross.summaryyou.llm.SummaryLength
 import com.talosross.summaryyou.llm.SummaryOutput
 import com.talosross.summaryyou.llm.tools.BiliBiliSubtitleTool
@@ -29,6 +31,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SummaryViewModel @Inject constructor(
     private val llmHandler: LLMHandler,
+    private val proxySummarizer: ProxySummarizer,
+    private val flavorConfig: FlavorConfig,
     private val application: Application,
     private val historyRepository: HistoryRepository,
 ) : ViewModel() {
@@ -90,28 +94,23 @@ class SummaryViewModel @Inject constructor(
     private suspend fun summarizeInternal(source: SummarySource, settings: SettingsUiState) {
         _summarizationState.value = SummarizationState(isLoading = true)
         try {
-            val currentApiKey = settings.apiKey
-            if (currentApiKey.isNullOrEmpty()) {
-                throw SummaryException.NoKeyException()
-            }
             if (source is SummarySource.None) {
                 throw SummaryException.NoContentException()
             }
 
+            val currentApiKey = settings.apiKey
+            val useProxy = currentApiKey.isNullOrEmpty() && flavorConfig.proxyBaseUrl != null
+
+            if (currentApiKey.isNullOrEmpty() && !useProxy) {
+                throw SummaryException.NoKeyException()
+            }
+
             val appLanguage = application.resources.configuration.locales[0]
 
-            val agent = llmHandler.getSummarizationAgent(
-                provider = settings.aiProvider,
-                apiKey = currentApiKey,
-                baseUrl = settings.baseUrl,
-                model = settings.model,
-                summaryLength = settings.summaryLength,
-                useContentLanguage = settings.useOriginalLanguage,
-                appLanguage = appLanguage
-            )
-
-            val summaryOutput = withContext(Dispatchers.IO) {
-                agent.run(source)
+            val summaryOutput = if (useProxy) {
+                summarizeViaProxy(source, settings, appLanguage)
+            } else {
+                summarizeViaAgent(source, settings, currentApiKey!!, appLanguage)
             }
 
             _summarizationState.update { it.copy(summaryResult = summaryOutput) }
@@ -128,6 +127,75 @@ class SummaryViewModel @Inject constructor(
         } finally {
             _summarizationState.update { it.copy(isLoading = false) }
         }
+    }
+
+    /**
+     * Standard path: use the koog agent with the user's own API key.
+     */
+    private suspend fun summarizeViaAgent(
+        source: SummarySource,
+        settings: SettingsUiState,
+        apiKey: String,
+        appLanguage: java.util.Locale,
+    ): SummaryOutput {
+        val agent = llmHandler.getSummarizationAgent(
+            provider = settings.aiProvider,
+            apiKey = apiKey,
+            baseUrl = settings.baseUrl,
+            model = settings.model,
+            summaryLength = settings.summaryLength,
+            useContentLanguage = settings.useOriginalLanguage,
+            appLanguage = appLanguage
+        )
+
+        return withContext(Dispatchers.IO) {
+            agent.run(source)
+        }
+    }
+
+    /**
+     * Proxy path: extract content locally, then send to Cloudflare Worker proxy.
+     * Used in gms flavor when user has no API key set.
+     */
+    private suspend fun summarizeViaProxy(
+        source: SummarySource,
+        settings: SettingsUiState,
+        appLanguage: java.util.Locale,
+    ): SummaryOutput {
+        // Extract content locally using the existing tools via LLMHandler
+        val extractedContent = withContext(Dispatchers.IO) {
+            llmHandler.extractContent(source)
+        }
+
+        val summaryText = withContext(Dispatchers.IO) {
+            proxySummarizer.summarize(
+                content = extractedContent.content,
+                length = settings.summaryLength,
+                useContentLanguage = settings.useOriginalLanguage,
+                appLanguage = appLanguage.getDisplayLanguage(java.util.Locale.ENGLISH),
+                model = settings.model,
+            )
+        }
+
+        val isYoutube = source is SummarySource.Video &&
+                YouTubeTranscriptTool.isYouTubeLink((source).url)
+        val isBiliBili = source is SummarySource.Video &&
+                BiliBiliSubtitleTool.isBiliBiliLink((source).url)
+        val sourceLink = when (source) {
+            is SummarySource.Video -> source.url
+            is SummarySource.Article -> source.url
+            else -> null
+        }
+
+        return SummaryOutput(
+            title = extractedContent.title,
+            author = extractedContent.author,
+            summary = summaryText,
+            sourceLink = sourceLink,
+            isYoutubeLink = isYoutube,
+            isBiliBiliLink = isBiliBili,
+            length = settings.summaryLength,
+        )
     }
 
     private suspend fun saveSummaryToHistory(

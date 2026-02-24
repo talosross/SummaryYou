@@ -230,6 +230,7 @@ fun SettingsScreen(
                     initialProvider = state.aiProvider,
                     initialBaseUrl = state.baseUrl,
                     initialApiKey = state.apiKey,
+                    hasProxy = state.hasProxy,
                     onDismissRequest = { dialogState = DialogState.NONE },
                     onConfirm = { provider, baseUrl, apiKey ->
                         actions.onProviderChange(provider.name)
@@ -438,7 +439,7 @@ private fun SettingsContent(
                 )
             }
         }
-        
+
         item {
             SettingsGroup {
                 ListItem(
@@ -708,6 +709,7 @@ private fun AIProviderSettingsDialog(
     initialProvider: AIProvider,
     initialBaseUrl: String?,
     initialApiKey: String?,
+    hasProxy: Boolean = false,
     onConfirm: (provider: AIProvider, baseUrl: String, apiKey: String) -> Unit,
     onNext: (provider: AIProvider, baseUrl: String, apiKey: String) -> Unit,
 ) {
@@ -719,8 +721,13 @@ private fun AIProviderSettingsDialog(
     var baseUrlTextFieldValue by remember { mutableStateOf(initialBaseUrl ?: "") }
     var apiKeyTextFieldValue by remember { mutableStateOf(initialApiKey ?: "") }
 
+    // Form is valid if:
+    // - Provider needs mandatory base URL and one is provided, OR
+    // - Provider needs API key and one is provided, OR
+    // - Proxy is available (gms flavor) — user can proceed without API key
     val formValid = (selectedProvider.isMandatoryBaseUrl && baseUrlTextFieldValue.isNotBlank())
             || (selectedProvider.isRequiredApiKey && apiKeyTextFieldValue.isNotBlank())
+            || hasProxy
     val providerChanged = selectedProvider != initialProvider
 
     val submit = {
@@ -784,7 +791,12 @@ private fun AIProviderSettingsDialog(
                                 contentDescription = "API Key"
                             )
                         },
-                        label = { Text("* " + stringResource(R.string.setApiKey)) },
+                        label = {
+                            Text(
+                                if (hasProxy) stringResource(R.string.setApiKey) + " (optional)"
+                                else "* " + stringResource(R.string.setApiKey)
+                            )
+                        },
                         shape = MaterialTheme.shapes.large,
                         trailingIcon = {
                             ClickablePasteIcon(

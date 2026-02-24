@@ -21,3 +21,6 @@ local.properties
 keystore.*
 keystore-playstore.properties
 keystore-foss.properties
+
+/worker
+

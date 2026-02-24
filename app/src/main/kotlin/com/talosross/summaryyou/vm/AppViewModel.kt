@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import com.talosross.summaryyou.UserPreferencesRepository
+import com.talosross.summaryyou.di.FlavorConfig
 import com.talosross.summaryyou.llm.AIProvider
 import com.talosross.summaryyou.llm.SummaryLength
 import com.talosross.summaryyou.ui.Nav
@@ -21,6 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AppViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val flavorConfig: FlavorConfig,
 ) : ViewModel() {
 
     private val _startDestination = MutableStateFlow<Nav?>(null)
@@ -53,11 +55,12 @@ class AppViewModel @Inject constructor(
                 autoExtractUrl = prefs.autoExtractUrl,
                 sessData = prefs.sessData,
                 sessDataExpires = prefs.sessDataExpires,
+                hasProxy = flavorConfig.proxyBaseUrl != null,
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue = SettingsUiState()
+            initialValue = SettingsUiState(hasProxy = flavorConfig.proxyBaseUrl != null)
         )
 
     // Original Language in summary

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -87,6 +86,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -124,6 +128,29 @@ private object MimeTypes {
     const val WEBP = "image/webp"
 
     val allSupported = arrayOf(PDF, DOCX, PNG, JPEG, JPG, WEBP)
+}
+
+/**
+ * Helper function to extract image from clipboard and save it to a temporary file
+ * Returns the URI of the saved image or null if no image is found
+ */
+private fun getImageFromClipboard(context: android.content.Context, clipData: ClipData?): Uri? {
+    if (clipData == null) return null
+
+    for (i in 0 until clipData.itemCount) {
+        val item = clipData.getItemAt(i)
+        val uri = item.uri
+
+        // Check if the URI points to an image
+        if (uri != null) {
+            val mimeType = context.contentResolver.getType(uri)
+            if (mimeType?.startsWith("image/") == true) {
+                return uri
+            }
+        }
+    }
+
+    return null
 }
 
 @OptIn(
@@ -252,6 +279,28 @@ fun HomeScreen(
         documentFilename = null
     }
 
+    fun pasteFromClipboard() {
+        clearInput()
+        scope.launch {
+            clipboard.getClipEntry()?.let { clipEntry ->
+                val clipData = clipEntry.clipData
+
+                // First, try to get an image from the clipboard
+                val imageUri = getImageFromClipboard(context, clipData)
+                if (imageUri != null) {
+                    documentFilename = getFileName(context, imageUri)
+                    urlOrText = imageUri.toString()
+                } else {
+                    // If no image, try to get text
+                    val text = clipData.getItemAt(0).text
+                    if (text != null) {
+                        urlOrText = text.toString()
+                    }
+                }
+            }
+        }
+    }
+
     val listState = rememberLazyListState()
     val fabVisible by remember { derivedStateOf { !listState.canScrollBackward } }
 
@@ -264,14 +313,7 @@ fun HomeScreen(
         floatingActionButton = {
             FloatingActionButtons(
                 fabVisible = fabVisible,
-                onPaste = {
-                    clearInput()
-                    scope.launch {
-                        clipboard.getClipEntry()?.let {
-                            urlOrText = it.clipData.getItemAt(0).text.toString()
-                        }
-                    }
-                },
+                onPaste = { pasteFromClipboard() },
                 onSummarize = {
                     haptics.performHapticFeedback(HapticFeedbackType.Confirm)
                     summarize()
@@ -329,17 +371,18 @@ fun HomeScreen(
                         style = MaterialTheme.typography.headlineMedium
                     )
 
-                    InputSection(
-                        urlOrText = urlOrText,
-                        onUrlChange = { urlOrText = it },
-                        onSummarize = { summarize() },
-                        error = error,
-                        apiKey = apiKey,
-                        onClear = { clearInput() },
-                        focusRequester = focusRequester,
-                        documentFilename = documentFilename,
-                        isLoading = isLoading,
-                    )
+                        InputSection(
+                            urlOrText = urlOrText,
+                            onUrlChange = { urlOrText = it },
+                            onSummarize = { summarize() },
+                            error = error,
+                            apiKey = apiKey,
+                            onClear = { clearInput() },
+                            focusRequester = focusRequester,
+                            documentFilename = documentFilename,
+                            isLoading = isLoading,
+                            onPaste = { pasteFromClipboard() }
+                        )
 
                     if (showLength) {
                         LengthSelector(
@@ -432,6 +475,7 @@ private fun InputSection(
     onClear: () -> Unit,
     focusRequester: FocusRequester,
     isLoading: Boolean,
+    onPaste: () -> Unit,
 ) {
     val isDocument = documentFilename != null
     val isUrl = urlOrText.startsWith("http://", ignoreCase = true)
@@ -536,6 +580,17 @@ private fun InputSection(
             .padding(top = 20.dp)
             .focusRequester(focusRequester)
             .animateContentSize()
+            .onKeyEvent { keyEvent ->
+                if (keyEvent.type == KeyEventType.KeyDown &&
+                    keyEvent.key == Key.V &&
+                    keyEvent.nativeKeyEvent.isCtrlPressed
+                ) {
+                    onPaste()
+                    true
+                } else {
+                    false
+                }
+            }
     )
 }
 
@@ -722,6 +777,7 @@ private fun InputSectionPreview() {
             focusRequester = focusRequester,
             documentFilename = null,
             isLoading = false,
+            onPaste = {}
         )
 
         HorizontalDivider()
@@ -736,6 +792,7 @@ private fun InputSectionPreview() {
             focusRequester = focusRequester,
             documentFilename = "some image or documentations",
             isLoading = false,
+            onPaste = {}
         )
     }
 }
