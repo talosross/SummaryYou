@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Summary Expressive"
+rootProject.name = "Summary You"
 include(":app")

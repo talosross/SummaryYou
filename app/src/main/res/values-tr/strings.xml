@@ -44,7 +44,7 @@
     <string name="deleted">Özet silindi</string>
     <string name="search">Ara</string>
     <string name="nothingFound">Hiçbir şey bulunamadı</string>
-    <string name="welcome">Summary Expressive\'ya Hoş Geldiniz!</string>
+    <string name="welcome">Summary You\'ya Hoş Geldiniz!</string>
     <string name="welcomeDescription">Web sitelerini, makaleleri ve YouTube Videolarını özetleyin</string>
     <string name="instruction">Özet oluşturmak için bir web sitesinin, makalenin veya YouTube videosunun bağlantısını yapıştırmanız yeterlidir.</string>
     <string name="instructionsShare">Ya da özet oluşturmak için uygulama ile kolayca bir bağlantı paylaşın.</string>

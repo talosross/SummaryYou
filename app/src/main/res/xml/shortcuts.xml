@@ -9,6 +9,6 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="summaryexpressive://clipboard"
-            android:targetClass="me.nanova.summaryexpressive.MainActivity" />
+            android:targetClass="com.MainActivity" />
     </shortcut>
 </shortcuts>

@@ -70,4 +70,4 @@
 -keep class **$$serializer { *; }
 
 # Keep specific data models to be safe, though the above rules should cover them.
--keep class me.nanova.summaryexpressive.model.** { *; }
+-keep class com.talosross.summaryyou.model.** { *; }

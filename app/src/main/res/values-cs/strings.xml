@@ -36,7 +36,7 @@
     <string name="deleted">Shrnutí smazáno</string>
     <string name="search">Hledat</string>
     <string name="nothingFound">Nic nenalezeno</string>
-    <string name="welcome">Vítejte v Summary Expressive!</string>
+    <string name="welcome">Vítejte v Summary You!</string>
     <string name="welcomeDescription">Shrňte stránky, články a YouTube videa</string>
     <string name="instruction">Jednoduše vložte odkaz na webovou stránku, článek nebo YouTube video pro vygenerování shrnutí.</string>
     <string name="instructionsShare">Nebo jednoduše sdilejte odkaz s aplikaci pro vygenerování shrnutí.</string>
@@ -51,4 +51,3 @@
     <string name="shortcut_summarize_clipboard_long">Shrnout ze schránky</string>
     <string name="instant_summarize">Okamžité shrnutí</string>
 </resources>
-

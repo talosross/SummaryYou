@@ -10,11 +10,11 @@ plugins {
 }
 
 android {
-    namespace = "me.nanova.summaryexpressive"
+    namespace = "com.talosross.summaryyou"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "me.nanova.summaryexpressive"
+        applicationId = "com.talosross.summaryyou"
         minSdk = 33
         targetSdk = 36
         versionCode = 49

@@ -30,7 +30,7 @@ SummaryExpressive is an AI/LLM summarizer FOSS Android app that summarizes YouTu
 ./gradlew connectedAndroidTest
 
 # Run a specific test class
-./gradlew testDebugUnitTest --tests="me.nanova.summaryexpressive.ExampleUnitTest"
+./gradlew testDebugUnitTest --tests="com.talosross.com.ExampleUnitTest"
 ```
 
 ### Code Quality
@@ -73,7 +73,7 @@ Configure in `app/build.gradle.kts:58-68`.
 
 ### Project Structure
 
-#### Core Application (`app/src/main/kotlin/me/nanova/summaryexpressive/`)
+#### Core Application (`app/src/main/kotlin/com.talosross.com/nanova/summaryexpressive/`)
 - **`App.kt`**: Application class with `@HiltAndroidApp` annotation
 - **`MainActivity.kt`**: Main activity handling deep links, share intents, and initialization
 

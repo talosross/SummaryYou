@@ -66,7 +66,7 @@
     <string name="deleted">Resumo excluído</string>
     <string name="search">Pesquisar</string>
     <string name="nothingFound">Nada encontrado</string>
-    <string name="welcome">Bem-vindo ao Summary Expressive!</string>
+    <string name="welcome">Bem-vindo ao Summary You!</string>
     <string name="welcomeDescription">Resuma sites, artigos e vídeos do YouTube</string>
     <string name="instruction">Basta colar o link de um site, artigo ou vídeo do YouTube para gerar um resumo.</string>
     <string name="instructionsShare">Ou compartilhe facilmente um link com o aplicativo para gerar um resumo.</string>
