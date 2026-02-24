@@ -25,6 +25,9 @@ jobs:
           distribution: 'zulu'
           java-version: 21
 
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
