@@ -1,5 +1,6 @@
 package com.talosross.summaryyou.llm
 
+import android.util.Log
 import com.talosross.summaryyou.di.FlavorConfig
 import com.talosross.summaryyou.model.SummaryException
 import io.ktor.client.HttpClient
@@ -49,6 +50,7 @@ class ProxySummarizer(
             ?: throw SummaryException.NoKeyException()
 
         val integrityToken = flavorConfig.getIntegrityToken()
+        Log.d("ProxySummarizer", "Proxy URL: $baseUrl, integrity token present: ${integrityToken != null}")
 
         val requestBody = ProxyRequest(
             content = content,
@@ -67,6 +69,7 @@ class ProxySummarizer(
         }
 
         val responseText = response.bodyAsText()
+        Log.d("ProxySummarizer", "Proxy response: status=${response.status.value}, body=$responseText")
 
         if (response.status.value !in 200..299) {
             val proxyResponse = try {
@@ -75,9 +78,11 @@ class ProxySummarizer(
                 null
             }
 
-            val errorMessage = proxyResponse?.message ?: "Proxy error: ${response.status.value}"
+            val errorMessage = proxyResponse?.message
+                ?: "Proxy error ${response.status.value}: $responseText"
+            Log.e("ProxySummarizer", errorMessage)
+
             throw when (response.status.value) {
-                403 -> SummaryException.IncorrectKeyException()
                 429 -> SummaryException.RateLimitException()
                 else -> SummaryException.UnknownException(errorMessage)
             }

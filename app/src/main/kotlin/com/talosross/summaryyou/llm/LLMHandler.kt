@@ -37,6 +37,7 @@ import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import android.content.Context
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import com.talosross.summaryyou.UserPreferencesRepository
 import com.talosross.summaryyou.llm.tools.Article
@@ -51,6 +52,9 @@ import com.talosross.summaryyou.model.ExtractedContent
 import com.talosross.summaryyou.model.SummaryData
 import com.talosross.summaryyou.model.SummaryException
 import com.talosross.summaryyou.vm.SummaryViewModel.SummarySource
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import kotlinx.serialization.json.Json
 import java.util.Locale
 
 @Serializable
@@ -66,11 +70,21 @@ data class SummaryOutput(
 ) : SummaryData
 
 class LLMHandler(context: Context, httpClient: HttpClient) {
+    private val httpClient = httpClient
     private val userPreferencesRepository = UserPreferencesRepository(context)
     private val fileExtractorTool: FileExtractorTool = FileExtractorTool(context)
     private val articleExtractorTool = ArticleExtractorTool(httpClient)
     private val youTubeTranscriptTool = YouTubeTranscriptTool(httpClient)
     private val bilibiliSubtitleTool = BiliBiliSubtitleTool(httpClient, userPreferencesRepository)
+
+    private val promptConfig: PromptConfig by lazy { runBlocking { fetchPromptConfig() } }
+    private val json = Json { ignoreUnknownKeys = true }
+
+    private suspend fun fetchPromptConfig(): PromptConfig {
+        val remoteUrl = "https://raw.githubusercontent.com/talosross/SummaryYou/refs/heads/master/prompts/summarize.json"
+        val body = httpClient.get(remoteUrl).bodyAsText()
+        return json.decodeFromString(PromptConfig.serializer(), body)
+    }
 
     /**
      * Extract content locally from any source type, without involving an LLM.
@@ -172,7 +186,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
 
         val lang = appLanguage.getDisplayLanguage(Locale.ENGLISH)
         return AIAgentConfig(
-            prompt = createSummarizationPrompt(summaryLength, useContentLanguage, lang),
+            prompt = createSummarizationPrompt(promptConfig, summaryLength, useContentLanguage, lang),
             model = llmModel,
             maxAgentIterations = 10,
         )
