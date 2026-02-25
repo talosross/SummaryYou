@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name" translatable="false">Summary You</string>
     <string name="short_length">Kurz</string>
     <string name="middle_length">Mittel</string>
     <string name="long_length">Lang</string>
@@ -8,14 +9,14 @@
     <string name="regenerate">Regenerieren</string>
     <string name="invalidURL">Ungültiger Link: Zusammenfassen nicht möglich</string>
     <string name="noTranscript">Kein Transcript gefunden</string>
-    <string name="noInternet">Keine Internet-Verbindung</string>
     <string name="noContent">Kein Inhalt</string>
+    <string name="tooShort">Das Medium ist zu kurz.</string>
+    <string name="noInternet">Keine Internet-Verbindung</string>
     <string name="paywallDetected">Paywall gefunden, Zusammenfassen nicht möglich</string>
     <string name="incorrectKey">Fehler mit Server, Update der App notwendig.</string>
     <string name="incorrectKeyOpenSource">Falscher API-Schlüssel</string>
     <string name="noKey">Fehler mit Server, kein API-Key gefunden</string>
     <string name="tooLong">Das Medium ist zu lang.</string>
-    <string name="tooShort">Das Medium ist zu kurz.</string>
     <string name="rateLimit">Server überlastet, versuchen Sie es später erneut.</string>
     <string name="useOriginalLanguage">Originalsprache</string>
     <string name="useOriginalLanguageDescription">Benutze die Originalsprache anstelle der Appsprache.</string>
@@ -26,7 +27,13 @@
     <string name="madeBy">Made with ❤ by talosross</string>
     <string name="useDynamicColor">Dynamische Farben</string>
     <string name="useDynamicColorDescription">Benutze Farben von deinem Hintergrundbild</string>
-    <string name="setApiKey">API-Schlüssel</string>
+    <string name="useAutoExtractLink">Weblink automatisch extrahieren</string>
+    <string name="useAutoExtractLinkDescription">Extrahiere automatisch den Weblink aus geteilten Inhalten</string>
+    <string name="setApiKey">API-Schlüssel festlegen</string>
+    <string name="setAIProvider">KI-Anbieter</string>
+    <string name="setAIProviderDescription">KI-Anbieter festlegen</string>
+    <string name="setModel">Modell auswählen</string>
+    <string name="setModelDescription">Wähle das LLM-Modell für die Zusammenfassung</string>
     <string name="theme">Thema</string>
     <string name="cancel">Abbrechen</string>
     <string name="ok">OK</string>
@@ -58,4 +65,10 @@
     <string name="shortcut_summarize_clipboard_short">Zwischenablage</string>
     <string name="shortcut_summarize_clipboard_long">Aus Zwischenablage zusammenfassen</string>
     <string name="instant_summarize">Sofort Zusammenfassen</string>
+    <string name="discord">Discord Gruppe</string>
+    <string name="discordDescription">Tritt unserer Community bei</string>
+    <string name="next">Weiter</string>
+    <string name="undo">Rückgängig</string>
+    <string name="summary_show_less">Weniger anzeigen</string>
+    <string name="summary_show_more">Mehr anzeigen</string>
 </resources>

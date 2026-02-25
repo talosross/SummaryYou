@@ -68,4 +68,6 @@
     <string name="discordDescription">Join our community</string>
     <string name="next">Next</string>
     <string name="undo">Undo</string>
+    <string name="summary_show_less">Show Less</string>
+    <string name="summary_show_more">Show More</string>
 </resources>

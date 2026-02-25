@@ -170,7 +170,13 @@ fun SummaryCard(
                         .align(Alignment.End)
                         .padding(end = 8.dp)
                 ) {
-                    Text(if (isExpanded) "Show Less" else "Show More")
+                    Text(
+                        if (isExpanded) {
+                            stringResource(id = R.string.summary_show_less)
+                        } else {
+                            stringResource(id = R.string.summary_show_more)
+                        }
+                    )
                 }
             }
         }
