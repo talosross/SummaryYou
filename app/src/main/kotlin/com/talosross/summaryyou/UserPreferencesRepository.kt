@@ -35,6 +35,7 @@ data class UserPreferences(
     val autoExtractUrl: Boolean = true,
     val sessData: String = "",
     val sessDataExpires: Long = 0L,
+    val developerMode: Boolean = false,
 )
 
 class UserPreferencesRepository(private val context: Context) {
@@ -96,4 +97,18 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun clearSessData() =
         updatePreferences { it.copy(sessData = "", sessDataExpires = 0L) }
+
+    suspend fun setDeveloperMode(value: Boolean) =
+        updatePreferences { it.copy(developerMode = value) }
+
+    suspend fun disableDeveloperMode() =
+        updatePreferences {
+            it.copy(
+                developerMode = false,
+                apiKey = "",
+                baseUrl = "",
+                aiProvider = AIProvider.OPENAI.name,
+                model = "",
+            )
+        }
 }

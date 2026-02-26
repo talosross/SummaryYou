@@ -56,6 +56,7 @@ class AppViewModel @Inject constructor(
                 sessData = prefs.sessData,
                 sessDataExpires = prefs.sessDataExpires,
                 hasProxy = flavorConfig.proxyBaseUrl != null,
+                developerMode = prefs.developerMode,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -120,6 +121,16 @@ class AppViewModel @Inject constructor(
     fun clearSessData() {
         viewModelScope.launch {
             userPreferencesRepository.clearSessData()
+        }
+    }
+
+    // Developer Mode
+    fun setDeveloperMode(newValue: Boolean) =
+        savePreference(userPreferencesRepository::setDeveloperMode, newValue)
+
+    fun disableDeveloperMode() {
+        viewModelScope.launch {
+            userPreferencesRepository.disableDeveloperMode()
         }
     }
 

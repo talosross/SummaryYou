@@ -70,4 +70,10 @@
     <string name="undo">Undo</string>
     <string name="summary_show_less">Show Less</string>
     <string name="summary_show_more">Show More</string>
+    <string name="developerMode">Developer Mode</string>
+    <string name="developerModeDescription">Use your own API key and provider</string>
+    <string name="developerModeDisableTitle">Disable Developer Mode?</string>
+    <string name="developerModeDisableMessage">Your custom API key, provider, and model settings will be reset.</string>
+    <string name="developerModeDisableConfirm">Reset</string>
+    <string name="approximate_tokens">Approximate tokens: %d</string>
 </resources>

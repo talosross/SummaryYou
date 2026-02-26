@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><resources>
+﻿<?xml version="1.0" encoding="UTF-8"?><resources>
 
     <string name="short_length">Corto</string>
 
@@ -73,4 +73,5 @@
     <string name="shortcut_summarize_clipboard_short">Appunti</string>
     <string name="shortcut_summarize_clipboard_long">Sintetizza dagli appunti</string>
     <string name="instant_summarize">Riepilogo Istantaneo</string>
+    <string name="approximate_tokens">Token approssimativi: %d</string>
 </resources>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><resources>
+﻿<?xml version="1.0" encoding="UTF-8"?><resources>
 
     <string name="short_length">Corto</string>
 
@@ -76,4 +76,5 @@
     <string name="shortcut_summarize_clipboard_short">Portapapeles</string>
     <string name="shortcut_summarize_clipboard_long">Resumir del portapapeles</string>
     <string name="instant_summarize">Resumen Instantáneo</string>
+    <string name="approximate_tokens">Tokens aproximados: %d</string>
 </resources>

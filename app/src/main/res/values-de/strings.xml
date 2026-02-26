@@ -71,4 +71,10 @@
     <string name="undo">Rückgängig</string>
     <string name="summary_show_less">Weniger anzeigen</string>
     <string name="summary_show_more">Mehr anzeigen</string>
+    <string name="developerMode">Entwicklermodus</string>
+    <string name="developerModeDescription">Eigenen API-Key und Anbieter verwenden</string>
+    <string name="developerModeDisableTitle">Entwicklermodus deaktivieren?</string>
+    <string name="developerModeDisableMessage">Dein eigener API-Key, Anbieter und Modell werden zurückgesetzt.</string>
+    <string name="developerModeDisableConfirm">Zurücksetzen</string>
+    <string name="approximate_tokens">Ungefähre Tokens: %d</string>
 </resources>

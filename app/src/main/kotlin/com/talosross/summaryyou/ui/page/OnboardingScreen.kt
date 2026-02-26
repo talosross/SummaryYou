@@ -49,6 +49,7 @@ fun OnboardingScreen(
     onDone: () -> Unit,
     onDoneAndNavigate: (destinationRoute: String) -> Unit,
     modifier: Modifier = Modifier,
+    hasProxy: Boolean = false,
 ) {
     val pagerState = rememberPagerState(pageCount = { 4 })
     val scope = rememberCoroutineScope()
@@ -91,7 +92,7 @@ fun OnboardingScreen(
                 Text(text = if (isFirst) stringResource(id = R.string.skip) else "Previous")
             }
 
-            if (isLast) {
+            if (isLast && !hasProxy) {
                 Button(onClick = {
                     onDoneAndNavigate("${Nav.Settings.name}?highlight=ai")
                 }) {

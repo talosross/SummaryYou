@@ -6,9 +6,12 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -39,6 +42,7 @@ import androidx.compose.material.icons.automirrored.rounded.HelpCenter
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Link
@@ -130,6 +134,7 @@ data class SettingsActions(
     val onAutoExtractUrlChange: (Boolean) -> Unit,
     val onSessDataChange: (String, Long) -> Unit,
     val onSessDataClear: () -> Unit,
+    val onDeveloperModeChange: (Boolean) -> Unit,
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -155,7 +160,11 @@ fun SettingsScreen(
         onShowLengthChange = appViewModel::setShowLengthValue,
         onAutoExtractUrlChange = appViewModel::setAutoExtractUrlValue,
         onSessDataChange = appViewModel::setSessData,
-        onSessDataClear = appViewModel::clearSessData
+        onSessDataClear = appViewModel::clearSessData,
+        onDeveloperModeChange = { enabled ->
+            if (enabled) appViewModel.setDeveloperMode(true)
+            else appViewModel.disableDeveloperMode()
+        }
     )
 
     var dialogState by remember { mutableStateOf(DialogState.NONE) }
@@ -404,39 +413,42 @@ private fun SettingsContent(
             }
         }
 
-        item {
-            SettingsGroup(highlighted = highlightSection == "ai") {
-                ListItem(
-                    modifier = Modifier
-                        .clickable(onClick = onShowAIProviderDialog)
-                        .fillMaxWidth(),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.setAIProvider)) },
-                    supportingContent = { Text(stringResource(id = R.string.setAIProviderDescription)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Default.Cloud,
-                            contentDescription = "AI Provider",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                )
+        // AI Provider & Model — always visible in FOSS, only in developer mode for Playstore
+        if (!state.hasProxy) {
+            item {
+                SettingsGroup(highlighted = highlightSection == "ai") {
+                    ListItem(
+                        modifier = Modifier
+                            .clickable(onClick = onShowAIProviderDialog)
+                            .fillMaxWidth(),
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        headlineContent = { Text(stringResource(id = R.string.setAIProvider)) },
+                        supportingContent = { Text(stringResource(id = R.string.setAIProviderDescription)) },
+                        leadingContent = {
+                            Icon(
+                                Icons.Default.Cloud,
+                                contentDescription = "AI Provider",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    )
 
-                ListItem(
-                    modifier = Modifier
-                        .clickable(onClick = onShowModelDialog)
-                        .fillMaxWidth(),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(id = R.string.setModel)) },
-                    supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
-                    leadingContent = {
-                        Icon(
-                            Icons.Default.AutoAwesome,
-                            contentDescription = "LLM Model",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                )
+                    ListItem(
+                        modifier = Modifier
+                            .clickable(onClick = onShowModelDialog)
+                            .fillMaxWidth(),
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        headlineContent = { Text(stringResource(id = R.string.setModel)) },
+                        supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
+                        leadingContent = {
+                            Icon(
+                                Icons.Default.AutoAwesome,
+                                contentDescription = "LLM Model",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    )
+                }
             }
         }
 
@@ -564,6 +576,154 @@ private fun SettingsContent(
                     },
                     supportingContent = { Text(stringResource(id = R.string.githubDescription)) },
                 )
+            }
+        }
+
+        // Developer Mode — only shown in Playstore flavor (hasProxy)
+        if (state.hasProxy) {
+            item {
+                var showDisableDialog by remember { mutableStateOf(false) }
+
+                if (showDisableDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDisableDialog = false },
+                        title = { Text(stringResource(id = R.string.developerModeDisableTitle)) },
+                        text = { Text(stringResource(id = R.string.developerModeDisableMessage)) },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                actions.onDeveloperModeChange(false)
+                                showDisableDialog = false
+                            }) {
+                                Text(stringResource(id = R.string.developerModeDisableConfirm))
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDisableDialog = false }) {
+                                Text(stringResource(id = R.string.cancel))
+                            }
+                        },
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SettingsGroup {
+                        ListItem(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            headlineContent = {
+                                Text(stringResource(id = R.string.developerMode))
+                            },
+                            supportingContent = {
+                                Text(stringResource(id = R.string.developerModeDescription))
+                            },
+                            leadingContent = {
+                                Icon(
+                                    Icons.Rounded.Code,
+                                    contentDescription = "Developer Mode",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            },
+                            trailingContent = {
+                                Switch(
+                                    checked = state.developerMode,
+                                    onCheckedChange = { enabled ->
+                                        if (enabled) {
+                                            actions.onDeveloperModeChange(true)
+                                        } else {
+                                            showDisableDialog = true
+                                        }
+                                    }
+                                )
+                            }
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        visible = state.developerMode,
+                        enter = expandVertically(),
+                        exit = shrinkVertically(),
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            SettingsGroup(highlighted = highlightSection == "ai") {
+                                ListItem(
+                                    modifier = Modifier
+                                        .clickable(onClick = onShowAIProviderDialog)
+                                        .fillMaxWidth(),
+                                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                    headlineContent = { Text(stringResource(id = R.string.setAIProvider)) },
+                                    supportingContent = { Text(stringResource(id = R.string.setAIProviderDescription)) },
+                                    leadingContent = {
+                                        Icon(
+                                            Icons.Default.Cloud,
+                                            contentDescription = "AI Provider",
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                )
+
+                                ListItem(
+                                    modifier = Modifier
+                                        .clickable(onClick = onShowModelDialog)
+                                        .fillMaxWidth(),
+                                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                    headlineContent = { Text(stringResource(id = R.string.setModel)) },
+                                    supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
+                                    leadingContent = {
+                                        Icon(
+                                            Icons.Default.AutoAwesome,
+                                            contentDescription = "LLM Model",
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                )
+                            }
+
+                            SettingsGroup(highlighted = highlightSection == "3rd-party-service") {
+                                val sessDataValid =
+                                    state.sessData.isNotBlank() && state.sessDataExpires > System.currentTimeMillis()
+                                val itemColor =
+                                    if (sessDataValid) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f) else LocalContentColor.current
+
+                                ListItem(
+                                    modifier = Modifier.combinedClickable(
+                                        onClick = {
+                                            if (!sessDataValid) {
+                                                onShowBiliBiliLoginSheet()
+                                            }
+                                        },
+                                        onLongClick = {
+                                            if (sessDataValid) {
+                                                onShowClearSessDataDialog()
+                                            }
+                                        }
+                                    ),
+                                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                    headlineContent = { Text("BiliBili Account", color = itemColor) },
+                                    supportingContent = {
+                                        if (sessDataValid) {
+                                            val expiryDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                                .format(Date(state.sessDataExpires))
+                                            Text(
+                                                "Logged in, expires on $expiryDate. Long press to clear.",
+                                                color = itemColor
+                                            )
+                                        } else {
+                                            Text("BiliBili required login to get transcripts which used for video summary")
+                                        }
+                                    },
+                                    leadingContent = {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.bilibili),
+                                            contentDescription = "BiliBili",
+                                            modifier = Modifier.size(24.dp),
+                                            tint = itemColor
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -1052,7 +1212,8 @@ private fun ScrollContentPreview() {
             onShowLengthChange = {},
             onAutoExtractUrlChange = {},
             onSessDataChange = { _, _ -> },
-            onSessDataClear = {}
+            onSessDataClear = {},
+            onDeveloperModeChange = {}
         )
         Scaffold { innerPadding ->
             SettingsContent(

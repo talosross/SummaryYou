@@ -7,6 +7,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import com.talosross.summaryyou.BuildConfig
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -53,6 +54,7 @@ import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
@@ -381,7 +383,8 @@ fun HomeScreen(
                             focusRequester = focusRequester,
                             documentFilename = documentFilename,
                             isLoading = isLoading,
-                            onPaste = { pasteFromClipboard() }
+                            onPaste = { pasteFromClipboard() },
+                            developerMode = settings.developerMode
                         )
 
                     if (showLength) {
@@ -439,7 +442,10 @@ private fun HomeTopAppBar(
 ) {
     MediumFlexibleTopAppBar(
         modifier = Modifier.height(100.dp),
-        colors = TopAppBarDefaults.topAppBarColors(),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            scrolledContainerColor = MaterialTheme.colorScheme.background
+        ),
         title = { },
         navigationIcon = {
             IconButton(
@@ -450,7 +456,9 @@ private fun HomeTopAppBar(
         },
         actions = {
             IconButton(
-                onClick = { onNav(Nav.History) }
+                onClick = { onNav(Nav.History) },
+                shapes = IconButtonDefaults.shapes(),
+                colors = IconButtonDefaults.filledTonalIconButtonColors()
             ) {
                 Icon(
                     Icons.Outlined.History,
@@ -476,6 +484,7 @@ private fun InputSection(
     focusRequester: FocusRequester,
     isLoading: Boolean,
     onPaste: () -> Unit,
+    developerMode: Boolean = false,
 ) {
     val isDocument = documentFilename != null
     val isUrl = urlOrText.startsWith("http://", ignoreCase = true)
@@ -486,6 +495,8 @@ private fun InputSection(
 
     val hasText = remember(urlOrText) { urlOrText.isNotBlank() }
     val textToShow = documentFilename ?: urlOrText
+
+    val showApproximateTokens = BuildConfig.FLAVOR == "foss" || developerMode
 
     OutlinedTextField(
         value = textToShow,
@@ -499,14 +510,14 @@ private fun InputSection(
         supportingText = {
             if (error != null) {
                 ErrorMessage(error, apiKey)
-            } else if (hasText && !isDocument && !isUrl) {
+            } else if (hasText && !isDocument && !isUrl && showApproximateTokens) {
                 Column {
                     // Based on the rule of thumb that 100 tokens is about 75 words.
                     // ref: https://platform.openai.com/tokenizer
                     val wordCount = urlOrText.trim().split(Regex("\\s+")).size
                     val tokenCount = (wordCount * 4) / 3
                     Text(
-                        text = "Approximate tokens: $tokenCount",
+                        text = stringResource(R.string.approximate_tokens, tokenCount),
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.End,
                         color = MaterialTheme.colorScheme.tertiaryFixedDim
@@ -777,7 +788,8 @@ private fun InputSectionPreview() {
             focusRequester = focusRequester,
             documentFilename = null,
             isLoading = false,
-            onPaste = {}
+            onPaste = {},
+            developerMode = true
         )
 
         HorizontalDivider()
@@ -792,7 +804,8 @@ private fun InputSectionPreview() {
             focusRequester = focusRequester,
             documentFilename = "some image or documentations",
             isLoading = false,
-            onPaste = {}
+            onPaste = {},
+            developerMode = false
         )
     }
 }

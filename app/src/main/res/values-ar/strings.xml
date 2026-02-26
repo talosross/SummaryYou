@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="short_length">قصير</string>
     <string name="middle_length">متوسط</string>
@@ -53,4 +53,5 @@
     <string name="shortcut_summarize_clipboard_short">الحافظة</string>
     <string name="shortcut_summarize_clipboard_long">تلخيص من الحافظة</string>
     <string name="instant_summarize">تلخيص فوري</string>
+    <string name="approximate_tokens">التوكنات التقريبية: %d</string>
 </resources>

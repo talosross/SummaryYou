@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="short_length">Krátké</string>
     <string name="middle_length">Střední</string>
@@ -50,4 +50,5 @@
     <string name="shortcut_summarize_clipboard_short">Schránka</string>
     <string name="shortcut_summarize_clipboard_long">Shrnout ze schránky</string>
     <string name="instant_summarize">Okamžité shrnutí</string>
+    <string name="approximate_tokens">Přibližný počet tokenů: %d</string>
 </resources>

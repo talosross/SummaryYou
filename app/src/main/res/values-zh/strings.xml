@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><resources>
+﻿<?xml version="1.0" encoding="UTF-8"?><resources>
 
     <string name="short_length">较短</string>
 
@@ -96,4 +96,5 @@
     <string name="instant_summarize">即时总结</string>
     <string name="useAutoExtractLink">自动提取链接</string>
     <string name="undo">撤销</string>
+    <string name="approximate_tokens">预估 Token 数：%d</string>
 </resources>

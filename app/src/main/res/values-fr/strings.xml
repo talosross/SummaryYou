@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><resources>
+﻿<?xml version="1.0" encoding="UTF-8"?><resources>
 
     <string name="short_length">Court</string>
 
@@ -76,4 +76,5 @@
     <string name="instant_summarize">Résumé Instantané</string>
 
 
+    <string name="approximate_tokens">Tokens approximatifs : %d</string>
 </resources>

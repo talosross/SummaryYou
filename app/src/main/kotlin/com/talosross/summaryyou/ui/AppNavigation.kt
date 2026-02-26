@@ -8,6 +8,8 @@ import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -67,6 +69,8 @@ fun AppNavigation(
                 }
             }
 
+            val settings by appViewModel.settingsUiState.collectAsState()
+
             OnboardingScreen(
                 onDone = {
                     handleOnboardingDone()
@@ -74,7 +78,8 @@ fun AppNavigation(
                 onDoneAndNavigate = {
                     handleOnboardingDone()
                     navController.navigate(it)
-                }
+                },
+                hasProxy = settings.hasProxy
             )
         }
 
