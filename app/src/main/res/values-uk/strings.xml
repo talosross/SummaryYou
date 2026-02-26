@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+﻿﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="short_length">Короткий</string>
     <string name="middle_length">Середній</string>
@@ -46,4 +46,7 @@
     <string name="shortcut_summarize_clipboard_long">Узагальнити з буфера обміну</string>
     <string name="instant_summarize">Миттєве узагальнення</string>
     <string name="approximate_tokens">Приблизна кількість токенів: %d</string>
+    <string name="fab_image">Зображення</string>
+    <string name="fab_camera">Камера</string>
+    <string name="fab_document">Документ</string>
 </resources>

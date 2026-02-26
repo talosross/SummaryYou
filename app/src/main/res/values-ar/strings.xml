@@ -54,4 +54,7 @@
     <string name="shortcut_summarize_clipboard_long">تلخيص من الحافظة</string>
     <string name="instant_summarize">تلخيص فوري</string>
     <string name="approximate_tokens">التوكنات التقريبية: %d</string>
+    <string name="fab_image">صورة</string>
+    <string name="fab_camera">كاميرا</string>
+    <string name="fab_document">مستند</string>
 </resources>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?><resources>
+﻿﻿<?xml version="1.0" encoding="UTF-8"?><resources>
 
     <string name="short_length">Curto</string>
 
@@ -77,4 +77,7 @@
     <string name="shortcut_summarize_clipboard_long">Resumir da área de transferência</string>
     <string name="instant_summarize">Resumo Instantâneo</string>
     <string name="approximate_tokens">Tokens aproximados: %d</string>
+    <string name="fab_image">Imagem</string>
+    <string name="fab_camera">Câmera</string>
+    <string name="fab_document">Documento</string>
 </resources>

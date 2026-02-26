@@ -77,4 +77,7 @@
     <string name="developerModeDisableConfirm">Reset</string>
     <string name="approximate_tokens">Approximate tokens: %d</string>
     <string name="integratedProvider">Integrated (free)</string>
+    <string name="fab_image">Image</string>
+    <string name="fab_camera">Camera</string>
+    <string name="fab_document">Document</string>
 </resources>

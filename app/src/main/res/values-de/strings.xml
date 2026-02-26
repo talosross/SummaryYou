@@ -78,4 +78,7 @@
     <string name="developerModeDisableConfirm">Zurücksetzen</string>
     <string name="approximate_tokens">Ungefähre Tokens: %d</string>
     <string name="integratedProvider">Integriert (kostenlos)</string>
+    <string name="fab_image">Bild</string>
+    <string name="fab_camera">Kamera</string>
+    <string name="fab_document">Dokument</string>
 </resources>

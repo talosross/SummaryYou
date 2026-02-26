@@ -77,4 +77,7 @@
 
 
     <string name="approximate_tokens">Tokens approximatifs : %d</string>
+    <string name="fab_image">Image</string>
+    <string name="fab_camera">Appareil photo</string>
+    <string name="fab_document">Document</string>
 </resources>

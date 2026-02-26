@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?><resources>
+﻿﻿<?xml version="1.0" encoding="UTF-8"?><resources>
 
     <string name="short_length">短い</string>
 
@@ -77,4 +77,7 @@
     <string name="shortcut_summarize_clipboard_long">クリップボードから要約</string>
     <string name="instant_summarize">即時要約</string>
     <string name="approximate_tokens">おおよそのトークン数: %d</string>
+    <string name="fab_image">画像</string>
+    <string name="fab_camera">カメラ</string>
+    <string name="fab_document">ドキュメント</string>
 </resources>

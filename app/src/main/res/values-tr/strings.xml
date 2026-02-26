@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+﻿﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="short_length">Kısa</string>
     <string name="middle_length">Orta</string>
@@ -69,4 +69,7 @@
     <string name="next">Sonraki</string>
     <string name="undo">Geri al</string>
     <string name="approximate_tokens">Yaklaşık token: %d</string>
+    <string name="fab_image">Görsel</string>
+    <string name="fab_camera">Kamera</string>
+    <string name="fab_document">Belge</string>
 </resources>

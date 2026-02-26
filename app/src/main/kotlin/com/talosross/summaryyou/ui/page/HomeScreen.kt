@@ -667,9 +667,9 @@ private fun FloatingActionButtons(
     BackHandler(menuExpanded) { menuExpanded = false }
 
     val attachmentItems = listOf(
-        Triple(Icons.Rounded.Image, "Image", onLaunchImagePicker),
-        Triple(Icons.Rounded.CameraAlt, "Camera", onLaunchCamera),
-        Triple(Icons.Rounded.Description, "Document", onLaunchFilePicker)
+        Triple(Icons.Rounded.Image, stringResource(R.string.fab_image), onLaunchImagePicker),
+        Triple(Icons.Rounded.CameraAlt, stringResource(R.string.fab_camera), onLaunchCamera),
+        Triple(Icons.Rounded.Description, stringResource(R.string.fab_document), onLaunchFilePicker)
     )
 
     Column(
