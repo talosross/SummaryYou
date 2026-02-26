@@ -153,6 +153,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         appLanguage: Locale,
     ): PromptExecutor {
         return when (provider) {
+            AIProvider.INTEGRATED -> throw IllegalStateException("INTEGRATED provider uses proxy, not a direct executor")
             AIProvider.OPENAI -> createOpenAIExecutor(apiKey, baseUrl)
             AIProvider.GEMINI -> createGeminiExecutor(apiKey, baseUrl)
             AIProvider.CLAUDE -> createClaudExecutor(apiKey, baseUrl)
@@ -174,6 +175,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         val llmModel = modelName?.takeIf { it.isNotBlank() }?.let { name ->
             provider.models.find { it.id == name } ?: CustomLLModel(provider, name).toLLModel()
         } ?: when (provider) {
+            AIProvider.INTEGRATED -> GoogleModels.Gemini2_5Flash // not used directly, proxy handles model
             AIProvider.OPENAI -> OpenAIModels.Chat.GPT4oMini
             AIProvider.GEMINI -> GoogleModels.Gemini2_5Flash
             AIProvider.CLAUDE -> AnthropicModels.Sonnet_3_5

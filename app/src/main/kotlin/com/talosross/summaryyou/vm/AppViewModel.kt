@@ -125,8 +125,18 @@ class AppViewModel @Inject constructor(
     }
 
     // Developer Mode
-    fun setDeveloperMode(newValue: Boolean) =
-        savePreference(userPreferencesRepository::setDeveloperMode, newValue)
+    fun setDeveloperMode(newValue: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setDeveloperMode(newValue)
+            if (newValue && flavorConfig.proxyBaseUrl != null) {
+                // Default to INTEGRATED provider when enabling dev mode in Playstore
+                userPreferencesRepository.setAIProvider(AIProvider.INTEGRATED.name)
+                userPreferencesRepository.setModel("")
+                userPreferencesRepository.setApiKey("")
+                userPreferencesRepository.setBaseUrl("")
+            }
+        }
+    }
 
     fun disableDeveloperMode() {
         viewModelScope.launch {

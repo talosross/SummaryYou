@@ -22,6 +22,21 @@ enum class AIProvider(
     val isMonochromeIcon: Boolean = false,
     val models: List<LLModel> = emptyList(),
 ) {
+    INTEGRATED(
+        LLMProvider.Google,
+        false,
+        false,
+        R.drawable.ic_launcher_foreground,
+        true,
+        listOf(
+            LLModel(
+                provider = LLMProvider.Google,
+                id = "integrated",
+                capabilities = listOf(LLMCapability.Completion),
+                contextLength = 1_000_000,
+            )
+        )
+    ),
     OPENAI(
         LLMProvider.OpenAI,
         false,

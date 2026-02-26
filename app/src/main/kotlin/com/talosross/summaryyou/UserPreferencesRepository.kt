@@ -107,7 +107,7 @@ class UserPreferencesRepository(private val context: Context) {
                 developerMode = false,
                 apiKey = "",
                 baseUrl = "",
-                aiProvider = AIProvider.OPENAI.name,
+                aiProvider = AIProvider.INTEGRATED.name,
                 model = "",
             )
         }

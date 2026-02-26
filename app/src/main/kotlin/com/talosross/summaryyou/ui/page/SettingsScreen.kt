@@ -881,11 +881,15 @@ private fun AIProviderSettingsDialog(
     var baseUrlTextFieldValue by remember { mutableStateOf(initialBaseUrl ?: "") }
     var apiKeyTextFieldValue by remember { mutableStateOf(initialApiKey ?: "") }
 
+    val isIntegrated = selectedProvider == AIProvider.INTEGRATED
+
     // Form is valid if:
+    // - INTEGRATED provider is selected (no key/url needed), OR
     // - Provider needs mandatory base URL and one is provided, OR
     // - Provider needs API key and one is provided, OR
     // - Proxy is available (gms flavor) — user can proceed without API key
-    val formValid = (selectedProvider.isMandatoryBaseUrl && baseUrlTextFieldValue.isNotBlank())
+    val formValid = isIntegrated
+            || (selectedProvider.isMandatoryBaseUrl && baseUrlTextFieldValue.isNotBlank())
             || (selectedProvider.isRequiredApiKey && apiKeyTextFieldValue.isNotBlank())
             || hasProxy
     val providerChanged = selectedProvider != initialProvider
@@ -901,12 +905,17 @@ private fun AIProviderSettingsDialog(
         }
     }
 
+    // Filter providers: only show INTEGRATED when hasProxy (Playstore)
+    val availableProviders = AIProvider.entries.filter {
+        it != AIProvider.INTEGRATED || hasProxy
+    }
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(stringResource(id = R.string.setAIProvider)) },
         text = {
             Column {
-                AIProvider.entries.map {
+                availableProviders.map {
                     AIProviderItem(it, selected = (selectedProvider == it)) {
                         selectedProvider = it
                     }
@@ -917,16 +926,19 @@ private fun AIProviderSettingsDialog(
                 OutlinedTextField(
                     value = baseUrlTextFieldValue,
                     onValueChange = { baseUrlTextFieldValue = it },
+                    enabled = !isIntegrated,
                     label = { Text(if (selectedProvider.isMandatoryBaseUrl) "* Base Url" else "Custom URL") },
                     singleLine = true,
                     shape = MaterialTheme.shapes.large,
                     leadingIcon = { Icon(Icons.Rounded.Link, contentDescription = "Base Url") },
                     trailingIcon = {
-                        ClickablePasteIcon(
-                            text = baseUrlTextFieldValue,
-                            onPaste = { baseUrlTextFieldValue = it.trim() },
-                            onClear = { baseUrlTextFieldValue = "" }
-                        )
+                        if (!isIntegrated) {
+                            ClickablePasteIcon(
+                                text = baseUrlTextFieldValue,
+                                onPaste = { baseUrlTextFieldValue = it.trim() },
+                                onClear = { baseUrlTextFieldValue = "" }
+                            )
+                        }
                     },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Uri,
@@ -939,11 +951,12 @@ private fun AIProviderSettingsDialog(
 
                 Spacer(modifier = Modifier.height(9.dp))
 
-                if (selectedProvider.isRequiredApiKey) {
+                if (selectedProvider.isRequiredApiKey || isIntegrated) {
                     OutlinedTextField(
                         modifier = Modifier.focusRequester(apiKeyFocusRequester),
                         value = apiKeyTextFieldValue,
                         onValueChange = { apiKeyTextFieldValue = it },
+                        enabled = !isIntegrated,
                         singleLine = true,
                         leadingIcon = {
                             Icon(
@@ -953,17 +966,20 @@ private fun AIProviderSettingsDialog(
                         },
                         label = {
                             Text(
-                                if (hasProxy) stringResource(R.string.setApiKey) + " (optional)"
+                                if (isIntegrated) stringResource(R.string.setApiKey)
+                                else if (hasProxy) stringResource(R.string.setApiKey) + " (optional)"
                                 else "* " + stringResource(R.string.setApiKey)
                             )
                         },
                         shape = MaterialTheme.shapes.large,
                         trailingIcon = {
-                            ClickablePasteIcon(
-                                text = apiKeyTextFieldValue,
-                                onPaste = { apiKeyTextFieldValue = it.trim() },
-                                onClear = { apiKeyTextFieldValue = "" }
-                            )
+                            if (!isIntegrated) {
+                                ClickablePasteIcon(
+                                    text = apiKeyTextFieldValue,
+                                    onPaste = { apiKeyTextFieldValue = it.trim() },
+                                    onClear = { apiKeyTextFieldValue = "" }
+                                )
+                            }
                         },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
@@ -1017,7 +1033,11 @@ private fun ModelSettingsDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(id = R.string.setModel) + " (${provider.id.display})") },
+        title = {
+            val providerDisplay = if (provider == AIProvider.INTEGRATED) stringResource(R.string.integratedProvider)
+                                  else provider.id.display
+            Text(stringResource(id = R.string.setModel) + " ($providerDisplay)")
+        },
         text = {
             Column(Modifier.heightIn(max = 390.dp)) {
                 LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
@@ -1127,7 +1147,11 @@ private fun AIProviderItem(
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = llm.id.display, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = if (llm == AIProvider.INTEGRATED) stringResource(R.string.integratedProvider)
+                       else llm.id.display,
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
     }
 }

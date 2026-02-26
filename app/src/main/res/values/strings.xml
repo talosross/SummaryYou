@@ -76,4 +76,5 @@
     <string name="developerModeDisableMessage">Your custom API key, provider, and model settings will be reset.</string>
     <string name="developerModeDisableConfirm">Reset</string>
     <string name="approximate_tokens">Approximate tokens: %d</string>
+    <string name="integratedProvider">Integrated (free)</string>
 </resources>

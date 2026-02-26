@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.talosross.summaryyou.data.HistoryRepository
 import com.talosross.summaryyou.di.FlavorConfig
+import com.talosross.summaryyou.llm.AIProvider
 import com.talosross.summaryyou.llm.LLMHandler
 import com.talosross.summaryyou.llm.ProxySummarizer
 import com.talosross.summaryyou.llm.SummaryLength
@@ -99,7 +100,8 @@ class SummaryViewModel @Inject constructor(
             }
 
             val currentApiKey = settings.apiKey
-            val useProxy = currentApiKey.isNullOrEmpty() && flavorConfig.proxyBaseUrl != null
+            val isIntegrated = settings.aiProvider == AIProvider.INTEGRATED
+            val useProxy = (currentApiKey.isNullOrEmpty() || isIntegrated) && flavorConfig.proxyBaseUrl != null
 
             if (currentApiKey.isNullOrEmpty() && !useProxy) {
                 throw SummaryException.NoKeyException()

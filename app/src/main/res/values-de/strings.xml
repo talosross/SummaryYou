@@ -77,4 +77,5 @@
     <string name="developerModeDisableMessage">Dein eigener API-Key, Anbieter und Modell werden zurückgesetzt.</string>
     <string name="developerModeDisableConfirm">Zurücksetzen</string>
     <string name="approximate_tokens">Ungefähre Tokens: %d</string>
+    <string name="integratedProvider">Integriert (kostenlos)</string>
 </resources>
