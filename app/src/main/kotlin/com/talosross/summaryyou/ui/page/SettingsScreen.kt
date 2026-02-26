@@ -645,6 +645,9 @@ private fun SettingsContent(
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             SettingsGroup(highlighted = highlightSection == "ai") {
+                                val isIntegrated = state.aiProvider == AIProvider.INTEGRATED
+                                val disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+
                                 ListItem(
                                     modifier = Modifier
                                         .clickable(onClick = onShowAIProviderDialog)
@@ -663,16 +666,30 @@ private fun SettingsContent(
 
                                 ListItem(
                                     modifier = Modifier
-                                        .clickable(onClick = onShowModelDialog)
+                                        .then(
+                                            if (isIntegrated) Modifier
+                                            else Modifier.clickable(onClick = onShowModelDialog)
+                                        )
                                         .fillMaxWidth(),
                                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                    headlineContent = { Text(stringResource(id = R.string.setModel)) },
-                                    supportingContent = { Text(stringResource(id = R.string.setModelDescription)) },
+                                    headlineContent = {
+                                        Text(
+                                            stringResource(id = R.string.setModel),
+                                            color = if (isIntegrated) disabledColor else Color.Unspecified
+                                        )
+                                    },
+                                    supportingContent = {
+                                        Text(
+                                            stringResource(id = R.string.setModelDescription),
+                                            color = if (isIntegrated) disabledColor else Color.Unspecified
+                                        )
+                                    },
                                     leadingContent = {
                                         Icon(
                                             Icons.Default.AutoAwesome,
                                             contentDescription = "LLM Model",
-                                            modifier = Modifier.size(24.dp)
+                                            modifier = Modifier.size(24.dp),
+                                            tint = if (isIntegrated) disabledColor else LocalContentColor.current
                                         )
                                     }
                                 )
