@@ -47,7 +47,7 @@ import com.talosross.summaryyou.ui.component.LogoIcon
 @Composable
 fun OnboardingScreen(
     onDone: () -> Unit,
-    onDoneAndNavigate: (destinationRoute: String) -> Unit,
+    onDoneAndNavigate: (Nav) -> Unit,
     modifier: Modifier = Modifier,
     hasProxy: Boolean = false,
 ) {
@@ -94,7 +94,7 @@ fun OnboardingScreen(
 
             if (isLast && !hasProxy) {
                 Button(onClick = {
-                    onDoneAndNavigate("${Nav.Settings.name}?highlight=ai")
+                    onDoneAndNavigate(Nav.Settings(highlight = "ai"))
                 }) {
                     Text(stringResource(id = R.string.setupAi))
                 }
@@ -237,5 +237,5 @@ fun OnboardingStepContentPreview() {
 @Preview(showBackground = true)
 @Composable
 fun OnboardingScreenPreview() {
-    OnboardingScreen(onDone = {}, onDoneAndNavigate = {})
+    OnboardingScreen(onDone = {}, onDoneAndNavigate = { _ -> })
 }

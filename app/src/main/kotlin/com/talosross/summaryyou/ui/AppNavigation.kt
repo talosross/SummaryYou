@@ -12,10 +12,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import com.talosross.summaryyou.ui.page.HistoryScreen
 import com.talosross.summaryyou.ui.page.HomeScreen
 import com.talosross.summaryyou.ui.page.OnboardingScreen
@@ -45,27 +44,21 @@ fun AppNavigation(
 
     NavHost(
         navController = navController,
-        startDestination = startDestination.name
+        startDestination = startDestination
     ) {
-        composable(Nav.Home.name) {
+        composable<Nav.Home> {
             HomeScreen(
                 modifier = Modifier,
-                onNav = { dest, args ->
-                    navController.navigate(
-                        "${dest.name}?${
-                            args?.entries?.joinToString("&") { "${it.key}=${it.value}" }
-                        }"
-                    )
-                },
+                onNav = { dest -> navController.navigate(dest) },
                 appViewModel = appViewModel
             )
         }
 
-        composable(Nav.Onboarding.name) {
+        composable<Nav.Onboarding> {
             fun handleOnboardingDone() {
                 appViewModel.setIsOnboarded(true)
-                navController.navigate(Nav.Home.name) {
-                    popUpTo(Nav.Onboarding.name) { inclusive = true }
+                navController.navigate(Nav.Home) {
+                    popUpTo<Nav.Onboarding> { inclusive = true }
                 }
             }
 
@@ -75,35 +68,28 @@ fun AppNavigation(
                 onDone = {
                     handleOnboardingDone()
                 },
-                onDoneAndNavigate = {
+                onDoneAndNavigate = { route ->
                     handleOnboardingDone()
-                    navController.navigate(it)
+                    navController.navigate(route)
                 },
                 hasProxy = settings.hasProxy
             )
         }
 
-        composable(
-            route = "${Nav.Settings.name}?highlight={highlight}",
+        composable<Nav.Settings>(
             enterTransition = slideIn(SlideDirection.End),
             exitTransition = slideOut(SlideDirection.Start),
-            arguments = listOf(navArgument("highlight") {
-                type = NavType.StringType
-                nullable = true
-                defaultValue = null
-            })
         ) { backStackEntry ->
-            val highlightSection = backStackEntry.arguments?.getString("highlight")
+            val settingsRoute = backStackEntry.toRoute<Nav.Settings>()
             SettingsScreen(
                 onBack = { navController.popBackStack() },
-                onNav = { navController.navigate(it.name) },
-                highlightSection = highlightSection,
+                onNav = { navController.navigate(it) },
+                highlightSection = settingsRoute.highlight,
                 appViewModel = appViewModel
             )
         }
 
-        composable(
-            Nav.History.name,
+        composable<Nav.History>(
             enterTransition = slideIn(SlideDirection.Start),
             exitTransition = slideOut(SlideDirection.End)
         ) {

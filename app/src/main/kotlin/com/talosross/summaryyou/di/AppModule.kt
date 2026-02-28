@@ -40,7 +40,7 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "summary_you_db"
-        ).build()
+        ).fallbackToDestructiveMigration(dropAllTables = true).build()
     }
 
     @Provides
@@ -58,10 +58,11 @@ object AppModule {
     @Provides
     @Singleton
     fun provideLLMHandler(
+        userPreferencesRepository: UserPreferencesRepository,
         @ApplicationContext context: Context,
         httpClient: HttpClient
     ): LLMHandler {
-        return LLMHandler(context, httpClient)
+        return LLMHandler(userPreferencesRepository, context, httpClient)
     }
 
     @Provides

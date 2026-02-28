@@ -71,3 +71,10 @@
 
 # Keep specific data models to be safe, though the above rules should cover them.
 -keep class com.talosross.summaryyou.model.** { *; }
+
+# Strip debug and verbose logging in release builds
+-assumenosideeffects class android.util.Log {
+    public static int d(...);
+    public static int v(...);
+}
+

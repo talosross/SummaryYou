@@ -27,8 +27,10 @@ import com.talosross.summaryyou.llm.tools.YouTubeTranscriptTool
 import com.talosross.summaryyou.llm.tools.getFileName
 import com.talosross.summaryyou.model.HistorySummary
 import com.talosross.summaryyou.model.SummaryException
+import com.talosross.summaryyou.model.SummarySource
 import com.talosross.summaryyou.model.SummaryType
 import com.talosross.summaryyou.model.VideoSubtype
+import com.talosross.summaryyou.util.extractHttpUrl
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,13 +42,6 @@ class SummaryViewModel @Inject constructor(
     private val historyRepository: HistoryRepository,
 ) : ViewModel() {
 
-    sealed class SummarySource {
-        data class Video(val url: String) : SummarySource()
-        data class Article(val url: String) : SummarySource()
-        data class Text(val content: String) : SummarySource()
-        data class Document(val filename: String, val uri: String) : SummarySource()
-        object None : SummarySource()
-    }
 
     private val _summarizationState = MutableStateFlow(SummarizationState())
     val summarizationState: StateFlow<SummarizationState> = _summarizationState.asStateFlow()
@@ -63,15 +58,6 @@ class SummaryViewModel @Inject constructor(
         _summarizationState.update { it.copy(isLoading = false) }
     }
 
-    private fun extractHttpUrl(text: String): String {
-        val urlRegex = Regex(
-            "(?:^|\\W)((http|https)://)" + // Protocol
-                    "([\\w\\-]+\\.){1,}" + // Domain name
-                    "([\\w\\-]+)" + // Top-level domain
-                    "([^\\s<>\"#%{}|\\\\^`]*)" // Path, query, and fragment
-        )
-        return urlRegex.find(text)?.value?.trim() ?: text
-    }
 
     private val isFileUri =
         { input: String -> input.startsWith("content://") || input.startsWith("file://") }

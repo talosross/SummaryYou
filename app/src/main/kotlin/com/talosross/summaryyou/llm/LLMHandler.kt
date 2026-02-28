@@ -52,7 +52,7 @@ import com.talosross.summaryyou.llm.tools.YouTubeTranscriptTool
 import com.talosross.summaryyou.model.ExtractedContent
 import com.talosross.summaryyou.model.SummaryData
 import com.talosross.summaryyou.model.SummaryException
-import com.talosross.summaryyou.vm.SummaryViewModel.SummarySource
+import com.talosross.summaryyou.model.SummarySource
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import kotlinx.serialization.json.Json
@@ -70,8 +70,11 @@ data class SummaryOutput(
     val length: SummaryLength,
 ) : SummaryData
 
-class LLMHandler(context: Context, private val httpClient: HttpClient) {
-    private val userPreferencesRepository = UserPreferencesRepository(context)
+class LLMHandler(
+    private val userPreferencesRepository: UserPreferencesRepository,
+    context: Context,
+    private val httpClient: HttpClient,
+) {
     private val fileExtractorTool: FileExtractorTool = FileExtractorTool(context)
     private val articleExtractorTool = ArticleExtractorTool(httpClient)
     private val youTubeTranscriptTool = YouTubeTranscriptTool(httpClient)

@@ -19,10 +19,10 @@ android {
 
     defaultConfig {
         applicationId = "com.talosross.summaryyou"
-        minSdk = 33
+        minSdk = 28
         targetSdk = 36
-        versionCode = 2026022515
-        versionName = "1.4.1"
+        versionCode = 2026022813
+        versionName = "1.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -117,7 +117,6 @@ android {
 
 
     androidResources {
-        generateLocaleConfig = true
     }
 
     lint {
@@ -136,6 +135,10 @@ kotlin {
         languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
     }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 // Helper to load signing properties; returns null when file is absent.

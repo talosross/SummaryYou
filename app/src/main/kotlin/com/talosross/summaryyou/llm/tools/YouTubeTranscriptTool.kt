@@ -58,6 +58,10 @@ class YouTubeTranscriptTool(client: HttpClient) : Tool<YouTubeTranscript, Extrac
         fun isYouTubeLink(input: String): Boolean {
             return YouTubeExtractor.isYouTubeLink(input)
         }
+
+        fun extractVideoId(url: String): String? {
+            return YouTubeExtractor.extractVideoId(url)
+        }
     }
 }
 
