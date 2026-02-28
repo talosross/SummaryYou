@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents when working with code in this repository.
 
 ## Project Overview
 
@@ -10,32 +10,36 @@ SummaryYou is an AI/LLM summarizer FOSS Android app that summarizes YouTube vide
 
 ### Building the App
 ```bash
-# Clean and build debug APK
-./gradlew clean assembleDebug
+# Clean and build debug APK (foss flavor)
+./gradlew clean assembleFossDebug
 
 # Build specific release variants
 ./gradlew assemblePlaystoreRelease
 ./gradlew assembleFossRelease
+
+# Compile only (fast check)
+./gradlew compileFossDebugKotlin
 ```
 
 ### Testing
 ```bash
-# Run unit tests
+# Run unit tests (foss flavor)
+./gradlew testFossDebugUnitTest
+
+# Run all unit tests
 ./gradlew clean test
 
 # Run instrumented tests
 ./gradlew connectedAndroidTest
 
 # Run a specific test class
-./gradlew testDebugUnitTest --tests="com.talosross.com.ExampleUnitTest"
+./gradlew testFossDebugUnitTest --tests="com.talosross.summaryyou.YouTubeExtractorTest"
 ```
 
 ### Code Quality
 ```bash
 # Run lint analysis
 ./gradlew lint
-
-# Format code (follow Kotlin style guide)
 ```
 
 ## Code Style Guidelines
@@ -44,89 +48,101 @@ SummaryYou is an AI/LLM summarizer FOSS Android app that summarizes YouTube vide
 - Follow [Kotlin style guide](https://developer.android.com/kotlin/style-guide)
 
 ## Dev Environment Tips
-- Use `./gradlew clean assembleDebug` to verify the build
-- Use `./gradlew clean test` to run tests
+- Use `./gradlew clean assembleFossDebug` to verify the build
+- Use `./gradlew testFossDebugUnitTest` to run tests
 - Configure SDK paths in `local.properties`
 - Set up signing keys in `keystore-playstore.properties` and `keystore-foss.properties` for release builds
 
 ## Architecture & Code Structure
 
 ### Technology Stack
-- **Language**: Kotlin
-- **UI Framework**: Jetpack Compose with Material 3 Expressive (alpha version for expressive features)
-- **DI**: Dagger/Hilt
-- **Database**: Room (SQLite)
-- **Networking**: Ktor 3.x
+- **Language**: Kotlin 2.3 (language version 2.3, JVM 21)
+- **UI Framework**: Jetpack Compose with Material 3 Expressive (`1.5.0-alpha12`)
+- **DI**: Dagger/Hilt 2.59
+- **Database**: Room 2.8.4 (SQLite) with `fallbackToDestructiveMigration`
+- **Networking**: Ktor 3.4.0
 - **Async**: Kotlin Coroutines + Flow
+- **Navigation**: Jetpack Navigation Compose with type-safe `@Serializable` routes
 - **ML Kit**: For text recognition from images (build flavor dependent)
-- **LLM Integration**: Koog library
+- **LLM Integration**: Koog agents library (`ai.koog:koog-agents:0.6.0`)
+- **Serialization**: kotlinx.serialization 1.10.0
+- **HTML Parsing**: Jsoup 1.22.1
+- **Image Loading**: Coil 2.7.0
 
 ### Build Flavors
 The app uses two product flavors:
-- **playstore**: Uses Google Play Services ML Kit (smaller APK size, requires Google Play Services)
-- **foss**: Bundles ML model in APK (larger package size, works without Google Play Services)
+- **playstore**: Uses Google Play Services ML Kit (smaller APK size, requires Google Play Services). Includes proxy summarizer and Play Integrity API.
+- **foss**: Bundles ML model in APK (larger package size, works without Google Play Services). App ID suffix `.foss`.
 
 Configure in `app/build.gradle.kts` under the `productFlavors` block.
 
 ### Project Structure
 
-#### Core Application (`app/src/main/kotlin/com.talosross.com/nanova/summaryexpressive/`)
+#### Core Application (`app/src/main/kotlin/com/talosross/summaryyou/`)
 - **`App.kt`**: Application class with `@HiltAndroidApp` annotation
 - **`MainActivity.kt`**: Main activity handling deep links, share intents, and initialization
+- **`InstantSummaryActivity.kt`**: Overlay activity for instant summaries via share sheet
+- **`UserPreferencesRepository.kt`**: DataStore-backed user preferences
 
-#### Dependency Injection (`di/AppModule.kt`)
-Hilt module providing:
-- User preferences repository
-- Room database and DAO
-- History repository
-- LLM handler
-- Ktor HTTP client with cookies and JSON serialization
+#### Dependency Injection (`di/`)
+- **`AppModule.kt`**: Hilt module providing UserPreferencesRepository, Room database + DAO, HistoryRepository, LLMHandler (with injected UserPreferencesRepository), ProxySummarizer, and Ktor HTTP client
+- **`FlavorConfig.kt`**: Build-flavor-specific configuration interface
 
 #### Data Layer (`data/`)
-- **`AppDatabase.kt`**: Room database definition
-- **`HistoryDao.kt`**: DAO for history operations
+- **`AppDatabase.kt`**: Room database definition (`summary_you_db`) with destructive migration fallback
+- **`HistoryDao.kt`**: DAO for history CRUD and paging operations
 - **`HistoryRepository.kt`**: Repository managing history data
 - **`converters/`**: Type converters for Room (SummaryType, VideoSubtype, SummaryLength)
 
 #### Domain Models (`model/`)
-- `SummaryData.kt`: Core summary data model
-- `HistorySummary.kt`: History entry model
-- `SummaryType.kt`: Supported content types (YouTube, BiliBili, article, image, document, text)
-- `VideoSubtype.kt`: Video platform classifications
-- `SummaryException.kt`: Custom exception types
-- `ExtractedContent.kt`: Content extraction model
+- **`SummaryData.kt`**: Core summary result data model
+- **`SummarySource.kt`**: Sealed class representing input sources (`Video`, `Article`, `Text`, `Document`, `None`)
+- **`HistorySummary.kt`**: History entry Room entity
+- **`SummaryType.kt`**: Supported content types (YouTube, BiliBili, article, image, document, text)
+- **`VideoSubtype.kt`**: Video platform classifications
+- **`SummaryException.kt`**: Custom exception types with `fromMessage()` factory and `getUserMessageResId()` for user-facing error mapping
+- **`ExtractedContent.kt`**: Content extraction result model
 
 #### LLM Integration (`llm/`)
-- **`LLMHandler.kt`**: Core handler for LLM interactions, supports multiple providers
-- **`AIProvider.kt`**: Provider definitions (OpenAI, Gemini, Claude, DeepSeek)
-- **`Prompts.kt`**: Prompt templates for different content types
+- **`LLMHandler.kt`**: Core handler for LLM interactions using Koog agent graph strategy. `UserPreferencesRepository` is injected via constructor (not manually created).
+- **`AIProvider.kt`**: Provider enum with model lists (Integrated, OpenAI, Gemini, Claude, DeepSeek, Mistral, Qwen, Ollama, OpenRouter)
+- **`ProxySummarizer.kt`**: Proxy-based summarizer for playstore flavor
+- **`Prompts.kt`**: Prompt templates for different content types and summary lengths
 - **`CustomModel.kt`**: Custom model configuration
-- **`tools/`**: Extraction tools
-  - `YouTubeTranscriptTool.kt`: YouTube transcript extraction
+- **`tools/`**: Content extraction tools
+  - `YouTubeTranscriptTool.kt`: YouTube transcript extraction (companion exposes `isYouTubeLink()` and `extractVideoId()` for testability)
   - `BiliBiliSubtitleTool.kt`: BiliBili subtitle extraction
-  - `ArticleExtractorTool.kt`: Web article content extraction
-  - `FileExtractorTool.kt`: Document parsing
+  - `ArticleExtractorTool.kt`: Web article content extraction via Jsoup
+  - `FileExtractorTool.kt`: Document/image parsing (ML Kit flavor-dependent)
+
+#### Utilities (`util/`)
+- **`UrlUtils.kt`**: `extractHttpUrl()` top-level function — extracts first HTTP(S) URL from text
+- **`LocaleUtil.kt`**: Locale helper utilities
+- **`MarkdownParser.kt`**: Markdown-to-AnnotatedString conversion
 
 #### ViewModels (`vm/`)
-- **`AppViewModel`**: App-level state, onboarding, settings, deep links
-- **`SummaryViewModel`**: Main summarization logic, content processing
-- **`HistoryViewModel`**: History browsing, searching, deletion
-- **`UiState.kt`**: State classes for UI rendering
+- **`AppViewModel.kt`**: App-level state, onboarding flow, settings management, deep link / share intent handling
+- **`SummaryViewModel.kt`**: Main summarization orchestration — determines `SummarySource`, delegates to `LLMHandler` or `ProxySummarizer`
+- **`HistoryViewModel.kt`**: History browsing, searching, deletion with Paging 3
+- **`UiState.kt`**: State data classes (`SettingsUiState`, `SummarizationState`, `AppStartAction`)
 
 #### UI Layer (`ui/`)
-- **`AppNavigation.kt`**: Navigation graph setup
-- **`Nav.kt`**: Route definitions
+- **`Nav.kt`**: Type-safe route definitions as `@Serializable sealed interface Nav` with `Home`, `Onboarding`, `History`, and `Settings(highlight: String? = null)`
+- **`AppNavigation.kt`**: Navigation graph using `composable<Nav.Home>`, `composable<Nav.Settings>` etc. (type-safe, no string-based routing)
 - **`page/`**: Screen composables
-  - `HomeScreen.kt`: Main summary screen
+  - `HomeScreen.kt`: Main summary screen (orchestration only)
+  - `HomeComponents.kt`: Extracted sub-composables — `HomeTopAppBar`, `InputSection`, `LengthSelector`, `FloatingActionButtons`, `ErrorMessage`
+  - `SettingsScreen.kt`: App configuration screen (orchestration + `SettingsContent`)
+  - `SettingsComponents.kt`: Extracted sub-composables — `SettingsGroup`, `ThemeSettingsDialog`, `AIProviderSettingsDialog`, `ModelSettingsDialog`, `RadioButtonItem`, `AIProviderItem`
   - `HistoryScreen.kt`: History browser with paging
-  - `SettingsScreen.kt`: App configuration
-  - `OnboardingScreen.kt`: First-run setup
-  - `BilibiliLoginScreen.kt`: BiliBili authentication
+  - `OnboardingScreen.kt`: First-run setup wizard
+  - `BilibiliLoginScreen.kt`: BiliBili WebView authentication
 - **`component/`**: Reusable UI components
+  - `InstantSummaryDialog.kt`: Overlay summary dialog (extracted from `InstantSummaryActivity`)
+  - `SummaryCard.kt`: Summary result card with copy, share, TTS
+  - `ClickablePasteIcon.kt`: Paste/clear icon button
+  - `LogoIcon.kt`: App logo composable
 - **`theme/`**: Material 3 theming (colors, typography, theme)
-
-#### Services
-- **`InstantSummaryActivity.kt`**: Overlay activity for instant summaries via share sheet
 
 ### Supported Content Types
 
@@ -141,39 +157,45 @@ Hilt module providing:
 
 ### LLM Providers
 
-The app supports multiple LLM providers configured in settings:
-- **OpenAI**: gpt-4.1, gpt-4.1-mini, gpt-4.1-nano, gpt-40, gpt-4o-mini, gpt-5, gpt-5-mini, gpt-5-nano, o1, o3, o3-mini, o4-mini
-- **Gemini**: gemini-2.0-flash, gemini-2.0-flash-001, gemini-2.0-flash-lite, gemini-2.0-flash-lite-001, gemini-2.5-flash, gemini-2.5-pro
-- **Claude**: claude-3-haiku, claude-3-opus, claude-3-5-haiku, claude-3-5-sonnet, claude-3-7-sonnet, claude-opus-4-0, claude-sonnet-4-0
-- **DeepSeek**: deepseek-chat, deepseek-reasoner
-- **Custom models**: User-configurable endpoints
+The app supports multiple LLM providers configured in `AIProvider.kt`:
+- **Integrated**: Built-in Google AI (playstore flavor only, uses proxy)
+- **OpenAI**: Models from `OpenAIModels` (Completion-capable, non-audio)
+- **Gemini**: Models from `GoogleModels` (Completion-capable)
+- **Claude**: Models from `AnthropicModels` (Completion-capable, version-sorted)
+- **DeepSeek**: Models from `DeepSeekModels` (Completion-capable)
+- **Mistral**: Models from `MistralAIModels` (Completion-capable)
+- **Qwen**: Models from `DashscopeModels` (Completion-capable)
+- **Ollama**: Local models (Llama, Qwen, Gemma — mandatory base URL)
+- **OpenRouter**: Models from `OpenRouterModels` (Completion-capable)
+- **Custom models**: User-configurable via custom model name text field in settings
+
+All providers support custom model names entered manually.
 
 ## Key Configuration Files
 
 ### `build.gradle.kts` (root)
 Defines plugin versions:
-- Android Gradle Plugin: 8.13.1
-- Kotlin: 2.2.20
-- KSP: 2.2.20-2.0.3
-- Hilt: 2.57.2
+- Android Gradle Plugin: 9.0.0
+- Kotlin: 2.3.0
+- KSP: 2.3.4
+- Hilt: 2.59
 
 ### `app/build.gradle.kts`
 Main app configuration:
-- Min SDK: 33 (Android 13)
-- Target SDK: 36
-- Java 21 toolchain
+- Min SDK: 28 (Android 9)
+- Target/Compile SDK: 36
+- Java 21 toolchain, Kotlin language version 2.3
 - Compose BOM: 2026.01.00
+- Material 3: 1.5.0-alpha12 (expressive alpha)
 - Room: 2.8.4
+- Navigation Compose: 2.9.6
 - Signing configs: `keystore-playstore.properties` and `keystore-foss.properties`
 
 ### `local.properties`
-Local SDK paths (not tracked in git)
+Local SDK paths + proxy URL + GCP project number (not tracked in git)
 
-### `keystore-playstore.properties`
-Play Store release signing keys (not tracked in git)
-
-### `keystore-foss.properties`
-FOSS release signing keys (not tracked in git)
+### `keystore-*.properties`
+Release signing keys (not tracked in git)
 
 ## Development Guidelines
 
@@ -181,70 +203,92 @@ FOSS release signing keys (not tracked in git)
 - Follow [Kotlin Android Style Guide](https://developer.android.com/kotlin/style-guide)
 - Keep code structure as simple as possible
 - Follow Android best practices
+- Use `internal` visibility for composables shared across files within the same package
 
 ### Architecture Patterns
-- MVVM (Model-View-ViewModel)
-- Repository pattern for data access
-- Hilt for dependency injection
-- StateFlow for reactive UI state
-- Sealed classes for type-safe navigation and state management
+- **MVVM** (Model-View-ViewModel)
+- **Repository pattern** for data access
+- **Hilt DI** for all injectable components — avoid manual instantiation of repositories
+- **StateFlow** for reactive UI state
+- **Type-safe navigation** using `@Serializable sealed interface` routes (no string-based routing)
+- **Composable extraction** — keep screen files as orchestration layers; extract sub-composables into `*Components.kt` files
+- **Domain model separation** — models like `SummarySource` live in `model/` package, not nested inside ViewModels
 
 ### Dependency Injection
-- All major components are Hilt-injectable
-- Use `@Singleton` for app-wide dependencies
-- Use `@ActivityScoped` for activity-level dependencies (when needed)
+- All major components are Hilt-injectable (`@Singleton`)
+- `LLMHandler` receives `UserPreferencesRepository`, `Context`, and `HttpClient` via constructor injection
+- Never manually create `UserPreferencesRepository` — always inject via Hilt
 
 ### Room Database
-- Database: `summary_expressive_db`
+- Database name: `summary_you_db`
 - Main entity: `HistorySummary` with DAO operations
+- Migration strategy: `fallbackToDestructiveMigration(dropAllTables = true)`
 - Type converters in `converters/` package
+- Schema export to `$projectDir/schemas`
+
+### Navigation
+- Routes defined as `@Serializable sealed interface Nav` in `ui/Nav.kt`
+- Use `composable<Nav.Route>` and `navController.navigate(Nav.Route)` — never use string-based routes
+- Route parameters are type-safe (e.g., `Nav.Settings(highlight = "ai")`)
 
 ### Material 3 Expressive
-The app uses Material 3 Expressive alpha features for enhanced UI. Material version: `1.5.0-alpha12`
+The app uses Material 3 Expressive alpha features for enhanced UI:
+- `LoadingIndicator`, `MediumFlexibleTopAppBar`, `ToggleFloatingActionButton`, `FloatingActionButtonMenu`, `ButtonGroupDefaults`
+- Material version: `1.5.0-alpha12`
 
 ## Testing
-- Unit tests in `src/test/kotlin/`
-- Instrumented tests in `src/androidTest/kotlin/`
-- Use `./gradlew test` for unit tests
-- Use `./gradlew connectedAndroidTest` for instrumented tests
+- **Unit tests** in `src/test/kotlin/com/talosross/summaryyou/`
+  - `YouTubeExtractorTest.kt`: 16 tests for video ID extraction and YouTube link detection
+  - `SummaryExceptionTest.kt`: 11 tests for `SummaryException.fromMessage()` factory
+  - `UrlExtractionTest.kt`: 9 tests for URL extraction regex behavior
+  - `ExampleUnitTest.kt`: Basic sanity test
+- **Instrumented tests** in `src/androidTest/kotlin/`
+- Run unit tests: `./gradlew testFossDebugUnitTest`
+- Run instrumented tests: `./gradlew connectedAndroidTest`
 
 ## Build & Release
 
 ### Development
 - Debug builds are debuggable with application ID suffix `.debug`
-- Use `assembleDebug` for development builds
+- FOSS debug builds: `assembleFossDebug`
+- Playstore debug builds: `assemblePlaystoreDebug`
 
 ### Release
-- Release builds are minified and shrunk
+- Release builds are minified (`isMinifyEnabled = true`) and shrunk (`isShrinkResources = true`)
 - Signing is flavor-specific and optional if the properties file is missing
 - Two distribution channels:
-  1. **GitHub Releases**: FOSS variant
+  1. **GitHub Releases**: FOSS variant (`.foss` suffix)
   2. **Google Play Store**: Playstore variant with Google-managed signing
 
 ### Version Info
-Current version: 1.4.0 (versionCode 2026022415)
-- Update version in `app/build.gradle.kts:20-21`
+Current version: **2.0.0** (versionCode 2026022822)
+- Update version in `app/build.gradle.kts` lines 24-25
 
 ## Permissions & Security
-The app likely requires:
-- Internet access (for LLM calls and content extraction)
+The app requires:
+- Internet access (for LLM API calls and content extraction)
 - Storage access (for document/image processing)
-- Clipboard access (for instant summary feature)
-- Overlay permission (for instant summary overlay)
+- Clipboard access (for paste and instant summary features)
+- Overlay permission (for instant summary overlay via share sheet)
+- Camera permission (for camera-based image summarization)
 
-## Known Dependencies
-- `ai.koog:koog-agents:0.6.0` - Kotlin-based LLM interactions
-- `io.ktor:ktor-client-android:3.4.0` - HTTP client
-- `org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0` - JSON serialization
-- `org.jsoup:jsoup:1.22.1` - HTML parsing
-- `io.coil-kt:coil-compose:2.7.0` - Image loading
+## Key Dependencies
+| Dependency | Version | Purpose |
+|---|---|---|
+| `ai.koog:koog-agents` | 0.6.0 | LLM agent framework |
+| `io.ktor:ktor-client-android` | 3.4.0 | HTTP client |
+| `org.jetbrains.kotlinx:kotlinx-serialization-json` | 1.10.0 | JSON serialization |
+| `org.jsoup:jsoup` | 1.22.1 | HTML parsing |
+| `io.coil-kt:coil-compose` | 2.7.0 | Image loading |
+| `androidx.room:room-*` | 2.8.4 | Local database |
+| `com.google.dagger:hilt-android` | 2.59 | Dependency injection |
+| `androidx.navigation:navigation-compose` | 2.9.6 | Type-safe navigation |
+| `androidx.paging:paging-compose` | 3.3.6 | Paging support |
+| `androidx.datastore:datastore-preferences` | 1.2.0 | Preferences storage |
 
 ## Build Warnings & Notes
 - ML Kit dependency is flavor-specific (see `app/build.gradle.kts` dependencies)
 - ProGuard/R8 rules configured in `app/proguard-rules.pro`
-- Some resources excluded from APK (see packaging section)
-- Lint rule: MissingTranslation disabled for localization flexibility
-
----
-
-**Note**: Content from AGENTS.md has been merged into this file.
+- Some META-INF resources excluded from APK packaging
+- Lint rule: `MissingTranslation` disabled for localization flexibility
+- `hiltViewModel()` deprecation warning — will be migrated to `androidx.hilt.lifecycle.viewmodel.compose` package
