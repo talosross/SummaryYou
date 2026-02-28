@@ -111,7 +111,7 @@ import com.talosross.summaryyou.R
 import com.talosross.summaryyou.llm.AIProvider
 import com.talosross.summaryyou.ui.Nav
 import com.talosross.summaryyou.ui.component.ClickablePasteIcon
-import com.talosross.summaryyou.ui.theme.SummaryExpressiveTheme
+import com.talosross.summaryyou.ui.theme.SummaryYouTheme
 import com.talosross.summaryyou.vm.AppViewModel
 import com.talosross.summaryyou.vm.SettingsUiState
 import java.text.SimpleDateFormat
@@ -1177,7 +1177,7 @@ private fun AIProviderItem(
 @Preview
 @Composable
 private fun AIProviderSettingsDialogPreview() {
-    SummaryExpressiveTheme {
+    SummaryYouTheme {
         AIProviderSettingsDialog(
             onDismissRequest = {},
             initialProvider = AIProvider.OPENAI,
@@ -1192,7 +1192,7 @@ private fun AIProviderSettingsDialogPreview() {
 @Preview
 @Composable
 private fun ModelSettingsDialogPreview() {
-    SummaryExpressiveTheme {
+    SummaryYouTheme {
         ModelSettingsDialog(
             onDismissRequest = {},
             provider = AIProvider.OPENAI,
@@ -1205,7 +1205,7 @@ private fun ModelSettingsDialogPreview() {
 @Preview
 @Composable
 private fun RadioButtonItemPreview() {
-    SummaryExpressiveTheme {
+    SummaryYouTheme {
         Column(modifier = Modifier.padding(16.dp)) {
             RadioButtonItem(selected = true, onSelectionChange = {}) {
                 Text("Option 1")
@@ -1220,7 +1220,7 @@ private fun RadioButtonItemPreview() {
 @Preview
 @Composable
 private fun AIProviderItemPreview() {
-    SummaryExpressiveTheme {
+    SummaryYouTheme {
         Column(modifier = Modifier.padding(16.dp)) {
             AIProvider.entries
                 .map { AIProviderItem(it, selected = it == AIProvider.GEMINI) {} }
@@ -1231,7 +1231,7 @@ private fun AIProviderItemPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun ScrollContentPreview() {
-    SummaryExpressiveTheme {
+    SummaryYouTheme {
         val state = SettingsUiState(
             theme = 0,
             apiKey = "test_key",

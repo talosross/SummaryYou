@@ -8,7 +8,7 @@
         android:shortcutLongLabel="@string/shortcut_summarize_clipboard_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:data="summaryexpressive://clipboard"
+            android:data="summaryyou://clipboard"
             android:targetClass="com.MainActivity" />
     </shortcut>
 </shortcuts>

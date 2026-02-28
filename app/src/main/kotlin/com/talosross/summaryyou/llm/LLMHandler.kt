@@ -37,7 +37,8 @@ import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import android.content.Context
 import io.ktor.client.HttpClient
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import com.talosross.summaryyou.UserPreferencesRepository
 import com.talosross.summaryyou.llm.tools.Article
@@ -69,16 +70,23 @@ data class SummaryOutput(
     val length: SummaryLength,
 ) : SummaryData
 
-class LLMHandler(context: Context, httpClient: HttpClient) {
-    private val httpClient = httpClient
+class LLMHandler(context: Context, private val httpClient: HttpClient) {
     private val userPreferencesRepository = UserPreferencesRepository(context)
     private val fileExtractorTool: FileExtractorTool = FileExtractorTool(context)
     private val articleExtractorTool = ArticleExtractorTool(httpClient)
     private val youTubeTranscriptTool = YouTubeTranscriptTool(httpClient)
     private val bilibiliSubtitleTool = BiliBiliSubtitleTool(httpClient, userPreferencesRepository)
 
-    private val promptConfig: PromptConfig by lazy { runBlocking { fetchPromptConfig() } }
+    private var _promptConfig: PromptConfig? = null
+    private val promptConfigMutex = Mutex()
     private val json = Json { ignoreUnknownKeys = true }
+
+    private suspend fun getPromptConfig(): PromptConfig {
+        _promptConfig?.let { return it }
+        return promptConfigMutex.withLock {
+            _promptConfig ?: fetchPromptConfig().also { _promptConfig = it }
+        }
+    }
 
     private suspend fun fetchPromptConfig(): PromptConfig {
         val remoteUrl = "https://raw.githubusercontent.com/talosross/SummaryYou/refs/heads/master/prompts/summarize.json"
@@ -112,7 +120,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         }
     }
 
-    fun getSummarizationAgent(
+    suspend fun getSummarizationAgent(
         provider: AIProvider,
         apiKey: String,
         baseUrl: String? = null,
@@ -165,7 +173,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
         }
     }
 
-    private fun createAgentConfig(
+    private suspend fun createAgentConfig(
         provider: AIProvider,
         modelName: String?,
         summaryLength: SummaryLength,
@@ -188,7 +196,7 @@ class LLMHandler(context: Context, httpClient: HttpClient) {
 
         val lang = appLanguage.getDisplayLanguage(Locale.ENGLISH)
         return AIAgentConfig(
-            prompt = createSummarizationPrompt(promptConfig, summaryLength, useContentLanguage, lang),
+            prompt = createSummarizationPrompt(getPromptConfig(), summaryLength, useContentLanguage, lang),
             model = llmModel,
             maxAgentIterations = 10,
         )

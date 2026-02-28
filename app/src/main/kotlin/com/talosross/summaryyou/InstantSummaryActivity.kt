@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -50,7 +51,7 @@ import androidx.compose.ui.window.DialogProperties
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import com.talosross.summaryyou.ui.theme.SummaryExpressiveTheme
+import com.talosross.summaryyou.ui.theme.SummaryYouTheme
 import com.talosross.summaryyou.vm.AppViewModel
 import com.talosross.summaryyou.vm.SummaryViewModel
 
@@ -78,7 +79,7 @@ class InstantSummaryActivity : ComponentActivity() {
                 }
             }
 
-            SummaryExpressiveTheme(
+            SummaryYouTheme(
                 darkTheme = when (settings.theme) {
                     1 -> true
                     2 -> false
@@ -107,8 +108,13 @@ class InstantSummaryActivity : ComponentActivity() {
             Intent.ACTION_SEND -> {
                 val type = intent.type ?: ""
                 if (type.startsWith("application/") || type.startsWith("image/")) {
+                    @Suppress("DEPRECATION")
                     val contentUri: Uri? =
-                        intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                        } else {
+                            intent.getParcelableExtra(Intent.EXTRA_STREAM)
+                        }
                     contentUri?.toString()
                 } else {
                     intent.getStringExtra(Intent.EXTRA_TEXT)

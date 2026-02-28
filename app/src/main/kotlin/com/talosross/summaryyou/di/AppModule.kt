@@ -9,6 +9,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
@@ -37,7 +39,7 @@ object AppModule {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "summary_expressive_db"
+            "summary_you_db"
         ).build()
     }
 
@@ -79,6 +81,15 @@ object AppModule {
                 storage = AcceptAllCookiesStorage()
             }
             install(ContentNegotiation) { json() }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 60_000
+                connectTimeoutMillis = 15_000
+                socketTimeoutMillis = 60_000
+            }
+            install(HttpRequestRetry) {
+                retryOnServerErrors(maxRetries = 2)
+                exponentialDelay()
+            }
         }
     }
 }

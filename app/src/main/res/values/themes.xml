@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.SummaryExpressive" parent="android:Theme.DeviceDefault.NoActionBar" />
+    <style name="Theme.SummaryYou" parent="android:Theme.DeviceDefault.NoActionBar" />
 </resources>

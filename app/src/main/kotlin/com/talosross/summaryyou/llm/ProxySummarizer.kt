@@ -69,7 +69,7 @@ class ProxySummarizer(
         }
 
         val responseText = response.bodyAsText()
-        Log.d("ProxySummarizer", "Proxy response: status=${response.status.value}, body=$responseText")
+        Log.d("ProxySummarizer", "Proxy response: status=${response.status.value}")
 
         if (response.status.value !in 200..299) {
             val proxyResponse = try {

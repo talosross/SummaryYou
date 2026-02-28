@@ -3,6 +3,7 @@ package com.talosross.summaryyou
 import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,7 +17,7 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import com.talosross.summaryyou.ui.AppNavigation
-import com.talosross.summaryyou.ui.theme.SummaryExpressiveTheme
+import com.talosross.summaryyou.ui.theme.SummaryYouTheme
 import com.talosross.summaryyou.vm.AppStartAction
 import com.talosross.summaryyou.vm.AppViewModel
 
@@ -38,7 +39,7 @@ class MainActivity : ComponentActivity() {
             val settingsState by viewModel.settingsUiState.collectAsState()
             val startDestination by viewModel.startDestination.collectAsState()
 
-            SummaryExpressiveTheme(
+            SummaryYouTheme(
                 darkTheme = when (settingsState.theme) {
                     1 -> true
                     2 -> false
@@ -47,7 +48,7 @@ class MainActivity : ComponentActivity() {
                 dynamicColor = settingsState.dynamicColor
             ) {
                 if (startDestination == null) {
-                    return@SummaryExpressiveTheme
+                    return@SummaryYouTheme
                 }
                 AppNavigation(
                     navController = navController,
@@ -69,8 +70,13 @@ class MainActivity : ComponentActivity() {
             Intent.ACTION_SEND -> {
                 val type = intent.type ?: ""
                 if (type.startsWith("application/") || type.startsWith("image/")) {
+                    @Suppress("DEPRECATION")
                     val contentUri: Uri? =
-                        intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                        } else {
+                            intent.getParcelableExtra(Intent.EXTRA_STREAM)
+                        }
                     contentUri?.let { viewModel.onEvent(AppStartAction(it.toString())) }
                 } else if (type == "text/plain") {
                     val content = intent.getStringExtra(Intent.EXTRA_TEXT)

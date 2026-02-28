@@ -54,19 +54,14 @@ private object PdfTextExtractor : TextExtractor {
                             // fallback to get content directly from text layer
                             if (pageText.isBlank()) {
                                 try {
-                                    val textContents =
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-                                            page.getTextContents()
-                                        } else {
-                                            // maybe can use this: https://developer.android.com/jetpack/androidx/releases/pdf
-                                            TODO()
-                                        }
-
-                                    if (textContents.isNotEmpty()) {
-                                        val pageLayerText =
-                                            textContents.joinToString(" ") { it.text }.trim()
-                                        if (pageLayerText.isNotBlank()) {
-                                            pageText = pageLayerText
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                                        val textContents = page.getTextContents()
+                                        if (textContents.isNotEmpty()) {
+                                            val pageLayerText =
+                                                textContents.joinToString(" ") { it.text }.trim()
+                                            if (pageLayerText.isNotBlank()) {
+                                                pageText = pageLayerText
+                                            }
                                         }
                                     }
                                 } catch (e: Exception) {
