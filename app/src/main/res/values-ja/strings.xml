@@ -11,6 +11,7 @@
     <string name="history">歴史</string>
 
     <string name="regenerate">再生する</string>
+    <string name="stop">停止</string>
 
     <string name="invalidURL">無効なリンク: 要約できません</string>
 

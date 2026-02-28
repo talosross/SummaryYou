@@ -56,7 +56,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearWavyProgressIndicator
-import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.OutlinedTextField
@@ -327,6 +326,10 @@ fun HomeScreen(
                     scope.launch {
                         snackbarHostState.showSnackbar(message)
                     }
+                },
+                onCancel = {
+                    haptics.performHapticFeedback(HapticFeedbackType.Reject)
+                    summaryViewModel.cancelSummarization()
                 },
                 onLaunchFilePicker = {
                     filePickerLauncher.launch(MimeTypes.allSupported)
@@ -657,11 +660,11 @@ private fun FloatingActionButtons(
     hasResult: Boolean,
     isDirty: Boolean,
     onShowSnackbar: (String) -> Unit,
+    onCancel: () -> Unit,
     onLaunchFilePicker: () -> Unit,
     onLaunchImagePicker: () -> Unit,
     onLaunchCamera: () -> Unit,
 ) {
-    val stillLoading = stringResource(id = R.string.stillLoading)
     var menuExpanded by rememberSaveable { mutableStateOf(false) }
 
     BackHandler(menuExpanded) { menuExpanded = false }
@@ -734,7 +737,7 @@ private fun FloatingActionButtons(
 
         FloatingActionButton(
             onClick = {
-                if (isLoading) onShowSnackbar(stillLoading)
+                if (isLoading) onCancel()
                 else onSummarize()
             },
             modifier = Modifier.animateFloatingActionButton(
@@ -743,7 +746,7 @@ private fun FloatingActionButtons(
             )
         ) {
             if (isLoading) {
-                LoadingIndicator()
+                Icon(Icons.Filled.Close, stringResource(R.string.stop))
             } else if (hasResult && !isDirty) {
                 Icon(Icons.Rounded.Refresh, stringResource(R.string.regenerate))
             } else {
@@ -837,6 +840,7 @@ private fun FloatingActionButtonsPreview() {
         hasResult = false,
         isDirty = false,
         onShowSnackbar = {},
+        onCancel = {},
         onLaunchFilePicker = {},
         onLaunchImagePicker = {},
         onLaunchCamera = {}

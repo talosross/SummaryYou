@@ -6,6 +6,7 @@
     <string name="settings">Налаштування</string>
     <string name="history">Історія</string>
     <string name="regenerate">Відновити</string>
+    <string name="stop">Зупинити</string>
     <string name="invalidURL">Недійсне посилання: резюме неможливо</string>
     <string name="noTranscript">Транскрипт не знайдено</string>
     <string name="noContent">Немає вмісту</string>

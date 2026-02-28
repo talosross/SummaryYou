@@ -6,7 +6,9 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,8 +51,16 @@ class SummaryViewModel @Inject constructor(
     private val _summarizationState = MutableStateFlow(SummarizationState())
     val summarizationState: StateFlow<SummarizationState> = _summarizationState.asStateFlow()
 
+    private var summarizationJob: Job? = null
+
     fun clearCurrentSummary() {
         _summarizationState.update { it.copy(summaryResult = null, error = null) }
+    }
+
+    fun cancelSummarization() {
+        summarizationJob?.cancel()
+        summarizationJob = null
+        _summarizationState.update { it.copy(isLoading = false) }
     }
 
     private fun extractHttpUrl(text: String): String {
@@ -67,7 +77,8 @@ class SummaryViewModel @Inject constructor(
         { input: String -> input.startsWith("content://") || input.startsWith("file://") }
 
     fun summarize(text: String, settings: SettingsUiState) {
-        viewModelScope.launch {
+        summarizationJob?.cancel()
+        summarizationJob = viewModelScope.launch {
             val source = if (isFileUri(text)) {
                 val uri = text.toUri()
                 val filename = getFileName(application, uri)
@@ -118,6 +129,8 @@ class SummaryViewModel @Inject constructor(
             _summarizationState.update { it.copy(summaryResult = summaryOutput) }
             saveSummaryToHistory(summaryOutput, settings.summaryLength, source)
 
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e("LLMViewModel", "Failed to summarize", e)
             val error =

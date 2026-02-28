@@ -6,6 +6,7 @@
     <string name="settings">Ayarlar</string>
     <string name="history">Geçmiş</string>
     <string name="regenerate">Yeniden Oluştur</string>
+    <string name="stop">Durdur</string>
     <string name="invalidURL">Geçersiz bağlantı: Özet mümkün değil</string>
     <string name="noTranscript">Transkript bulunamadı</string>
     <string name="noContent">İçerik Yok</string>

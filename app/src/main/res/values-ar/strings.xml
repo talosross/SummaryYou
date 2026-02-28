@@ -6,6 +6,7 @@
     <string name="settings">الإعدادات</string>
     <string name="history">السجل</string>
     <string name="regenerate">إعادة توليد</string>
+    <string name="stop">إيقاف</string>
     <string name="invalidURL">رابط غير صالح: الإجمالي غير ممكن</string>
     <string name="noTranscript">لا توجد نصوص مترجمة</string>
     <string name="noContent">لا يوجد محتوى</string>

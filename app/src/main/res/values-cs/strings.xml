@@ -6,6 +6,7 @@
     <string name="settings">Nastavení</string>
     <string name="history">Historie</string>
     <string name="regenerate">Regenerovat</string>
+    <string name="stop">Zastavit</string>
     <string name="invalidURL">Neplatný odkaz – Shrnutí není možné</string>
     <string name="noTranscript">Nenalezen žádný přepis</string>
     <string name="noContent">Nenalezen žádný obsah/kontext</string>

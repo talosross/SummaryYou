@@ -11,6 +11,7 @@
     <string name="history">历史</string>
 
     <string name="regenerate">重新生成</string>
+    <string name="stop">停止</string>
 
     <string name="invalidURL">无效链接：无法进行总结</string>
 

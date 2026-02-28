@@ -7,6 +7,7 @@
     <string name="settings">Einstellungen</string>
     <string name="history">Verlauf</string>
     <string name="regenerate">Regenerieren</string>
+    <string name="stop">Stopp</string>
     <string name="invalidURL">Ungültiger Link: Zusammenfassen nicht möglich</string>
     <string name="noTranscript">Kein Transcript gefunden</string>
     <string name="noContent">Kein Inhalt</string>

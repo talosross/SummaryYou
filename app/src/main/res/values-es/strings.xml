@@ -11,6 +11,7 @@
     <string name="history">Historia</string>
 
     <string name="regenerate">Regenerado</string>
+    <string name="stop">Detener</string>
 
     <string name="invalidURL">Enlace no válido: Resumen no posible</string>
 
