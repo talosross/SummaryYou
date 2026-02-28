@@ -74,6 +74,9 @@
     <string name="instructionsHistory">過去の要約には履歴セクションからアクセスできます。</string>
     <string name="finishButton">終了</string>
     <string name="continueButton">続ける</string>
+    <string name="previous">前へ</string>
+    <string name="next">次へ</string>
+    <string name="setupAi">AIを設定</string>
     <string name="shortcut_summarize_clipboard_short">クリップボード</string>
     <string name="shortcut_summarize_clipboard_long">クリップボードから要約</string>
     <string name="instant_summarize">即時要約</string>

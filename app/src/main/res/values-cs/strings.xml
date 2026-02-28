@@ -44,6 +44,9 @@
     <string name="instructionsHistory">Zobrazte  vaše staré shrnutí v sekci Historie.</string>
     <string name="finishButton">Dokončit</string>
     <string name="continueButton">Pokračovat</string>
+    <string name="previous">Předchozí</string>
+    <string name="next">Další</string>
+    <string name="setupAi">Nastavit AI</string>
     <string name="googlePlay">Obchod Google Play</string>
     <string name="googlePlayDescription">Ohodnoťte nás</string>
     <string name="tutorial">Tutoriál</string>

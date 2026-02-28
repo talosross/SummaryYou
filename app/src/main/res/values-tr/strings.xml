@@ -53,6 +53,9 @@
     <string name="finishButton">Bitir</string>
     <string name="continueButton">Devam et</string>
     <string name="skip">Atla</string>
+    <string name="previous">Önceki</string>
+    <string name="next">Sonraki</string>
+    <string name="setupAi">Yapay Zekayı Kur</string>
     <string name="googlePlay">Google Play Store</string>
     <string name="googlePlayDescription">Bizi değerlendirin</string>
     <string name="tutorial">Öğretici</string>
@@ -67,7 +70,6 @@
     <string name="instant_summarize">Anında Özetle</string>
     <string name="discord">Discord Grubu</string>
     <string name="discordDescription">Topluluğumuza katılın</string>
-    <string name="next">Sonraki</string>
     <string name="undo">Geri al</string>
     <string name="approximate_tokens">Yaklaşık token: %d</string>
     <string name="fab_image">Görsel</string>

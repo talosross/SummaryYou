@@ -46,6 +46,9 @@
     <string name="finishButton">انتهاء</string>
     <string name="continueButton">متابعة</string>
     <string name="skip">يتخطى</string>
+    <string name="previous">السابق</string>
+    <string name="next">التالي</string>
+    <string name="setupAi">إعداد الذكاء الاصطناعي</string>
     <string name="googlePlay">متجر Google Play</string>
     <string name="googlePlayDescription">قيمنا</string>
     <string name="tutorial">الدليل</string>

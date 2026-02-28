@@ -74,6 +74,9 @@
     <string name="instructionsHistory">Acesse seus resumos anteriores na seção Histórico.</string>
     <string name="finishButton">Finalizar</string>
     <string name="continueButton">Continuar</string>
+    <string name="previous">Anterior</string>
+    <string name="next">Próximo</string>
+    <string name="setupAi">Configurar IA</string>
     <string name="shortcut_summarize_clipboard_short">Área de transferência</string>
     <string name="shortcut_summarize_clipboard_long">Resumir da área de transferência</string>
     <string name="instant_summarize">Resumo Instantâneo</string>

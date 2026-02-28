@@ -54,6 +54,9 @@
     <string name="finishButton">Fertig</string>
     <string name="continueButton">Weiter</string>
     <string name="skip">Überspringen</string>
+    <string name="previous">Zurück</string>
+    <string name="next">Weiter</string>
+    <string name="setupAi">KI einrichten</string>
     <string name="googlePlay">Google Play Store</string>
     <string name="googlePlayDescription">Bewerten Sie uns</string>
     <string name="tutorial">Tutorial</string>
@@ -68,7 +71,6 @@
     <string name="instant_summarize">Sofort Zusammenfassen</string>
     <string name="discord">Discord Gruppe</string>
     <string name="discordDescription">Tritt unserer Community bei</string>
-    <string name="next">Weiter</string>
     <string name="undo">Rückgängig</string>
     <string name="summary_show_less">Weniger anzeigen</string>
     <string name="summary_show_more">Mehr anzeigen</string>

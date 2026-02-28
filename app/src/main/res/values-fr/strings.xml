@@ -72,6 +72,9 @@
     <string name="instructionsHistory">Accédez à vos résumés passés dans la section Historique.</string>
     <string name="finishButton">Terminer</string>
     <string name="continueButton">Continuer</string>
+    <string name="previous">Précédent</string>
+    <string name="next">Suivant</string>
+    <string name="setupAi">Configurer l\'IA</string>
     <string name="shortcut_summarize_clipboard_short">Presse-papiers</string>
     <string name="shortcut_summarize_clipboard_long">Résumer depuis le presse-papiers</string>
     <string name="instant_summarize">Résumé Instantané</string>

@@ -43,6 +43,9 @@
     <string name="instructionsHistory">Отримуйте доступ до своїх минулих узагальнень у розділі Історія.</string>
     <string name="finishButton">Завершити</string>
     <string name="continueButton">Продовжити</string>
+    <string name="previous">Назад</string>
+    <string name="next">Далі</string>
+    <string name="setupAi">Налаштувати ШІ</string>
     <string name="shortcut_summarize_clipboard_short">Буфер обміну</string>
     <string name="shortcut_summarize_clipboard_long">Узагальнити з буфера обміну</string>
     <string name="instant_summarize">Миттєве узагальнення</string>

@@ -89,14 +89,14 @@ fun OnboardingScreen(
                 if (isFirst) onDone()
                 else scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
             }) {
-                Text(text = if (isFirst) stringResource(id = R.string.skip) else "Previous")
+                Text(text = if (isFirst) stringResource(id = R.string.skip) else stringResource(id = R.string.previous))
             }
 
             if (isLast && !hasProxy) {
                 Button(onClick = {
                     onDoneAndNavigate("${Nav.Settings.name}?highlight=ai")
                 }) {
-                    Text("Setup AI")
+                    Text(stringResource(id = R.string.setupAi))
                 }
             }
 
@@ -108,7 +108,7 @@ fun OnboardingScreen(
             ) {
                 Text(
                     text = if (isLast) stringResource(id = R.string.finishButton)
-                    else "Next"
+                    else stringResource(id = R.string.next)
                 )
             }
         }
