@@ -58,6 +58,7 @@ import com.talosross.summaryyou.R
 import com.talosross.summaryyou.llm.SummaryLength
 import com.talosross.summaryyou.llm.SummaryOutput
 import com.talosross.summaryyou.util.getLanguageCode
+import com.talosross.summaryyou.util.parseMarkdown
 import java.util.Locale
 import java.util.UUID
 
@@ -146,7 +147,7 @@ fun SummaryCard(
             }
 
             Text(
-                text = summary.summary,
+                text = parseMarkdown(summary.summary),
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = if (isExpanded) Int.MAX_VALUE else MAX_LINES_WHEN_COLLAPSE,
                 overflow = TextOverflow.Ellipsis,

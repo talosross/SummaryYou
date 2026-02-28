@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.talosross.summaryyou.vm.SummaryViewModel
+import com.talosross.summaryyou.util.parseMarkdown
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -127,7 +128,7 @@ fun InstantSummaryDialog(viewModel: SummaryViewModel, onDismiss: () -> Unit) {
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(text = summaryResult.summary)
+                                Text(text = parseMarkdown(summaryResult.summary))
                             }
                         }
                     }
