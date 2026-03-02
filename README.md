@@ -16,9 +16,9 @@
 ## 📱 Screenshots
 
 <div align="center">
-  <img src="https://cdn.jsdelivr.net/gh/talosross/SummaryYou@refs/heads/main/.github/screenshots/screen1.webp" width="24%" alt="Home Screen"/>
-  <img src="https://cdn.jsdelivr.net/gh/talosross/SummaryYou@refs/heads/main/.github/screenshots/screen2.webp" width="24%" alt="Share Feature"/>
-  <img src="https://cdn.jsdelivr.net/gh/talosross/SummaryYou@refs/heads/main/.github/screenshots/screen3.webp" width="24%" alt="History"/>
+  <img src="https://cdn.jsdelivr.net/gh/talosross/SummaryYou@refs/heads/master/.github/screenshots/screen1.webp" width="24%" alt="Home Screen"/>
+  <img src="https://cdn.jsdelivr.net/gh/talosross/SummaryYou@refs/heads/master/.github/screenshots/screen2.webp" width="24%" alt="Share Feature"/>
+  <img src="https://cdn.jsdelivr.net/gh/talosross/SummaryYou@refs/heads/master/.github/screenshots/screen3.webp" width="24%" alt="History"/>
 </div>
 
 ## ⬇️ Download

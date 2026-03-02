@@ -117,7 +117,7 @@ fun OnboardingScreen(
 }
 
 const val CDN =
-    "https://cdn.jsdelivr.net/gh/talosross/SummaryYou@refs/heads/main/.github/screenshots"
+    "https://cdn.jsdelivr.net/gh/talosross/SummaryYou@refs/heads/master/.github/screenshots"
 
 @Composable
 private fun OnboardingStepPage(
