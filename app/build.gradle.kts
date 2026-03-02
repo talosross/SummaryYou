@@ -198,7 +198,7 @@ dependencies {
     // Play Integrity API (playstore flavor only)
     "playstoreImplementation"("com.google.android.play:integrity:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-    implementation("ai.koog:koog-agents:0.6.0")
+    implementation("ai.koog:koog-agents:0.6.3")
 
     // Networking
     implementation("io.ktor:ktor-client-android:3.4.0")
