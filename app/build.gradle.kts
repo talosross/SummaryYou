@@ -201,9 +201,9 @@ dependencies {
     implementation("ai.koog:koog-agents:0.6.0")
 
     // Networking
-    implementation("io.ktor:ktor-client-android:3.4.0")
-    implementation("io.ktor:ktor-client-content-negotiation:3.4.0")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.0")
+    implementation("io.ktor:ktor-client-android:3.4.1")
+    implementation("io.ktor:ktor-client-content-negotiation:3.4.1")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.1")
 
     // Serialization & Utilities
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
