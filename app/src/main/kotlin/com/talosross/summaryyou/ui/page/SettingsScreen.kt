@@ -95,6 +95,12 @@ private enum class DialogState {
     NONE, THEME, AI_PROVIDER, MODEL
 }
 
+private data class ModelRequest(
+    val provider: AIProvider,
+    val baseUrl: String?,
+    val apiKey: String?,
+)
+
 data class SettingsActions(
     val onThemeChange: (Int) -> Unit,
     val onApiKeyChange: (String) -> Unit,
@@ -122,6 +128,7 @@ fun SettingsScreen(
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     val state by appViewModel.settingsUiState.collectAsState()
+    val modelSelectionState by appViewModel.modelSelectionUiState.collectAsState()
     val actions = SettingsActions(
         onThemeChange = appViewModel::setTheme,
         onApiKeyChange = appViewModel::setApiKeyValue,
@@ -141,11 +148,21 @@ fun SettingsScreen(
     )
 
     var dialogState by remember { mutableStateOf(DialogState.NONE) }
+    var pendingModelRequest by remember { mutableStateOf<ModelRequest?>(null) }
     var showBiliBiliLoginSheet by remember { mutableStateOf(false) }
     var showClearSessDataDialog by remember { mutableStateOf(false) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(dialogState, pendingModelRequest) {
+        if (dialogState == DialogState.MODEL) {
+            pendingModelRequest?.let { request ->
+                appViewModel.refreshModels(request.provider, request.baseUrl, request.apiKey)
+                pendingModelRequest = null
+            }
+        }
+    }
 
     if (showClearSessDataDialog) {
         AlertDialog(
@@ -223,6 +240,7 @@ fun SettingsScreen(
                         actions.onProviderChange(provider.name)
                         actions.onBaseUrlChange(baseUrl)
                         actions.onApiKeyChange(apiKey)
+                        pendingModelRequest = ModelRequest(provider, baseUrl, apiKey)
                         dialogState = DialogState.MODEL
                     }
                 )
@@ -233,6 +251,8 @@ fun SettingsScreen(
                     onDismissRequest = { dialogState = DialogState.NONE },
                     provider = state.aiProvider,
                     initialModelId = state.model,
+                    availableModels = modelSelectionState.models,
+                    isLoading = modelSelectionState.isLoading,
                     onConfirm = { modelId ->
                         actions.onModelChange(modelId)
                     },
@@ -273,7 +293,10 @@ fun SettingsScreen(
             onNav = { onNav(it) },
             onShowThemeDialog = { dialogState = DialogState.THEME },
             onShowAIProviderDialog = { dialogState = DialogState.AI_PROVIDER },
-            onShowModelDialog = { dialogState = DialogState.MODEL },
+            onShowModelDialog = {
+                pendingModelRequest = ModelRequest(state.aiProvider, state.baseUrl, state.apiKey)
+                dialogState = DialogState.MODEL
+            },
             onShowBiliBiliLoginSheet = { showBiliBiliLoginSheet = true },
             onShowClearSessDataDialog = { showClearSessDataDialog = true },
             highlightSection = highlightSection

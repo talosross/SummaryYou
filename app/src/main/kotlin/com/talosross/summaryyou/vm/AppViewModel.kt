@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import com.talosross.summaryyou.UserPreferencesRepository
 import com.talosross.summaryyou.di.FlavorConfig
 import com.talosross.summaryyou.llm.AIProvider
+import com.talosross.summaryyou.llm.ModelRepository
 import com.talosross.summaryyou.llm.SummaryLength
 import com.talosross.summaryyou.ui.Nav
 import javax.inject.Inject
@@ -23,10 +24,15 @@ import javax.inject.Inject
 class AppViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val flavorConfig: FlavorConfig,
+    private val modelRepository: ModelRepository,
 ) : ViewModel() {
 
     private val _startDestination = MutableStateFlow<Nav?>(null)
     val startDestination: StateFlow<Nav?> = _startDestination
+
+    private val _modelSelectionUiState = MutableStateFlow(ModelSelectionUiState())
+    val modelSelectionUiState: StateFlow<ModelSelectionUiState> = _modelSelectionUiState.asStateFlow()
+    private var modelRequestId: Long = 0
 
     init {
         viewModelScope.launch {
@@ -63,6 +69,22 @@ class AppViewModel @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = SettingsUiState(hasProxy = flavorConfig.proxyBaseUrl != null)
         )
+
+    fun refreshModels(provider: AIProvider, baseUrl: String?, apiKey: String?) {
+        val requestId = ++modelRequestId
+        _modelSelectionUiState.value = ModelSelectionUiState(provider = provider, isLoading = true)
+
+        viewModelScope.launch {
+            val models = modelRepository.loadModels(provider, baseUrl, apiKey)
+            if (requestId == modelRequestId) {
+                _modelSelectionUiState.value = ModelSelectionUiState(
+                    provider = provider,
+                    models = models,
+                    isLoading = false,
+                )
+            }
+        }
+    }
 
     // Original Language in summary
     fun setUseOriginalLanguageValue(newValue: Boolean) =

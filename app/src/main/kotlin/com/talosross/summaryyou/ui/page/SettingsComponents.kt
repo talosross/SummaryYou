@@ -1,5 +1,6 @@
 package com.talosross.summaryyou.ui.page
 
+import ai.koog.prompt.llm.LLModel
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.TweenSpec
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.rounded.VpnKey
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -264,12 +267,44 @@ internal fun ModelSettingsDialog(
     onDismissRequest: () -> Unit,
     provider: AIProvider,
     initialModelId: String?,
+    availableModels: List<LLModel>,
+    isLoading: Boolean,
     onConfirm: (modelId: String) -> Unit,
 ) {
     val customModelKey = "##CUSTOM_MODEL##"
-    val isInitialModelCustom = initialModelId?.let { id -> provider.models.none { it.id == id } } == true
-    var selectedKey by remember { mutableStateOf(if (isInitialModelCustom) customModelKey else initialModelId) }
-    var customModelName by remember { mutableStateOf(if (isInitialModelCustom) initialModelId else "") }
+    val visibleModels = remember(availableModels, provider) {
+        (availableModels.ifEmpty { provider.models }).distinctBy { it.id }
+    }
+    val initialKnownModel = initialModelId?.let { id ->
+        visibleModels.any { it.id == id } || provider.models.any { it.id == id }
+    } == true
+    var selectedKey by remember(initialModelId) {
+        mutableStateOf(
+            when {
+                initialModelId == null -> null
+                initialKnownModel -> initialModelId
+                else -> customModelKey
+            }
+        )
+    }
+    var customModelName by remember(initialModelId) {
+        mutableStateOf(
+            when {
+                initialModelId == null -> ""
+                initialKnownModel -> ""
+                else -> initialModelId
+            }
+        )
+    }
+
+    LaunchedEffect(visibleModels, initialModelId) {
+        if (initialModelId != null && visibleModels.any { it.id == initialModelId }) {
+            selectedKey = initialModelId
+            if (customModelName == initialModelId) {
+                customModelName = ""
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -279,9 +314,16 @@ internal fun ModelSettingsDialog(
         },
         text = {
             Column(Modifier.heightIn(max = 390.dp)) {
-                LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
-                    items(provider.models.size) { index ->
-                        val model = provider.models[index]
+                if (isLoading && availableModels.isEmpty()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(text = "Modelle werden geladen...")
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 220.dp)) {
+                    items(items = visibleModels, key = { it.id }) { model ->
                         RadioButtonItem(selected = selectedKey == model.id, onSelectionChange = { selectedKey = model.id }) {
                             Text(text = model.id)
                         }
@@ -383,6 +425,8 @@ private fun ModelSettingsDialogPreview() {
         ModelSettingsDialog(
             onDismissRequest = {}, provider = AIProvider.OPENAI,
             onConfirm = { _ -> }, initialModelId = AIProvider.OPENAI.models.first().id,
+            availableModels = AIProvider.OPENAI.models,
+            isLoading = false,
         )
     }
 }

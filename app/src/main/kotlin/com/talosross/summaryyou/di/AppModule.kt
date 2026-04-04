@@ -15,6 +15,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
 import com.talosross.summaryyou.UserPreferencesRepository
 import com.talosross.summaryyou.data.AppDatabase
 import com.talosross.summaryyou.data.HistoryDao
@@ -81,7 +82,9 @@ object AppModule {
             install(HttpCookies) {
                 storage = AcceptAllCookiesStorage()
             }
-            install(ContentNegotiation) { json() }
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
             install(HttpTimeout) {
                 requestTimeoutMillis = 60_000
                 connectTimeoutMillis = 15_000

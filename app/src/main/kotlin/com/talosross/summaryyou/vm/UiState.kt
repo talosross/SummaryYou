@@ -1,5 +1,6 @@
 package com.talosross.summaryyou.vm
 
+import ai.koog.prompt.llm.LLModel
 import com.talosross.summaryyou.llm.AIProvider
 import com.talosross.summaryyou.llm.SummaryLength
 import com.talosross.summaryyou.llm.SummaryOutput
@@ -22,6 +23,12 @@ data class SettingsUiState(
     /** Whether a server-side proxy is available (gms flavor with proxy URL configured). */
     val hasProxy: Boolean = false,
     val developerMode: Boolean = false,
+)
+
+data class ModelSelectionUiState(
+    val provider: AIProvider = AIProvider.OPENAI,
+    val models: List<LLModel> = emptyList(),
+    val isLoading: Boolean = false,
 )
 
 data class SummarizationState(
