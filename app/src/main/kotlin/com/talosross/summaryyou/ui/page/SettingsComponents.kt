@@ -55,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.talosross.summaryyou.R
 import com.talosross.summaryyou.llm.AIProvider
+import com.talosross.summaryyou.llm.isProviderSettingsValid
 import com.talosross.summaryyou.ui.component.ClickablePasteIcon
 import com.talosross.summaryyou.ui.theme.SummaryYouTheme
 import kotlinx.coroutines.launch
@@ -162,10 +163,12 @@ internal fun AIProviderSettingsDialog(
     var baseUrlTextFieldValue by remember { mutableStateOf(initialBaseUrl ?: "") }
     var apiKeyTextFieldValue by remember { mutableStateOf(initialApiKey ?: "") }
     val isIntegrated = selectedProvider == AIProvider.INTEGRATED
-    val formValid = isIntegrated
-            || (selectedProvider.isMandatoryBaseUrl && baseUrlTextFieldValue.isNotBlank())
-            || (selectedProvider.isRequiredApiKey && apiKeyTextFieldValue.isNotBlank())
-            || hasProxy
+    val formValid = isProviderSettingsValid(
+        provider = selectedProvider,
+        baseUrl = baseUrlTextFieldValue,
+        apiKey = apiKeyTextFieldValue,
+        hasProxy = hasProxy,
+    )
     val providerChanged = selectedProvider != initialProvider
     val submit = {
         if (formValid) {
@@ -404,4 +407,3 @@ private fun AIProviderItemPreview() {
         }
     }
 }
-

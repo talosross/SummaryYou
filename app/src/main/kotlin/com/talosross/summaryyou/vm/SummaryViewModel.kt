@@ -31,6 +31,7 @@ import com.talosross.summaryyou.model.SummarySource
 import com.talosross.summaryyou.model.SummaryType
 import com.talosross.summaryyou.model.VideoSubtype
 import com.talosross.summaryyou.util.extractHttpUrl
+import com.talosross.summaryyou.llm.shouldUseProxyForSummary
 import javax.inject.Inject
 
 @HiltViewModel
@@ -97,10 +98,15 @@ class SummaryViewModel @Inject constructor(
             }
 
             val currentApiKey = settings.apiKey
-            val isIntegrated = settings.aiProvider == AIProvider.INTEGRATED
-            val useProxy = (currentApiKey.isNullOrEmpty() || isIntegrated) && flavorConfig.proxyBaseUrl != null
+            val provider = settings.aiProvider
+            val hasProxy = flavorConfig.proxyBaseUrl != null
+            val useProxy = shouldUseProxyForSummary(provider, currentApiKey, hasProxy)
 
-            if (currentApiKey.isNullOrEmpty() && !useProxy) {
+            if (provider == AIProvider.INTEGRATED && !useProxy) {
+                throw SummaryException.NoKeyException()
+            }
+
+            if (provider.isRequiredApiKey && currentApiKey.isNullOrEmpty() && !useProxy) {
                 throw SummaryException.NoKeyException()
             }
 
@@ -109,7 +115,7 @@ class SummaryViewModel @Inject constructor(
             val summaryOutput = if (useProxy) {
                 summarizeViaProxy(source, settings, appLanguage)
             } else {
-                summarizeViaAgent(source, settings, currentApiKey!!, appLanguage)
+                summarizeViaAgent(source, settings, currentApiKey.orEmpty(), appLanguage)
             }
 
             _summarizationState.update { it.copy(summaryResult = summaryOutput) }
