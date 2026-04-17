@@ -42,4 +42,6 @@ jobs:
         run: ./gradlew clean test
 
       - name: Build debug APK (for testing build process)
+        env:
+          GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=1g"
         run: ./gradlew clean assembleDebug --stacktrace --info
