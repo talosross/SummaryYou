@@ -84,7 +84,7 @@ jobs:
 
       - name: Copy and rename artifacts
         run: |
-          cp "app/build/outputs/apk/foss/release/app-foss-release.apk" "${{ env.APK_DIR }}/SummaryExpressive-foss-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
+          cp "app/build/outputs/apk/foss/release/app-foss-release.apk" "${{ env.APK_DIR }}/SummaryYou-foss-${{ env.VERSION_NAME }}(${{ env.VERSION_CODE }}).apk"
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
